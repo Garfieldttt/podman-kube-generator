@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}{{ config.name }} — Podman Kube Generator{% endblock %}
+{% block meta_description %}Saved Podman pod configuration: {{ config.name }}. Kubernetes YAML for podman play kube, shell script and systemd Quadlet guide.{% endblock %}
+{% block canonical_path %}/{{ config.uuid }}/{% endblock %}
+{% block og_title %}{{ config.name }} — Podman Kube Generator{% endblock %}
+{% block og_path %}/{{ config.uuid }}/{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a href="/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+      <div>
+        <h1 class="h3 mb-0">{{ config.name }}</h1>
+        <p class="text-secondary small mb-0">Saved on {{ config.created_at|date:"d.m.Y H:i" }}</p>
+      </div>
+      <a href="{% url 'download' config.uuid %}" class="btn btn-outline-secondary btn-sm ms-auto">
+        <i class="bi bi-download me-1"></i> Download YAML
+      </a>
+    </div>
+
+    <ul class="nav nav-tabs mb-0" id="outputTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab"
+          data-bs-target="#tab-yaml" type="button" role="tab">
+          <i class="bi bi-file-code me-1"></i>Kubernetes YAML
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab"
+          data-bs-target="#tab-shell" type="button" role="tab">
+          <i class="bi bi-terminal me-1"></i>Shell Script
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content mb-4">
+      <div class="tab-pane fade show active" id="tab-yaml" role="tabpanel">
+        <div class="card" style="border-top-left-radius:0; border-top-right-radius:0; border-top:0;">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-file-code me-2"></i>{{ config.name }}.yaml</span>
+            <div class="d-flex gap-2">
+              <a href="{% url 'download' config.uuid %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i></a>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'yaml-output')"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <pre class="m-0 rounded-0 rounded-bottom" id="yaml-output">{{ config.yaml_content }}</pre>
+          </div>
+        </div>
+        <div class="card mt-2">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
+            <span class="text-secondary small"><i class="bi bi-gear me-1"></i>{{ config.name }}.kube — Systemd Quadlet unit</span>
+            <div class="d-flex gap-2">
+              <a href="{% url 'download_quadlet' config.uuid %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i></a>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'quadlet-output')"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <pre class="m-0 rounded-bottom" id="quadlet-output">{{ quadlet_content }}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="tab-shell" role="tabpanel">
+        <div class="card" style="border-top-left-radius:0; border-top-right-radius:0; border-top:0;">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-terminal me-2"></i>Shell Script</span>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ config.name }}.sh', document.getElementById('shell-output').textContent)"><i class="bi bi-download"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'shell-output')"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <pre class="m-0 rounded-0 rounded-bottom" id="shell-output">{{ shell_content }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="border-secondary my-4">
+
+    <h2 class="h5 mb-3">
+      <i class="bi bi-terminal me-2 text-success"></i>Deployment Guide
+      {% if mode == 'rootful' %}
+        <span class="badge bg-warning text-dark ms-2">rootful</span>
+      {% else %}
+        <span class="badge bg-success ms-2">rootless</span>
+      {% endif %}
+    </h2>
+
+    {% if mode == 'rootful' %}
+      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name %}
+    {% else %}
+      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name %}
+    {% endif %}
+
+    <hr class="border-secondary my-4">
+
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="/" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i> New Pod
+      </a>
+      <a href="{% url 'edit_config' config.uuid %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-pencil me-1"></i> Edit
+      </a>
+      <button class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard(this, 'share-url')">
+        <i class="bi bi-share me-1"></i> Copy link
+      </button>
+      <a href="{% url 'config_versions' config.uuid %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-clock-history me-1"></i> Versions
+      </a>
+      {% if user.is_authenticated %}
+      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#addToCollectionModal">
+        <i class="bi bi-collection me-1"></i> Add to collection
+      </button>
+      {% endif %}
+      <span id="share-url" style="display:none">{{ request.build_absolute_uri }}</span>
+    </div>
+
+    {% if user.is_authenticated %}
+    <!-- Add to Collection Modal -->
+    <div class="modal fade" id="addToCollectionModal" tabindex="-1">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header py-2">
+            <h6 class="modal-title mb-0">Add to collection</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form method="post" action="{% url 'config_add_to_collection' config.uuid %}">
+            {% csrf_token %}
+            <div class="modal-body">
+              <select name="collection_id" class="form-select form-select-sm mb-2">
+                {% for col in user.collections.all %}
+                <option value="{{ col.pk }}">{{ col.name }}</option>
+                {% empty %}
+                <option disabled>No collections yet</option>
+                {% endfor %}
+                <option value="new">+ New collection…</option>
+              </select>
+              <input type="text" name="new_name" class="form-control form-control-sm"
+                placeholder="New collection name" style="display:none" id="newColNameInput">
+            </div>
+            <div class="modal-footer py-2">
+              <button type="submit" class="btn btn-primary btn-sm">Add</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script>
+    document.querySelector('[name=collection_id]')?.addEventListener('change', function(){
+      document.getElementById('newColNameInput').style.display = this.value === 'new' ? 'block' : 'none';
+    });
+    </script>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

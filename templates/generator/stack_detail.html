@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}{{ stack.label }} – Podman Kube YAML Generator{% endblock %}
+
+{% block meta_description %}Ready-to-use Kubernetes YAML for {{ stack.label }} – use directly with podman play kube. {{ mode|capfirst }}, {{ containers|length }} container{% if containers|length != 1 %}s{% endif %}. Free, no registration.{% endblock %}
+
+{% block canonical_path %}/stack/{{ stack.key }}/{% endblock %}
+
+{% block og_title %}{{ stack.label }} – Podman Kube YAML Generator{% endblock %}
+{% block og_description %}Ready-to-use Kubernetes YAML for {{ stack.label }} with podman play kube.{% endblock %}
+{% block og_path %}/stack/{{ stack.key }}/{% endblock %}
+{% block twitter_title %}{{ stack.label }} – Podman Kube YAML Generator{% endblock %}
+{% block twitter_description %}Ready-to-use Kubernetes YAML for {{ stack.label }} with podman play kube.{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "{{ stack.label }} – Podman Kube YAML",
+  "description": "Ready-to-use Kubernetes YAML for {{ stack.label }} with podman play kube.",
+  "url": "{{ site_url }}/stack/{{ stack.key }}/",
+  "author": {
+    "@type": "Person",
+    "name": "{{ site.footer_author }}"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "{{ seo.site_name }}"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:900px;">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" style="font-size:.8rem; margin-bottom:1.5rem;">
+    <ol class="breadcrumb" style="background:none; padding:0; margin:0; color:#8897ae;">
+      <li class="breadcrumb-item"><a href="/" style="color:#8897ae; text-decoration:none;">Home</a></li>
+      <li class="breadcrumb-item" style="color:#8897ae;">{{ stack.category }}</li>
+      <li class="breadcrumb-item active" style="color:#5eead4;">{{ stack.label }}</li>
+    </ol>
+  </nav>
+
+  <!-- Header -->
+  <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
+    <i class="bi {{ stack.icon }}" style="font-size:2.2rem; color:var(--accent);"></i>
+    <div>
+      <h1 style="font-size:1.6rem; font-weight:700; color:#e8edf4; margin:0;">{{ stack.label }}</h1>
+      <div style="font-size:.8rem; color:#8897ae; margin-top:.2rem;">
+        <span class="badge" style="background:rgba(20,184,166,.12); color:#5eead4; border:1px solid rgba(20,184,166,.2); font-size:.72rem; font-weight:500;">{{ stack.category }}</span>
+        <span class="badge ms-1" style="background:rgba(255,255,255,.05); color:#8897ae; border:1px solid rgba(255,255,255,.08); font-size:.72rem; font-weight:400;">{{ mode }}</span>
+        <span class="badge ms-1" style="background:rgba(255,255,255,.05); color:#8897ae; border:1px solid rgba(255,255,255,.08); font-size:.72rem; font-weight:400;">
+          {{ containers|length }} container{% if containers|length != 1 %}s{% endif %}
+        </span>
+      </div>
+    </div>
+    <div class="ms-auto">
+      <a href="/?stack={{ stack.key }}" class="btn btn-sm" style="background:var(--accent); color:#0a0f1a; font-weight:600; border:none; padding:.4rem 1rem;">
+        <i class="bi bi-sliders me-1"></i>Open in Generator
+      </a>
+    </div>
+  </div>
+
+  <!-- Container-Info -->
+  <div style="display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:1.5rem;">
+    {% for c in containers %}
+    <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:.4rem .75rem; font-size:.78rem; color:#dde3f0;">
+      <i class="bi bi-box me-1" style="color:var(--accent);"></i>
+      <strong>{{ c.name }}</strong>
+      <span style="color:#8897ae; margin-left:.4rem;">{{ c.image }}</span>
+      {% if c.ports %}
+      <span style="color:#8897ae; margin-left:.4rem;">· {% for p in c.ports.splitlines %}{{ p }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- YAML -->
+  <div style="margin-bottom:1.5rem;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem;">
+      <h2 style="font-size:.85rem; font-weight:700; color:#8897ae; text-transform:uppercase; letter-spacing:.06em; margin:0;">
+        <i class="bi bi-code-square me-1"></i>Kubernetes YAML
+      </h2>
+      <button onclick="copyYaml()" class="btn btn-sm" id="copy-btn" style="background:rgba(20,184,166,.1); color:#5eead4; border:1px solid rgba(20,184,166,.2); font-size:.75rem; padding:.2rem .65rem;">
+        <i class="bi bi-clipboard me-1"></i>Copy
+      </button>
+    </div>
+    <pre id="yaml-content" style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:1.25rem; font-size:.78rem; color:#c9d1d9; overflow-x:auto; margin:0; line-height:1.55;"><code>{{ yaml_content }}</code></pre>
+  </div>
+
+  <!-- Deployment Guide -->
+  <hr style="border-color:var(--border); margin:1.5rem 0;">
+  <h2 style="font-size:1rem; font-weight:600; color:#e8edf4; margin-bottom:1rem;">
+    <i class="bi bi-terminal me-2" style="color:#4ade80;"></i>Deployment Guide
+    {% if mode == 'rootful' %}
+      <span class="badge bg-warning text-dark ms-2">rootful</span>
+    {% else %}
+      <span class="badge bg-success ms-2">rootless</span>
+    {% endif %}
+  </h2>
+  {% if mode == 'rootful' %}
+    {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name %}
+  {% else %}
+    {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name %}
+  {% endif %}
+
+  <hr style="border-color:var(--border); margin:1.5rem 0;">
+
+  <!-- CTA -->
+  <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:1.25rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <div style="flex:1; min-width:200px;">
+      <div style="font-size:.9rem; font-weight:600; color:#e8edf4; margin-bottom:.25rem;">
+        Customize this stack
+      </div>
+      <div style="font-size:.8rem; color:#8897ae;">
+        Change ports, volumes, environment variables and more in the generator.
+      </div>
+    </div>
+    <a href="/?stack={{ stack.key }}" class="btn" style="background:var(--accent); color:#0a0f1a; font-weight:600; border:none; padding:.5rem 1.25rem; white-space:nowrap;">
+      <i class="bi bi-sliders me-1"></i>Open in Generator
+    </a>
+  </div>
+
+</div>
+
+<script>
+const _yaml = {{ form_data_json|safe }};
+
+function copyYaml() {
+  const text = document.getElementById('yaml-content').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied!';
+    setTimeout(() => btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy', 2000);
+  });
+}
+</script>
+{% endblock %}

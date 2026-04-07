@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Compose-Datei hochladen{% endblock %}
+
+{% block content %}
+<h1>Compose-Datei hochladen</h1>
+<p class="help">
+  Lade eine <code>docker-compose.yml</code> oder <code>podman-compose.yml</code> hoch —
+  sie wird automatisch als Stack-Template importiert.
+</p>
+
+{% if messages %}
+<ul class="messagelist">
+  {% for msg in messages %}
+  <li class="{{ msg.tags }}">{{ msg }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<div id="content-main">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+      <div class="form-row">
+        <div class="flex-container">
+          <label class="required" for="id_compose_file">Compose-Datei:</label>
+          <input type="file" name="compose_file" id="id_compose_file" accept=".yml,.yaml" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="flex-container">
+          <label for="id_label">Anzeigename:</label>
+          <input type="text" name="label" id="id_label" maxlength="100" placeholder="Leer lassen = Pod-Name aus Datei">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="flex-container">
+          <label for="id_category">Kategorie:</label>
+          <input type="text" name="category" id="id_category" maxlength="50" value="Eigene">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="flex-container">
+          <label for="id_icon">Icon (Bootstrap Icons Klasse):</label>
+          <input type="text" name="icon" id="id_icon" maxlength="60" value="bi-file-earmark-code">
+        </div>
+      </div>
+    </fieldset>
+    <div class="submit-row">
+      <input type="submit" value="Hochladen &amp; importieren" class="default">
+      <a href="{% url 'admin:generator_stacktemplate_changelist' %}" class="button cancel-link">Abbrechen</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

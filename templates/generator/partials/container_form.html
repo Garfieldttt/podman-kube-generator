@@ -1,0 +1,152 @@
+<div class="container-block" id="container-{{ index }}">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="badge badge-container px-3 py-2">
+      <i class="bi bi-box me-1"></i> Container {{ index|add:1 }}
+    </span>
+    {% if index > 0 %}
+    <button type="button" class="btn btn-sm btn-outline-danger"
+      onclick="this.closest('.container-block').remove(); updateCount('container_count', '.container-block');">
+      <i class="bi bi-trash"></i>
+    </button>
+    {% endif %}
+  </div>
+
+  <div class="row g-3">
+    <!-- Name + Image -->
+    <div class="col-md-5">
+      <label>{{ form.name.label }}</label>
+      {{ form.name }}
+    </div>
+    <div class="col-md-5">
+      <label>Image</label>
+      <div class="position-relative" id="img-wrap-{{ index }}">
+        <input type="text" class="form-control" placeholder="nginx, postgres, redis..."
+          autocomplete="off" id="img-search-{{ index }}"
+          oninput="triggerImageSearch(this, {{ index }})"
+          onfocus="triggerImageSearch(this, {{ index }})"
+          onblur="setTimeout(() => closeDropdown({{ index }}), 200)">
+        {{ form.image }}
+        <div id="img-results-{{ index }}" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1000;
+          background:#1a1d27; border:1px solid #14b8a6; border-radius:6px; max-height:220px; overflow-y:auto;">
+          <div id="img-results-inner-{{ index }}"></div>
+        </div>
+      </div>
+      <div id="tag-wrap-{{ index }}" style="display:none; margin-top:.4rem;">
+        <div class="position-relative">
+          <input type="text" class="form-control form-control-sm font-monospace"
+            placeholder="Search tag..." autocomplete="off"
+            id="tag-search-{{ index }}" oninput="filterTags(this, {{ index }})">
+          <div id="tag-results-{{ index }}" style="position:absolute; top:100%; left:0; right:0; z-index:1001;
+            background:#1a1d27; border:1px solid #2d3148; border-radius:6px; max-height:180px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <label>{{ form.pull_policy.label }}</label>
+      {{ form.pull_policy }}
+    </div>
+
+    <!-- Ports / Env / Volumes -->
+    <div class="col-md-4">
+      <label>{{ form.ports.label }}</label>
+      {{ form.ports }}
+    </div>
+    <div class="col-md-4">
+      <label>{{ form.env.label }}</label>
+      {{ form.env }}
+    </div>
+    <div class="col-md-4">
+      <label>{{ form.volumes.label }}</label>
+      {{ form.volumes }}
+    </div>
+
+    <!-- Command + Args + Working Dir -->
+    <div class="col-md-4">
+      <label>{{ form.command.label }}</label>
+      {{ form.command }}
+    </div>
+    <div class="col-md-4">
+      <label>{{ form.args.label }}</label>
+      {{ form.args }}
+    </div>
+    <div class="col-md-4">
+      <label>{{ form.working_dir.label }}</label>
+      {{ form.working_dir }}
+    </div>
+  </div>
+
+  <!-- Advanced options -->
+  <div class="mt-3">
+    <button type="button" class="btn btn-sm btn-outline-secondary"
+      data-bs-toggle="collapse" data-bs-target="#adv-{{ index }}">
+      <i class="bi bi-sliders me-1"></i> Advanced options
+    </button>
+    <div class="collapse mt-3" id="adv-{{ index }}">
+      <div class="row g-3">
+        <!-- Ressourcen -->
+        <div class="col-12"><span class="text-secondary small fw-semibold">RESOURCES</span></div>
+        <div class="col-md-3">
+          <label>{{ form.memory_limit.label }}</label>
+          {{ form.memory_limit }}
+        </div>
+        <div class="col-md-3">
+          <label>{{ form.cpu_limit.label }}</label>
+          {{ form.cpu_limit }}
+        </div>
+        <div class="col-md-3">
+          <label>{{ form.memory_request.label }}</label>
+          {{ form.memory_request }}
+        </div>
+        <div class="col-md-3">
+          <label>{{ form.cpu_request.label }}</label>
+          {{ form.cpu_request }}
+        </div>
+
+        <!-- Security Context -->
+        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">SECURITY CONTEXT</span></div>
+        <div class="col-md-3">
+          <label>{{ form.run_as_user.label }}</label>
+          {{ form.run_as_user }}
+        </div>
+        <div class="col-md-3">
+          <label>{{ form.run_as_group.label }}</label>
+          {{ form.run_as_group }}
+        </div>
+        <div class="col-md-3 d-flex align-items-end gap-3 pb-1">
+          <div class="form-check">
+            {{ form.read_only_root }}
+            <label class="form-check-label small">{{ form.read_only_root.label }}</label>
+          </div>
+          <div class="form-check">
+            {{ form.privileged }}
+            <label class="form-check-label small">{{ form.privileged.label }}</label>
+          </div>
+        </div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+          <label>{{ form.cap_add.label }}</label>
+          {{ form.cap_add }}
+        </div>
+        <div class="col-md-6">
+          <label>{{ form.cap_drop.label }}</label>
+          {{ form.cap_drop }}
+        </div>
+
+        <!-- Liveness Probe -->
+        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">LIVENESS PROBE (exec)</span></div>
+        <div class="col-md-6">
+          <label>{{ form.liveness_probe_cmd.label }}</label>
+          {{ form.liveness_probe_cmd }}
+        </div>
+        <div class="col-md-3">
+          <label>{{ form.liveness_initial_delay.label }}</label>
+          {{ form.liveness_initial_delay }}
+        </div>
+        <div class="col-md-3">
+          <label>{{ form.liveness_period.label }}</label>
+          {{ form.liveness_period }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+{% if results %}
+<ul class="list-unstyled mb-0" id="image-dropdown">
+  {% for r in results %}
+  <li>
+    <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+      onclick="selectImage('{{ r.full }}', '{{ r.namespace }}', '{{ r.name }}', this)"
+      style="background:none; border:none; width:100%; text-align:left; color:#e2e8f0; cursor:pointer;">
+      {% if r.official %}
+        <span class="badge bg-success" style="font-size:.7rem;">official</span>
+      {% elif r.registry != 'docker.io' %}
+        <span class="badge bg-secondary" style="font-size:.7rem;">{{ r.registry }}</span>
+      {% endif %}
+      <span class="fw-semibold">{{ r.full }}</span>
+      {% if r.description %}
+        <span class="text-secondary small text-truncate">{{ r.description }}</span>
+      {% endif %}
+    </button>
+  </li>
+  {% endfor %}
+</ul>
+{% elif query %}
+<p class="text-secondary small px-2 mb-0">No images found for "{{ query }}".</p>
+{% endif %}

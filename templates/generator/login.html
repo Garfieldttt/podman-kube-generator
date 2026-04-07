@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Login — Podman Kube Generator{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5 col-lg-4">
+    <h1 class="h4 mb-4">Login</h1>
+    <div class="card p-4">
+      {% if error %}
+      <div class="alert alert-danger small py-2">{{ error }}</div>
+      {% endif %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <div class="mb-3">
+          <label class="form-label small" style="color:var(--text-dim);">Username</label>
+          <input type="text" name="username" class="form-control" autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small" style="color:var(--text-dim);">Password</label>
+          <input type="password" name="password" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Log in</button>
+      </form>
+    </div>
+    <p class="text-center mt-3 small" style="color:var(--text-dim);">
+      No account yet? <a href="/register/" style="color:var(--accent);">Register</a>
+    </p>
+    {% if password_reset_enabled %}
+    <p class="text-center small" style="color:var(--text-muted);">
+      <a href="/password-reset/" style="color:var(--text-muted);">Forgot password?</a>
+    </p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

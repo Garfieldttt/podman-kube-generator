@@ -1,0 +1,642 @@
+{% extends "base.html" %}
+{% block title %}{{ pod_name }} — Podman Kube Generator{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <button onclick="history.back()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Builder</button>
+      <div>
+        <h1 class="h3 mb-0">{{ pod_name }}</h1>
+        <p class="text-secondary small mb-0">
+          Kubernetes YAML for <code>podman play kube</code> &mdash;
+          {% if mode == 'rootful' %}
+            <span class="badge bg-warning text-dark">rootful</span>
+          {% else %}
+            <span class="badge bg-success">rootless</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- Netzwerk-Banner (nur bei mehreren Containern) -->
+    {% if net_info|length > 1 %}
+    <div class="card mb-4" style="border-color:#166534; background:#0a1a0e;">
+      <div class="card-body py-3">
+        <div class="d-flex align-items-start gap-2">
+          <i class="bi bi-diagram-3 text-success mt-1"></i>
+          <div>
+            <p class="mb-2 fw-semibold text-success">Pod-internal network — containers communicate via localhost</p>
+            <p class="text-secondary small mb-2">
+              All containers share the same network namespace. Connections go via localhost, NOT via the container name (as in docker-compose).
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+              {% for c in net_info %}
+              <div class="px-3 py-2 rounded" style="background:#12141f; border:1px solid #166534;">
+                <div class="small fw-semibold text-success">{{ c.name }}</div>
+                {% for port in c.ports %}
+                <div class="font-monospace small text-secondary">localhost:<span style="color:#a8ff78;">{{ port }}</span></div>
+                {% endfor %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if validation_warnings %}
+    <div class="mb-3" id="validation-panel">
+      <div id="yaml-edit-warning" style="display:none;border:1px solid rgba(99,102,241,.4);background:rgba(99,102,241,.08);" class="rounded mb-1 px-3 py-2 small">
+        <i class="bi bi-pencil me-1" style="color:#818cf8;"></i>
+        <span style="color:#a5b4fc;">Warnings reflect the original form data — editing YAML directly won't update them.</span>
+      </div>
+      {% for w in validation_warnings %}
+      <div class="rounded mb-1 validation-item overflow-hidden"
+           style="border:1px solid {% if w.level == 'error' %}color-mix(in srgb,#dc3545 40%,transparent){% else %}color-mix(in srgb,#f59e0b 40%,transparent){% endif %};">
+        <!-- Header row -->
+        <div class="d-flex align-items-center gap-2 px-3 py-2"
+             style="background:{% if w.level == 'error' %}color-mix(in srgb,#dc3545 12%,var(--surface)){% else %}color-mix(in srgb,#f59e0b 10%,var(--surface)){% endif %};">
+          <i class="bi {% if w.level == 'error' %}bi-x-circle text-danger{% else %}bi-exclamation-triangle text-warning{% endif %} flex-shrink-0"></i>
+          <span class="small flex-grow-1">{{ w.msg|safe }}</span>
+          <div class="d-flex gap-1 ms-auto flex-shrink-0">
+            {% if w.hint %}
+            <button class="btn btn-sm py-0 px-2"
+                    style="font-size:.72rem;border:1px solid currentColor;opacity:.75;"
+                    onclick="highlightLines(this, '{{ w.hint|escapejs }}')">
+              <i class="bi bi-search me-1"></i>Show
+            </button>
+            {% endif %}
+            {% if w.fix %}
+            <button class="btn btn-sm py-0 px-2 btn-outline-success"
+                    style="font-size:.72rem;"
+                    onclick="applyFix('{{ w.fix|escapejs }}')">
+              <i class="bi bi-magic me-1"></i>Apply fix
+            </button>
+            {% endif %}
+            {% if w.suggestion %}
+            <button class="btn btn-sm py-0 px-2"
+                    style="font-size:.72rem;border:1px solid {% if w.level == 'error' %}#dc3545{% else %}#f59e0b{% endif %};opacity:.85;"
+                    onclick="toggleSuggestion(this)">
+              <i class="bi bi-lightbulb me-1"></i>Suggestion
+            </button>
+            {% endif %}
+            <button class="btn btn-sm py-0 px-1" title="Dismiss"
+                    style="font-size:.8rem;opacity:.5;border:none;background:none;color:var(--text);"
+                    onclick="this.closest('.validation-item').remove();_updatePanelVisibility()">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+        {% if w.suggestion %}
+        <div class="suggestion-box" style="display:none;padding:.6rem 1rem;
+             background:var(--surface);border-top:1px solid {% if w.level == 'error' %}color-mix(in srgb,#dc3545 25%,transparent){% else %}color-mix(in srgb,#f59e0b 25%,transparent){% endif %};">
+          <pre class="m-0 small" style="color:var(--text);white-space:pre-wrap;">{{ w.suggestion }}</pre>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <input type="hidden" id="result-form-data" value="{{ form_data_json|escape }}">
+
+    <!-- Output Tabs -->
+    <ul class="nav nav-tabs mb-0" id="outputTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-yaml-btn" data-bs-toggle="tab"
+          data-bs-target="#tab-yaml" type="button" role="tab">
+          <i class="bi bi-file-code me-1"></i>Kubernetes YAML
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-shell-btn" data-bs-toggle="tab"
+          data-bs-target="#tab-shell" type="button" role="tab">
+          <i class="bi bi-terminal me-1"></i>Shell Script
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content mb-4">
+      <!-- YAML Tab -->
+      <div class="tab-pane fade show active" id="tab-yaml" role="tabpanel">
+        <div class="card" style="border-top-left-radius:0; border-top-right-radius:0; border-top:0;">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
+            <span class="text-secondary small" id="yaml-mode-label">for Kubernetes YAML + systemd Quadlet</span>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" id="yaml-edit-btn" onclick="toggleYamlEdit()">
+                <i class="bi bi-pencil me-1"></i>Edit
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ pod_name }}.yaml', getYamlContent())" id="yaml-download-btn">
+                <i class="bi bi-download"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyYaml(this)">
+                <i class="bi bi-clipboard"></i> Copy
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-0" style="position:relative;">
+            {{ yaml_content|json_script:"yaml-raw-data" }}
+            <pre class="m-0 rounded-0 rounded-bottom" id="yaml-output" style="padding:0;"><span id="yaml-lines-wrap"></span></pre>
+            <script>
+            (function(){
+              const raw = JSON.parse(document.getElementById('yaml-raw-data').textContent);
+              const wrap = document.getElementById('yaml-lines-wrap');
+              wrap.innerHTML = raw.split('\n').map((l,i) =>
+                `<span class="yaml-line" data-i="${i}" style="display:block;padding:0 1rem;min-height:1.2em;">${l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`
+              ).join('');
+            })();
+            </script>
+            <textarea id="yaml-editor" class="m-0 rounded-0 rounded-bottom font-monospace"
+              spellcheck="false" autocomplete="off" autocorrect="off"
+              style="display:none;width:100%;min-height:400px;background:var(--surface);color:#a5f3fc;
+                     border:none;padding:1rem;font-size:.8rem;line-height:1.6;resize:vertical;outline:none;">{{ yaml_content }}</textarea>
+          </div>
+        </div>
+        <div class="card mt-2">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
+            <span class="text-secondary small"><i class="bi bi-gear me-1"></i>{{ pod_name }}.kube — Systemd Quadlet unit</span>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ pod_name }}.kube', document.getElementById('quadlet-output').textContent)">
+                <i class="bi bi-download"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'quadlet-output')">
+                <i class="bi bi-clipboard"></i> Copy
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <pre class="m-0 rounded-bottom" id="quadlet-output">{{ quadlet_content }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shell-Script Tab -->
+      <div class="tab-pane fade" id="tab-shell" role="tabpanel">
+        <div class="card" style="border-top-left-radius:0; border-top-right-radius:0; border-top:0;">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
+            <span class="text-secondary small">Immediately executable — for testing without systemd</span>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ pod_name }}.sh', document.getElementById('shell-output').textContent)">
+                <i class="bi bi-download"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'shell-output')">
+                <i class="bi bi-clipboard"></i> Copy
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <pre class="m-0 rounded-0 rounded-bottom" id="shell-output">{{ shell_content }}</pre>
+          </div>
+        </div>
+        <div class="mt-2 px-1">
+          <p class="text-secondary small mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            Ports are published on the pod (not on individual containers) — this is how the network works correctly. Init containers run before main containers and then exit. Stop commands are commented out — activate at the end if needed.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Speichern + Community Stack -->
+    <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+      <form method="post" action="{% url 'save_config' %}">
+        {% csrf_token %}
+        <input type="hidden" name="yaml_content" value="{{ yaml_content }}">
+        <input type="hidden" name="form_data_json" value="{{ form_data_json }}">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-link-45deg me-1"></i> Save as link (shareable)
+        </button>
+      </form>
+      {% if editing_stack_id %}
+      <button type="button" class="btn btn-outline-success btn-sm"
+        onclick="new bootstrap.Modal(document.getElementById('update-stack-modal')).show()">
+        <i class="bi bi-arrow-repeat me-1"></i>
+        Update stack
+      </button>
+      {% endif %}
+      {% if request.user.is_authenticated and not editing_stack_id %}
+      <button type="button" class="btn btn-outline-primary btn-sm"
+        onclick="new bootstrap.Modal(document.getElementById('submit-stack-modal')).show()">
+        <i class="bi bi-people me-1"></i>
+        Submit to Community
+      </button>
+      {% endif %}
+    </div>
+
+    <!-- Update-Stack Modal -->
+    {% if editing_stack_id %}
+    <div class="modal fade" id="update-stack-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered" style="max-width:500px;">
+        <div class="modal-content" style="background:var(--surface);border-color:var(--border);">
+          <div class="modal-header" style="border-color:var(--border);">
+            <h5 class="modal-title" style="font-size:.95rem;"><i class="bi bi-arrow-repeat me-2" style="color:#5eead4;"></i>Update stack</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form method="post" action="/update-stack/{{ editing_stack_id }}/">
+            {% csrf_token %}
+            <div class="modal-body">
+              <input type="hidden" name="form_data_json" value="{{ form_data_json }}">
+              <div class="mb-3">
+                <label class="form-label small" style="color:var(--text-dim);">Name</label>
+                <input type="text" name="name" class="form-control" maxlength="100" required
+                  value="{{ editing_stack_name|escapejs }}">
+              </div>
+              <div class="mb-3">
+                <label class="form-label small" style="color:var(--text-dim);">Description (optional)</label>
+                <input type="text" name="description" class="form-control" maxlength="300"
+                  value="{{ editing_stack_description|escapejs }}">
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                  <label class="form-label small" style="color:var(--text-dim);">Category</label>
+                  <input type="text" name="category" class="form-control" maxlength="50"
+                    placeholder="e.g. Database, CMS, Monitoring"
+                    value="{{ editing_stack_category|escapejs }}"
+                    list="category-suggestions-update">
+                  <datalist id="category-suggestions-update">
+                    <option value="Database"><option value="CMS"><option value="Monitoring">
+                    <option value="Git"><option value="Media"><option value="Backup">
+                    <option value="Network"><option value="Security"><option value="Other">
+                    <option value="Finance"><option value="Productivity"><option value="Home Automation">
+                  </datalist>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label small" style="color:var(--text-dim);">Icon</label>
+                  <div class="d-flex gap-2 align-items-center mb-1">
+                    <i id="icon-preview-update" class="bi {{ editing_stack_icon }}" style="font-size:1.4rem;color:#5eead4;width:28px;text-align:center;flex-shrink:0;"></i>
+                    <input type="text" name="icon" id="icon-input-update" class="form-control form-control-sm" maxlength="60"
+                      value="{{ editing_stack_icon }}"
+                      placeholder="bi-box"
+                      oninput="document.getElementById('icon-preview-update').className='bi '+this.value;filterIconPicker('icon-grid-update',this.value)">
+                  </div>
+                  <div id="icon-grid-update" style="display:flex;flex-wrap:wrap;gap:3px;max-height:96px;overflow-y:auto;"></div>
+                  <script>renderIconPicker('icon-grid-update','icon-preview-update','icon-input-update');</script>
+                </div>
+              </div>
+              <p class="small mb-0" style="color:var(--text-muted);">
+                <i class="bi bi-info-circle me-1"></i>
+                After updating, the stack needs to be re-approved by the admin.
+              </p>
+            </div>
+            <div class="modal-footer" style="border-color:var(--border);">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-success btn-sm">
+                <i class="bi bi-check-lg me-1"></i>Update
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+
+    <!-- Submit-to-Community Modal -->
+    {% if request.user.is_authenticated and not editing_stack_id %}
+    <div class="modal fade" id="submit-stack-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered" style="max-width:500px;">
+        <div class="modal-content" style="background:var(--surface);border-color:var(--border);">
+          <div class="modal-header" style="border-color:var(--border);">
+            <h5 class="modal-title" style="font-size:.95rem;"><i class="bi bi-people me-2" style="color:#5eead4;"></i>Submit to Community</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="submit-stack-form">
+            {% csrf_token %}
+            <div class="modal-body">
+              <input type="hidden" name="form_data_json" value="{{ form_data_json }}">
+              <div class="mb-3">
+                <label class="form-label small" style="color:var(--text-dim);">Name</label>
+                <input type="text" name="name" class="form-control" maxlength="100" required
+                  placeholder="e.g. Nextcloud + MariaDB">
+              </div>
+              <div class="mb-3">
+                <label class="form-label small" style="color:var(--text-dim);">Description <span style="color:var(--text-muted);">(optional)</span></label>
+                <input type="text" name="description" class="form-control" maxlength="300"
+                  placeholder="Short description of what this stack does">
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                  <label class="form-label small" style="color:var(--text-dim);">Category</label>
+                  <input type="text" name="category" class="form-control" maxlength="50"
+                    placeholder="e.g. Database, CMS, Monitoring"
+                    list="category-suggestions-submit">
+                  <datalist id="category-suggestions-submit">
+                    <option value="Database"><option value="CMS"><option value="Monitoring">
+                    <option value="Git"><option value="Media"><option value="Backup">
+                    <option value="Network"><option value="Security"><option value="Other">
+                    <option value="Finance"><option value="Productivity"><option value="Home Automation">
+                  </datalist>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label small" style="color:var(--text-dim);">Icon</label>
+                  <div class="d-flex gap-2 align-items-center mb-1">
+                    <i id="icon-preview-submit" class="bi bi-box" style="font-size:1.4rem;color:#5eead4;width:28px;text-align:center;flex-shrink:0;"></i>
+                    <input type="text" name="icon" id="icon-input-submit" class="form-control form-control-sm" maxlength="60"
+                      value="bi-box" placeholder="Search icon…"
+                      oninput="document.getElementById('icon-preview-submit').className='bi '+this.value;filterIconPicker('icon-grid-submit',this.value)">
+                  </div>
+                  <div id="icon-grid-submit" style="display:flex;flex-wrap:wrap;gap:3px;max-height:96px;overflow-y:auto;"></div>
+                  <script>renderIconPicker('icon-grid-submit','icon-preview-submit','icon-input-submit');</script>
+                </div>
+              </div>
+              <p class="small mb-0" style="color:var(--text-muted);">
+                <i class="bi bi-info-circle me-1"></i>
+                The stack will be reviewed by an admin before appearing in the community.
+              </p>
+              <div id="submit-stack-msg" class="mt-2" style="display:none;"></div>
+            </div>
+            <div class="modal-footer" style="border-color:var(--border);">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bi bi-send me-1"></i>Submit
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script>
+    document.getElementById('submit-stack-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = this;
+      const btn = form.querySelector('[type=submit]');
+      const msg = document.getElementById('submit-stack-msg');
+      btn.disabled = true;
+      const data = new FormData(form);
+      fetch('/submit-stack/', {method:'POST', body:data, headers:{'X-CSRFToken': data.get('csrfmiddlewaretoken')}})
+        .then(r => r.json())
+        .then(d => {
+          if (d.ok) {
+            msg.style.display = '';
+            msg.innerHTML = '<div class="alert alert-success py-2 mb-0 small"><i class="bi bi-check-circle me-1"></i>Stack submitted! It will appear after admin approval.</div>';
+            btn.style.display = 'none';
+          } else {
+            msg.style.display = '';
+            msg.innerHTML = '<div class="alert alert-danger py-2 mb-0 small">' + (d.message || 'Error. Please try again.') + '</div>';
+            btn.disabled = false;
+          }
+        })
+        .catch(() => { btn.disabled = false; });
+    });
+    </script>
+    {% endif %}
+
+    <hr class="border-secondary my-4">
+
+    <!-- Deployment-Anleitung -->
+    <h2 class="h5 mb-3">
+      <i class="bi bi-terminal me-2 text-success"></i>Deployment Guide
+      {% if mode == 'rootful' %}
+        <span class="badge bg-warning text-dark ms-2">rootful</span>
+      {% else %}
+        <span class="badge bg-success ms-2">rootless</span>
+      {% endif %}
+    </h2>
+
+    {% if mode == 'rootful' %}
+      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name %}
+    {% else %}
+      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name %}
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+const _STACK_ICONS = [
+  'bi-box','bi-box-seam','bi-boxes',
+  'bi-database','bi-database-fill','bi-hdd-stack','bi-hdd-network','bi-hdd',
+  'bi-cloud','bi-cloud-upload','bi-cloud-download','bi-cloud-check',
+  'bi-server','bi-cpu','bi-memory','bi-motherboard',
+  'bi-gear','bi-gear-wide','bi-sliders','bi-wrench-adjustable',
+  'bi-shield','bi-shield-check','bi-shield-lock','bi-lock','bi-key',
+  'bi-globe','bi-globe2','bi-wifi','bi-router','bi-ethernet',
+  'bi-camera-video','bi-camera','bi-music-note','bi-film','bi-image','bi-collection-play',
+  'bi-git','bi-github','bi-code-slash','bi-file-code','bi-terminal','bi-braces',
+  'bi-graph-up','bi-bar-chart','bi-pie-chart','bi-activity','bi-speedometer2',
+  'bi-people','bi-person','bi-person-badge','bi-envelope','bi-chat','bi-bell',
+  'bi-house','bi-house-gear','bi-building','bi-door-open',
+  'bi-archive','bi-folder','bi-folder2','bi-file-zip','bi-clipboard',
+  'bi-robot','bi-cpu-fill','bi-pc-display','bi-laptop','bi-phone',
+  'bi-calendar','bi-clock','bi-alarm','bi-hourglass',
+  'bi-printer','bi-camera2','bi-webcam','bi-headset','bi-joystick',
+  'bi-cash-coin','bi-currency-euro','bi-wallet','bi-piggy-bank','bi-credit-card',
+  'bi-book','bi-bookmark','bi-journal','bi-newspaper','bi-rss',
+  'bi-lightbulb','bi-plug','bi-outlet','bi-battery-charging','bi-thermometer',
+  'bi-heart','bi-star','bi-trophy','bi-flag','bi-tag',
+  'bi-share','bi-link-45deg','bi-send','bi-upload','bi-download',
+  'bi-search','bi-funnel','bi-list-ul','bi-grid','bi-table',
+];
+
+function showToast(msg, type) {
+  const colors = {
+    success: {bg:'rgba(74,222,128,.12)', border:'rgba(74,222,128,.4)', text:'#4ade80', icon:'bi-check-circle'},
+    warning: {bg:'rgba(251,191,36,.12)', border:'rgba(251,191,36,.4)', text:'#fbbf24', icon:'bi-clock'},
+    error:   {bg:'rgba(239,68,68,.12)', border:'rgba(239,68,68,.4)', text:'#f87171', icon:'bi-exclamation-circle'},
+  };
+  const c = colors[type] || colors.error;
+  const id = 'toast-' + Date.now();
+  const el = document.createElement('div');
+  el.id = id;
+  el.style.cssText = `position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;max-width:360px;
+    background:${c.bg};border:1px solid ${c.border};border-radius:10px;
+    padding:.75rem 1rem;display:flex;align-items:center;gap:.6rem;
+    box-shadow:0 4px 24px rgba(0,0,0,.4);animation:fadeInUp .2s ease;`;
+  el.innerHTML = `<i class="bi ${c.icon}" style="color:${c.text};font-size:1.1rem;flex-shrink:0;"></i>
+    <span style="color:var(--text);font-size:.875rem;">${msg}</span>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);margin-left:auto;font-size:1rem;cursor:pointer;line-height:1;">×</button>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 6000);
+}
+
+function _iconBtn(ic, previewId, inputId) {
+  return `<button type="button" title="${ic}"
+    style="background:var(--surface-2);border:1px solid var(--border);border-radius:4px;width:28px;height:28px;padding:0;flex-shrink:0;cursor:pointer;"
+    onclick="document.getElementById('${previewId}').className='bi ${ic}';if(document.getElementById('${inputId}'))document.getElementById('${inputId}').value='${ic}';this.closest('form').querySelector('[name=icon]').value='${ic}'">
+    <i class='bi ${ic}' style='font-size:.8rem;color:#5eead4;'></i>
+  </button>`;
+}
+
+function renderIconPicker(containerId, previewId, inputId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = _STACK_ICONS.map(ic => _iconBtn(ic, previewId, inputId || '')).join('');
+}
+
+function filterIconPicker(containerId, query) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const previewId = containerId.replace('icon-grid-', 'icon-preview-');
+  const inputId   = containerId.replace('icon-grid-', 'icon-input-');
+  const q = query.replace('bi-', '').toLowerCase();
+  const filtered = q.length < 2 ? _STACK_ICONS : _STACK_ICONS.filter(ic => ic.includes(q));
+  el.innerHTML = filtered.map(ic => _iconBtn(ic, previewId, inputId)).join('');
+}
+
+const _RT = {
+  edit: "Edit",
+  preview: "Preview",
+  editMode: "Edit mode",
+  copied: "Copied",
+};
+
+let _yamlEditMode = false;
+
+function getYamlContent() {
+  if (_yamlEditMode) return document.getElementById('yaml-editor').value;
+  const wrap = document.getElementById('yaml-lines-wrap');
+  if (wrap) {
+    return Array.from(wrap.querySelectorAll('.yaml-line')).map(s => s.textContent).join('\n');
+  }
+  return document.getElementById('yaml-output').textContent;
+}
+
+function _updatePanelVisibility() {
+  const panel = document.getElementById('validation-panel');
+  if (!panel) return;
+  const remaining = panel.querySelectorAll('.validation-item');
+  if (remaining.length === 0) panel.style.display = 'none';
+}
+
+function toggleYamlEdit() {
+  const pre = document.getElementById('yaml-output');
+  const ta  = document.getElementById('yaml-editor');
+  const btn = document.getElementById('yaml-edit-btn');
+  const lbl = document.getElementById('yaml-mode-label');
+  const editWarn = document.getElementById('yaml-edit-warning');
+
+  _yamlEditMode = !_yamlEditMode;
+
+  if (_yamlEditMode) {
+    ta.value = getYamlContent();
+    pre.style.display = 'none';
+    ta.style.display  = 'block';
+    ta.style.minHeight = Math.max(pre.scrollHeight, 400) + 'px';
+    btn.innerHTML = `<i class="bi bi-eye me-1"></i>${_RT.preview}`;
+    btn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+    lbl.innerHTML = `<span style="color:#fbbf24;"><i class="bi bi-pencil me-1"></i>${_RT.editMode}</span>`;
+    if (editWarn) editWarn.style.display = '';
+    ta.focus();
+  } else {
+    // Re-render lines from edited content
+    const newContent = ta.value;
+    const wrap = document.getElementById('yaml-lines-wrap');
+    if (wrap) {
+      wrap.innerHTML = newContent.split('\n').map((l,i) =>
+        `<span class="yaml-line" data-i="${i}" style="display:block;padding:0 1rem;min-height:1.2em;">${l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`
+      ).join('');
+    }
+    ta.style.display  = 'none';
+    pre.style.display = 'block';
+    btn.innerHTML = `<i class="bi bi-pencil me-1"></i>${_RT.edit}`;
+    btn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+    lbl.textContent = 'for Kubernetes YAML + systemd Quadlet';
+    if (editWarn) editWarn.style.display = 'none';
+  }
+}
+
+function copyYaml(btn) {
+  const text = getYamlContent();
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<i class="bi bi-check"></i> ${_RT.copied}`;
+    setTimeout(() => btn.innerHTML = orig, 1800);
+  });
+}
+
+// ── Validation highlight ──────────────────────────────────────────
+let _activeItem = null;
+
+function _clearHighlights() {
+  document.querySelectorAll('.yaml-line.hl-error,.yaml-line.hl-warn').forEach(el => {
+    el.classList.remove('hl-error','hl-warn');
+    el.style.background = '';
+    el.style.borderLeft = '';
+  });
+  if (_activeItem) { _activeItem.style.outline = ''; _activeItem = null; }
+}
+
+function highlightLines(btn, hint) {
+  _clearHighlights();
+  const item = btn.closest('.validation-item');
+  const isError = item.querySelector('.bi-x-circle') !== null;
+  const color = isError ? '#dc354533' : '#f59e0b33';
+  const border = isError ? '3px solid #dc3545' : '3px solid #f59e0b';
+
+  const escaped = hint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rx = new RegExp(escaped);
+  let first = null;
+  document.querySelectorAll('.yaml-line').forEach(span => {
+    if (rx.test(span.textContent)) {
+      span.style.background = color;
+      span.style.borderLeft = border;
+      if (!first) first = span;
+    }
+  });
+  if (first) {
+    first.scrollIntoView({ behavior:'smooth', block:'center' });
+    _activeItem = item;
+    item.style.outline = `2px solid ${isError ? '#dc3545' : '#f59e0b'}`;
+  }
+}
+
+function toggleSuggestion(btn) {
+  const box = btn.closest('.validation-item').querySelector('.suggestion-box');
+  if (!box) return;
+  const open = box.style.display !== 'none';
+  box.style.display = open ? 'none' : 'block';
+  btn.innerHTML = open
+    ? '<i class="bi bi-lightbulb me-1"></i>Suggestion'
+    : '<i class="bi bi-lightbulb-fill me-1"></i>Suggestion';
+}
+
+function applyFix(fixJson) {
+  const fix = JSON.parse(fixJson);
+  const formData = JSON.parse(document.getElementById('result-form-data').value);
+  if (fix.type === 'replace_env_value') {
+    (formData.containers || []).forEach(c => {
+      const lines = (c.env || '').split('\n').map(line => {
+        const idx = line.indexOf('=');
+        if (idx < 0) return line;
+        const val = line.slice(idx + 1);
+        return val === fix.old_value ? line.slice(0, idx + 1) + fix.new_value : line;
+      });
+      c.env = lines.join('\n');
+    });
+  } else if (fix.type === 'rename_env_key') {
+    (formData.containers || []).forEach(c => {
+      const lines = (c.env || '').split('\n').map(line => {
+        const idx = line.indexOf('=');
+        if (idx < 0) return line;
+        const key = line.slice(0, idx).trim();
+        return key === fix.old_key ? fix.new_key + '=' + line.slice(idx + 1) : line;
+      });
+      c.env = lines.join('\n');
+    });
+  }
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/builder/generate/';
+  [['csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value],
+   ['form_data_json', JSON.stringify(formData)]].forEach(([n, v]) => {
+    const inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = n; inp.value = v;
+    form.appendChild(inp);
+  });
+  document.body.appendChild(form);
+  form.submit();
+}
+
+</script>
+<style>
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,4131 @@
+{% extends "base.html" %}
+{% block title %}Pod Builder — {{ site.brand_name }}{% endblock %}
+{% block meta_description %}Visually design Kubernetes YAML pod configurations for Podman with the drag-and-drop Pod Builder. Import Docker Compose files and export ready-to-use YAML.{% endblock %}
+{% block main_class %}p-0 w-100{% endblock %}
+{% block extra_head %}
+<style>
+/* ── Layout ─────────────────────────────────────────────────── */
+#cv-layout {
+  display: flex;
+  height: calc(100vh - var(--nav-h, 58px));
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+#cv-sidebar {
+  width: 290px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#cv-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  padding: .75rem .65rem .75rem;
+  gap: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.cvs-section        { margin-bottom: 1.1rem; }
+.cvs-section-grow   { flex: 1; display: flex; flex-direction: column; margin-bottom: 1rem; }
+.cvs-label {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-muted);
+  margin-bottom: .45rem;
+}
+.cvs-field          { margin-bottom: .35rem; }
+.cvs-field-label    { font-size: .72rem; color: var(--text-dim); display: block; margin-bottom: .15rem; }
+.cvs-cat-label {
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  padding: .45rem .2rem .15rem;
+}
+/* Sidebar tabs */
+.cvs-tabs { display:flex; gap:2px; margin-bottom:.6rem; background:var(--surface-2); border-radius:6px; padding:2px; flex-shrink:0; }
+.cvs-tab { flex:1; background:transparent; border:none; border-radius:4px; padding:.3rem .4rem; font-size:.72rem; font-weight:600; color:var(--text-muted); cursor:pointer; transition:background .15s,color .15s; }
+.cvs-tab.active { background:var(--accent); color:#fff; }
+.cvs-tab:not(.active):hover { background:var(--surface-3); color:var(--text); }
+
+/* Collapsible sections (Images / Stacks) */
+.cvs-collapse { border-bottom: 1px solid var(--border); margin-bottom: .2rem; }
+.cvs-collapse-hd {
+  display: flex; align-items: center; gap: .45rem;
+  padding: .35rem .1rem; cursor: pointer; list-style: none;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-muted);
+  user-select: none;
+}
+.cvs-collapse-hd::-webkit-details-marker { display: none; }
+.cvs-collapse-hd i:first-child { color: var(--accent); font-size: .85rem; }
+.cvs-collapse-hd span { flex: 1; }
+.cvs-collapse-chev { font-size: .65rem; transition: transform .18s; }
+details.cvs-collapse[open] .cvs-collapse-chev { transform: rotate(90deg); }
+.cvs-collapse-body { padding: .3rem 0 .5rem; }
+
+/* Stack buttons */
+.cvs-stacks-list {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  gap: 1px;
+}
+.cvs-stack-btn {
+  display: flex !important;
+  align-items: center;
+  gap: .4rem;
+  width: 100% !important;
+  padding: .28rem .45rem;
+  box-sizing: border-box;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: .8rem;
+  cursor: pointer;
+  border-radius: var(--r);
+  text-align: left;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.cvs-stack-btn:hover { background: var(--surface-3); color: var(--text); }
+.cvs-stack-btn i    { font-size: .85rem; color: var(--accent); flex-shrink: 0; }
+.cvs-stack-btn span { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+
+/* Category pills */
+.cv-cat-pills { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: .5rem; }
+.cv-cat-pill {
+  font-size: .68rem; padding: .18rem .55rem;
+  background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--text-muted); border-radius: 20px; cursor: pointer;
+  transition: all .12s; white-space: nowrap;
+}
+.cv-cat-pill:hover  { border-color: var(--accent); color: var(--accent); }
+.cv-cat-pill.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+
+/* Image catalog grid */
+#cv-catalog { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: .25rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.cv-cat-card {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: .35rem .5rem;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  user-select: none;
+  width: 100%;
+}
+.cv-cat-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+
+}
+.cv-cat-card:active { }
+.cv-cat-card-icon {
+  width: 26px; height: 26px;
+  background: var(--accent-soft);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: .85rem;
+  color: var(--accent);
+}
+.cv-cat-card-name { font-size: .78rem; font-weight: 600; color: var(--text); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cv-cat-card-desc { display: block; font-size: .68rem; color: var(--text-muted); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Controls ─────────────────────────────────────────── */
+.cv-ctrl {
+  display: block; width: 100%;
+  background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--r);
+  font-size: .82rem; padding: .3rem .45rem; outline: none;
+  transition: border-color .15s;
+}
+.cv-ctrl:focus { border-color: var(--accent); }
+select.cv-ctrl  { appearance: auto; }
+
+/* ── Toolbar ──────────────────────────────────────────── */
+#cv-canvas-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+#cv-db-hint {
+  display: none; align-items: center; gap: .6rem;
+  padding: .45rem .75rem; font-size: .82rem;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--text); flex-shrink: 0;
+}
+#cv-db-hint.show { display: flex; }
+#cv-db-hint.warn {
+  background: color-mix(in srgb, #dc3545 10%, var(--surface));
+  border-bottom-color: color-mix(in srgb, #dc3545 35%, transparent);
+}
+#cv-db-hint .cv-db-hint-msg { flex: 1; }
+#cv-db-hint .btn { font-size: .78rem; padding: .2rem .6rem; }
+/* ── Tips panel ─────────────────────────────────────── */
+#cv-tips-panel {
+  display: none; flex-direction: column; flex-shrink: 0;
+  border-bottom: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);
+  background: color-mix(in srgb, #f59e0b 8%, var(--surface));
+}
+#cv-tips-panel.show { display: flex; }
+.cv-tip-row {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .35rem .75rem; font-size: .8rem; color: var(--text);
+  border-bottom: 1px solid color-mix(in srgb, #f59e0b 15%, transparent);
+}
+.cv-tip-row:last-child { border-bottom: none; }
+.cv-tip-row.error { background: color-mix(in srgb, #ef4444 8%, transparent); border-bottom-color: color-mix(in srgb, #ef4444 15%, transparent); }
+.cv-tip-icon { color: #f59e0b; flex-shrink: 0; }
+.cv-tip-row.error .cv-tip-icon { color: #ef4444; }
+.cv-tip-msg { flex: 1; }
+.cv-tip-apply { font-size: .72rem; padding: .15rem .55rem; flex-shrink: 0; }
+.cv-tip-dismiss { background: none; border: none; color: var(--text-muted); font-size: .8rem; cursor: pointer; padding: 0 .2rem; flex-shrink: 0; }
+#cv-toolbar {
+  display: flex; align-items: center;
+  padding: .42rem .75rem;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cv-counter-txt { font-size: .78rem; color: var(--text-muted); }
+
+/* ── Canvas ──────────────────────────────────────────── */
+#cv-canvas {
+  flex: 1; position: relative; overflow: auto;
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+#cv-hint {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center; pointer-events: none; user-select: none;
+}
+.cv-hint-inner i   { font-size: 3rem; opacity: .15; }
+.cv-hint-inner p   { color: var(--text-muted); margin: .6rem 0 0; font-size: .9rem; }
+
+/* ── Pod Network Bubble (SVG) ────────────────────────── */
+/* drawn via renderSvg() — styles applied as SVG attributes */
+
+/* ── Node loading spinner ────────────────────────────── */
+@keyframes cv-spin { to { transform: rotate(360deg); } }
+.cv-node-loading { position: relative; }
+.cv-node-loading::after {
+  content: '';
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 10px; height: 10px;
+  border: 2px solid var(--accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: cv-spin .7s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── Nodes ───────────────────────────────────────────── */
+.cv-node {
+  position: absolute; width: 185px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: 0 3px 14px rgba(0,0,0,.32);
+  transition: border-color .15s, box-shadow .15s;
+  pointer-events: all; user-select: none;
+}
+.cv-node:hover       { border-color: var(--border-mid); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+.cv-node.cv-selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow), 0 6px 20px rgba(0,0,0,.4); }
+
+.cv-node-head {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .5rem .6rem .35rem;
+  cursor: grab; border-bottom: 1px solid var(--border);
+}
+.cv-node-head:active { cursor: grabbing; }
+.cv-node-ico {
+  width: 26px; height: 26px;
+  background: var(--accent-soft); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: .9rem; color: var(--accent);
+}
+.cv-node-name {
+  font-size: .82rem; font-weight: 600; color: var(--text);
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cv-node-dup, .cv-node-del {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; padding: 0; font-size: .85rem; line-height: 1;
+  opacity: 0.35; transition: opacity .1s, color .1s; flex-shrink: 0;
+}
+.cv-node:hover .cv-node-dup,
+.cv-node:hover .cv-node-del { opacity: 1; }
+.cv-node-dup:hover { color: var(--accent); }
+.cv-node-del:hover { color: #ef4444; }
+
+.cv-node-body {
+  padding: .4rem .6rem .55rem; cursor: pointer;
+}
+.cv-node-img  { font-size: .7rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: .3rem; }
+.cv-badges    { display: flex; flex-wrap: wrap; gap: .2rem; }
+.cv-badge     { font-size: .62rem; padding: .08rem .3rem; border-radius: 3px; white-space: nowrap; }
+.cv-bp { background: rgba(20,184,166,.15);  color: var(--accent); }
+.cv-bv { background: rgba(34,211,238,.1);   color: var(--accent-2); }
+.cv-be { background: rgba(156,163,175,.08); color: var(--text-muted); }
+
+.cv-node-cfg-hint {
+  display: none; text-align: center;
+  font-size: .68rem; color: var(--accent); padding: .15rem 0 .2rem;
+  border-top: 1px solid var(--border);
+}
+.cv-node:hover .cv-node-cfg-hint { display: block; }
+
+/* ── Fix-Modals über Warnings-Modal stapeln ──────────── */
+#passwords-fix-modal,
+#hostpath-fix-modal,
+#env-paste-modal { z-index: 1065; }
+
+/* ── Config Modal ────────────────────────────────────── */
+.cv-modal-content {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.cv-modal-header {
+  background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cv-modal-icon {
+  width: 44px; height: 44px;
+  background: var(--accent-soft); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; color: var(--accent); flex-shrink: 0;
+}
+.cv-modal-title    { font-size: 1rem; font-weight: 700; color: var(--text); }
+.cv-modal-subtitle { font-size: .78rem; margin-top: .1rem; }
+.cv-modal-tabs {
+  background: var(--surface-3);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1rem;
+  flex-shrink: 0;
+}
+.cv-modal-tabs .nav-link {
+  color: var(--text-dim); font-size: .82rem; padding: .55rem .8rem;
+  border: none; border-bottom: 2px solid transparent;
+  background: none; border-radius: 0; margin-bottom: -1px;
+  transition: color .15s;
+}
+.cv-modal-tabs .nav-link:hover  { color: var(--text); }
+.cv-modal-tabs .nav-link.active { color: var(--accent); border-bottom-color: var(--accent); }
+.cv-modal-body  { padding: 1.25rem; max-height: 60vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.cv-modal-footer { background: var(--surface-3); border-top: 1px solid var(--border); padding: .65rem 1rem; }
+
+/* Config tabs content */
+.cfg-section     { margin-bottom: 1.25rem; }
+.cfg-section-title {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-muted);
+  margin-bottom: .6rem; display: flex; align-items: center; gap: .4rem;
+}
+.cfg-section-title i { color: var(--accent); font-size: .8rem; }
+
+/* Inputs in modal */
+.cfg-inp {
+  background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--r);
+  font-size: .83rem; padding: .35rem .5rem; outline: none;
+  transition: border-color .15s; min-width: 0;
+}
+.cfg-inp:focus { border-color: var(--accent); }
+.cfg-inp-full  { width: 100%; display: block; }
+.cfg-inp-sm    { font-size: .78rem !important; padding: .25rem .35rem !important; }
+.cfg-inp-num   { width: 72px; text-align: center; flex-shrink: 0; }
+
+/* Port/Vol/Env rows */
+.cfg-row { display: flex; align-items: center; gap: .3rem; margin-bottom: .3rem; }
+.cfg-sep { color: var(--text-muted); font-size: .8rem; flex-shrink: 0; padding: 0 .1rem; }
+.cfg-rdel {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; padding: .15rem .25rem; font-size: .85rem;
+  border-radius: var(--r); flex-shrink: 0; transition: color .1s, background .1s;
+}
+.cfg-rdel:hover { color: #ef4444; background: rgba(239,68,68,.1); }
+
+.cfg-port-name {
+  font-size: .68rem; color: var(--text-muted);
+  padding: .25rem .4rem; flex-shrink: 0;
+  min-width: 80px; text-align: left;
+}
+.cfg-port-name.known { color: var(--accent-2); }
+
+/* Add button */
+.cfg-add {
+  display: flex; align-items: center; justify-content: center; gap: .3rem;
+  width: 100%; padding: .3rem .5rem;
+  background: none; border: 1px dashed var(--border-mid); color: var(--text-muted);
+  border-radius: var(--r); font-size: .78rem; cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.cfg-add:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Volume type select */
+.cfg-vol-type {
+  flex-shrink: 0; width: 110px;
+  background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--text-dim); border-radius: var(--r);
+  font-size: .75rem; padding: .25rem .3rem; outline: none;
+  cursor: pointer;
+}
+
+/* Environment tab */
+.cfg-env-field { margin-bottom: .75rem; }
+.cfg-env-label {
+  font-size: .8rem; font-weight: 600; color: var(--text); display: block; margin-bottom: .12rem;
+}
+.cfg-env-key   { font-size: .65rem; color: var(--text-muted); font-family: monospace; margin-bottom: .2rem; }
+
+/* Env password visibility toggle */
+.cfg-pw-wrap { position: relative; }
+.cfg-pw-wrap .cfg-inp { padding-right: 4rem; }
+.cfg-pw-toggle {
+  position: absolute; right: .45rem; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: .85rem; padding: 0;
+  transition: color .1s;
+}
+.cfg-pw-toggle:hover { color: var(--text); }
+.cfg-pw-gen {
+  position: absolute; right: 1.9rem; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: .85rem; padding: 0;
+  transition: color .1s;
+}
+.cfg-pw-gen:hover { color: var(--accent); }
+
+/* Resources tab */
+.cfg-res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-bottom: .75rem; }
+.cfg-res-field label { font-size: .75rem; color: var(--text-dim); display: block; margin-bottom: .2rem; }
+.cfg-res-hint  { font-size: .66rem; color: var(--text-muted); margin-top: .15rem; }
+.cfg-checkbox-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem; }
+.cfg-checkbox-row input { accent-color: var(--accent); cursor: pointer; }
+.cfg-checkbox-row label { font-size: .82rem; color: var(--text-dim); cursor: pointer; }
+
+/* ── Docker Hub search results ───────────────────────── */
+.cv-hub-chip {
+  background: var(--surface-3); border: 1px solid var(--border);
+  border-radius: var(--r); padding: .35rem .5rem; margin-bottom: .25rem;
+  cursor: pointer; transition: border-color .12s, background .12s;
+}
+.cv-hub-chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+.cv-hub-chip-top { display: flex; align-items: center; gap: .35rem; }
+.cv-hub-official {
+  font-size: .6rem; font-weight: 700; padding: .05rem .3rem;
+  background: #16a34a; color: #fff; border-radius: 3px; flex-shrink: 0;
+}
+.cv-hub-name { font-size: .78rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cv-hub-desc { font-size: .65rem; color: var(--text-muted); margin-top: .1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Live validation badge on nodes ─────────────────── */
+.cv-node-warn-badge {
+  position: absolute; top: 4px; right: 26px;
+  width: 15px; height: 15px; border-radius: 50%;
+  font-size: 8px; font-weight: 700; line-height: 15px; text-align: center;
+  pointer-events: all; cursor: pointer; z-index: 5;
+}
+.cv-node-warn-badge.warn  { background: #f59e0b; color: #000; }
+.cv-node-warn-badge.error { background: #ef4444; color: #fff; }
+.cv-warn-popover {
+  position: fixed; z-index: 9999;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: .75rem; min-width: 260px; max-width: 340px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5); font-size: .78rem;
+}
+.cv-warn-popover-title {
+  font-weight: 600; margin-bottom: .5rem; color: var(--text);
+  display: flex; align-items: center; gap: .4rem;
+}
+.cv-warn-popover-item {
+  padding: .3rem 0; border-bottom: 1px solid var(--border);
+  display: flex; gap: .5rem; align-items: flex-start; color: var(--text-muted);
+  line-height: 1.4;
+}
+.cv-warn-popover-item:last-child { border-bottom: none; }
+.cv-warn-popover-item i.error { color: #ef4444; }
+.cv-warn-popover-item i.warn  { color: #f59e0b; }
+
+/* ── Pod name error ──────────────────────────────────── */
+.cv-pod-name-err { font-size: .63rem; color: #ef4444; margin-top: .1rem; display: none; }
+.cv-pod-name-err.show { display: block; }
+
+/* ── Image Inspector ─────────────────────────────────── */
+.insp-section { margin-bottom: 1rem; }
+.insp-section-title { font-size: .7rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-muted); margin-bottom: .4rem; }
+.insp-row { display: flex; align-items: baseline; gap: .5rem;
+  font-size: .8rem; padding: .2rem 0; border-bottom: 1px solid var(--border); }
+.insp-row:last-child { border-bottom: none; }
+.insp-key { color: var(--text-muted); flex-shrink: 0; min-width: 80px; font-size: .75rem; }
+.insp-val { color: var(--text); font-family: monospace; font-size: .78rem; word-break: break-all; }
+.insp-tag-list { display: flex; flex-wrap: wrap; gap: .3rem; }
+.insp-tag { background: var(--surface-3); border: 1px solid var(--border);
+  border-radius: 3px; padding: .1rem .4rem; font-size: .72rem; font-family: monospace;
+  cursor: pointer; transition: background .15s; }
+.insp-tag:hover { background: var(--surface-2); border-color: var(--accent); }
+.insp-tag.current { border-color: var(--accent); color: var(--accent); }
+.insp-vuln-bar { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .3rem; }
+.insp-vuln-pill { padding: .15rem .55rem; border-radius: 99px; font-size: .72rem;
+  font-weight: 600; }
+.insp-vuln-pill.critical { background: rgba(239,68,68,.2); color: #f87171; }
+.insp-vuln-pill.high     { background: rgba(249,115,22,.2); color: #fb923c; }
+.insp-vuln-pill.medium   { background: rgba(245,158,11,.2); color: #fbbf24; }
+.insp-vuln-pill.low      { background: rgba(34,197,94,.15); color: #4ade80; }
+.insp-vuln-none { font-size: .78rem; color: #4ade80; }
+.insp-scout-link { font-size: .75rem; color: var(--accent); text-decoration: none; }
+.insp-scout-link:hover { text-decoration: underline; }
+.insp-stat { font-size: .75rem; color: var(--text-muted); }
+.insp-stat span { color: var(--text); font-weight: 600; }
+
+/* ── Version picker ──────────────────────────────────── */
+.cfg-ver-btns { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .4rem; }
+.cfg-ver-btn {
+  font-size: .68rem; padding: .12rem .45rem;
+  border: 1px solid var(--border); border-radius: 3px;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.cfg-ver-btn:hover, .cfg-ver-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── Canvas hint banner ──────────────────────────────── */
+.pb-hint-chips { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; margin-top: .5rem; }
+.pb-hint-chip {
+  font-size: .72rem; color: var(--text-dim);
+  background: var(--surface-3); border: 1px solid var(--border);
+  border-radius: 20px; padding: .18rem .6rem;
+}
+
+/* ── Sidebar Network section ─────────────────────────── */
+.cvs-net-details { margin-bottom: .8rem; }
+.cvs-net-summary {
+  display: flex; align-items: center; cursor: pointer;
+  list-style: none; margin-bottom: 0; padding: .3rem .4rem;
+  justify-content: space-between;
+  background: var(--surface-3); border: 1px solid var(--border);
+  border-radius: var(--r); user-select: none;
+}
+.cvs-net-summary:hover { border-color: var(--accent); color: var(--text); }
+.cvs-net-summary::-webkit-details-marker { display: none; }
+.cvs-net-chev { font-size: .65rem; color: var(--text-muted); transition: transform .15s; flex-shrink: 0; }
+details[open] .cvs-net-chev { transform: rotate(90deg); }
+details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.cvs-net-body { border: 1px solid var(--accent); border-top: none; border-radius: 0 0 var(--r) var(--r); padding: .5rem .4rem .4rem; margin-bottom: .1rem; }
+.cvs-net-body { padding-top: .45rem; }
+.cvs-net-checks { display: flex; flex-direction: column; gap: .2rem; margin-bottom: .45rem; }
+.cvs-net-check { display: flex; align-items: center; gap: .4rem; cursor: pointer; padding: .1rem 0; }
+.cvs-net-check input { accent-color: var(--accent); cursor: pointer; margin: 0; }
+.cvs-net-check span { font-size: .75rem; color: var(--text-dim); }
+.cvs-field-disabled { opacity: .35; pointer-events: none; }
+
+/* ── Memory quickselect ──────────────────────────────── */
+.cfg-res-quickbtns { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .3rem; }
+.cfg-res-qbtn {
+  font-size: .7rem; padding: .15rem .4rem;
+  background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--text-muted); border-radius: var(--r); cursor: pointer;
+  transition: all .12s;
+}
+.cfg-res-qbtn:hover  { border-color: var(--accent); color: var(--accent); }
+.cfg-res-qbtn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+
+/* ── Env preset suggestions ──────────────────────────── */
+.cfg-preset-hints {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: .5rem .6rem;
+  margin-bottom: .6rem;
+}
+.cfg-preset-chip {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .22rem .45rem; margin-bottom: .2rem;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r); cursor: pointer;
+  transition: border-color .12s, background .12s;
+  font-size: .78rem;
+}
+.cfg-preset-chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+.cfg-preset-key { font-family: monospace; color: var(--accent); flex-shrink: 0; }
+.cfg-preset-val { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: .72rem; }
+
+/* ── Syntax validation ───────────────────────────────── */
+.dbg-val-summary {
+  padding: .6rem 1rem; font-weight: 600; font-size: .9rem;
+  border-radius: var(--r); margin-bottom: .75rem;
+}
+.dbg-val-summary.ok    { background: rgba(34,197,94,.12);  color: #22c55e; }
+.dbg-val-summary.error { background: rgba(239,68,68,.12);  color: #ef4444; }
+.dbg-val-summary.warn  { background: rgba(245,158,11,.12); color: #f59e0b; }
+.dbg-val-group { margin-bottom: .75rem; }
+.dbg-val-group-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: .35rem; }
+.dbg-val-item { font-size: .82rem; padding: .2rem .4rem; border-radius: 3px; margin-bottom: .18rem; }
+.dbg-val-item.error { color: #fca5a5; background: rgba(239,68,68,.08); }
+.dbg-val-item.warn  { color: #fcd34d; background: rgba(245,158,11,.08); }
+.dbg-val-item.ok    { color: #86efac; background: rgba(34,197,94,.06); }
+
+/* ── Output modal ────────────────────────────────────── */
+.cv-out-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .5rem .85rem;
+  background: var(--surface-3); border-bottom: 1px solid var(--border);
+}
+.cv-pre {
+  margin: 0; padding: 1rem;
+  background: #0d1117; color: #a5f3fc;
+  font-size: .79rem; max-height: 58vh;
+  overflow: auto; white-space: pre;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="cv-layout">
+
+  {# ══ SIDEBAR ════════════════════════════════════════════ #}
+  <div id="cv-sidebar">
+    <div id="cv-sidebar-inner">
+
+      {# Pod settings #}
+      <div class="cvs-section">
+        <div class="cvs-label">Pod Settings</div>
+        <div class="cvs-field">
+          <label class="cvs-field-label">Name</label>
+          <input type="text" id="cv-pod-name" class="cv-ctrl" value="mypod"
+            oninput="state.pod_name=this.value.trim().toLowerCase().replace(/\s+/g,'-')||'mypod';renderSvg();podNameCheck(this)">
+          <span class="cv-pod-name-err" id="cv-pod-name-err">Only lowercase letters, numbers and hyphens allowed</span>
+        </div>
+        <div class="d-flex gap-2">
+          <div class="cvs-field" style="flex:1">
+            <label class="cvs-field-label">Restart</label>
+            <select id="cv-restart" class="cv-ctrl" onchange="state.restart_policy=this.value">
+              <option value="Always">Always</option>
+              <option value="OnFailure">On failure</option>
+              <option value="Never">Never</option>
+            </select>
+          </div>
+          <div class="cvs-field" style="flex:1">
+            <label class="cvs-field-label">Mode</label>
+            <select id="cv-mode" class="cv-ctrl" onchange="state.mode=this.value;updateNetworkState();scanForTips()">
+              <option value="rootless">Rootless</option>
+              <option value="rootful">Rootful</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {# Network settings #}
+      <details class="cvs-net-details">
+        <summary class="cvs-label cvs-net-summary">
+          <span><i class="bi bi-diagram-3 me-1"></i>Network</span>
+          <i class="bi bi-chevron-right cvs-net-chev"></i>
+        </summary>
+        <div class="cvs-net-body">
+          <div class="cvs-net-checks">
+            <label class="cvs-net-check">
+              <input type="checkbox" id="cv-host-network" onchange="state.host_network=this.checked;renderSvg();updateNetworkState()">
+              <span>Host network</span>
+            </label>
+            <label class="cvs-net-check">
+              <input type="checkbox" id="cv-host-pid" onchange="state.host_pid=this.checked">
+              <span>Host PID</span>
+            </label>
+            <label class="cvs-net-check">
+              <input type="checkbox" id="cv-host-ipc" onchange="state.host_ipc=this.checked">
+              <span>Host IPC</span>
+            </label>
+          </div>
+          <div class="cvs-field" id="field-hostname">
+            <label class="cvs-field-label">Hostname</label>
+            <input type="text" id="cv-hostname" class="cv-ctrl" placeholder="e.g. mypod" oninput="state.hostname=this.value.trim()">
+          </div>
+          <div class="cvs-field" id="field-dns">
+            <label class="cvs-field-label">DNS server</label>
+            <input type="text" id="cv-dns" class="cv-ctrl" placeholder="e.g. 1.1.1.1" oninput="state.dns=this.value.trim()">
+          </div>
+          <div class="cvs-field" id="field-network">
+            <label class="cvs-field-label">Network <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);font-size:.65rem;">(Shell: --network flag)</span></label>
+            <input type="text" class="cv-ctrl" id="cv-network" placeholder="empty = default bridge" oninput="state.network=this.value.trim()">
+          </div>
+          <div class="cvs-field" id="field-host-aliases">
+            <label class="cvs-field-label">Host aliases</label>
+            <textarea class="cv-ctrl" id="cv-host-aliases" rows="2"
+              placeholder="192.168.1.10 myhost&#10;10.0.0.1 db"
+              style="resize:vertical;font-size:.75rem;font-family:monospace;"
+              oninput="state.host_aliases=this.value"></textarea>
+          </div>
+        </div>
+      </details>
+
+      {# Images collapsible #}
+      <details class="cvs-collapse" id="cvs-images-pane">
+        <summary class="cvs-collapse-hd">
+          <i class="bi bi-box-seam"></i><span>Images</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
+        </summary>
+        <div class="cvs-collapse-body">
+          <div id="cv-cat-pills" class="cv-cat-pills">
+            <button class="cv-cat-pill active" onclick="setCat('all',this)">All</button>
+            <button class="cv-cat-pill" onclick="setCat('web',this)">Web</button>
+            <button class="cv-cat-pill" onclick="setCat('db',this)">Database</button>
+            <button class="cv-cat-pill" onclick="setCat('monitoring',this)">Monitor</button>
+            <button class="cv-cat-pill" onclick="setCat('app',this)">Apps</button>
+            <button class="cv-cat-pill" onclick="setCat('tools',this)">Tools</button>
+            <button class="cv-cat-pill" onclick="setCat('security',this)">Security</button>
+          </div>
+          <div class="cvs-label" style="margin:.4rem 0 .2rem;font-size:.7rem;letter-spacing:.04em;color:var(--text-muted);">
+            <i class="bi bi-boxes me-1"></i>Presets — click to add to pod
+          </div>
+          <div style="font-size:.68rem;color:var(--text-muted);margin-bottom:.4rem;opacity:.8;">
+            <i class="bi bi-info-circle me-1"></i>Provided by this website
+          </div>
+          <div id="cv-catalog" class="cv-catalog"></div>
+        </div>
+      </details>
+
+      {# Docker Hub collapsible #}
+      <details class="cvs-collapse">
+        <summary class="cvs-collapse-hd">
+          <i class="bi bi-cloud-download"></i><span>Image Search</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
+        </summary>
+        <div class="cvs-collapse-body">
+          <input type="text" id="cv-hub-search" class="cv-ctrl" placeholder="🔍  Search Docker Hub, ghcr.io, quay.io…"
+            oninput="onSearch(this.value)" autocomplete="off">
+          <div id="cv-hub-section" style="margin-top:.4rem;">
+            <span id="cv-hub-spinner" style="display:none;" class="spinner-border spinner-border-sm"></span>
+            <div id="cv-hub-results"></div>
+          </div>
+        </div>
+      </details>
+
+      {# Stacks collapsible #}
+      <details class="cvs-collapse" id="cvs-stacks-pane">
+        <summary class="cvs-collapse-hd">
+          <i class="bi bi-stack"></i><span>Stacks</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
+        </summary>
+        <div class="cvs-collapse-body">
+          <div style="font-size:.68rem;color:var(--text-muted);margin-bottom:.4rem;opacity:.8;">
+            <i class="bi bi-info-circle me-1"></i>Provided by this website
+          </div>
+          {% if stacks %}
+          <div class="cvs-stacks-list">
+            {% regroup stacks by category as stack_groups %}
+            {% for group in stack_groups %}
+            <div class="cvs-cat-label">{{ group.grouper }}</div>
+            {% for s in group.list %}
+            <button class="cvs-stack-btn" onclick="loadStack('{{ s.key }}')">
+              <i class="bi {{ s.icon }}"></i><span>{{ s.label }}</span>
+            </button>
+            {% endfor %}
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if community_stacks %}
+          <div class="cvs-stacks-list" style="margin-top:.5rem;">
+            <div class="cvs-cat-label"><i class="bi bi-people me-1"></i>Community</div>
+            {% for cs in community_stacks %}
+            <button class="cvs-stack-btn" onclick="loadCommunityStack({{ cs.id }})">
+              <i class="bi bi-collection"></i><span>{{ cs.name }} <span style="font-size:.65rem;color:var(--text-muted);">· {{ cs.user.username }}</span></span>
+            </button>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if not stacks and not community_stacks %}
+          <p style="font-size:.8rem;color:var(--text-muted);padding:.5rem 0;">No stacks available.</p>
+          {% endif %}
+        </div>
+      </details>
+
+      {# Sidebar footer links #}
+      <div style="padding:.5rem .75rem;border-top:1px solid var(--border);display:flex;gap:.75rem;flex-wrap:wrap;font-size:.72rem;">
+        {% if request.user.is_authenticated %}
+        <a href="/my-stacks/" style="color:var(--text-muted);text-decoration:none;" title="My Stacks">
+          <i class="bi bi-collection me-1"></i>My Stacks
+        </a>
+        {% endif %}
+        <a href="/community/" style="color:var(--text-muted);text-decoration:none;">
+          <i class="bi bi-trophy me-1"></i>Community
+        </a>
+        <a href="{% url 'impressum' %}" style="color:var(--text-muted);text-decoration:none;">Imprint</a>
+      </div>
+
+    </div>
+  </div>
+
+  {# ══ CANVAS ════════════════════════════════════════════ #}
+  <div id="cv-canvas-wrap">
+    <div id="cv-db-hint">
+      <i class="bi bi-database-add"></i>
+      <span class="cv-db-hint-msg" id="cv-db-hint-msg"></span>
+      <button class="btn btn-sm btn-primary" id="cv-db-hint-btn" onclick="addSuggestedDb()"></button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="dismissDbHint()"><i class="bi bi-x"></i></button>
+    </div>
+    <div id="cv-tips-panel"></div>
+    <div id="cv-toolbar">
+      <span id="cv-counter" class="cv-counter-txt">0 containers</span>
+      <div class="d-flex gap-2 ms-auto align-items-center flex-wrap">
+        <button class="btn btn-sm btn-outline-secondary" onclick="undoAction()" id="cv-undo-btn" title="Undo (Ctrl+Z)" disabled>
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="redoAction()" id="cv-redo-btn" title="Redo (Ctrl+Y)" disabled>
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-info" onclick="openComposeImport()" title="Import docker-compose.yml">
+          <i class="bi bi-file-code me-1"></i>Import Docker Compose
+        </button>
+        <button class="btn btn-sm btn-outline-danger" onclick="clearCanvas()" title="Clear pod builder">
+          <i class="bi bi-trash"></i>
+        </button>
+
+        <button class="btn btn-sm btn-primary" id="cv-gen-btn" onclick="generateYaml()">
+          <i class="bi bi-code-slash me-1"></i>Generate
+        </button>
+      </div>
+    </div>
+    <div id="cv-canvas"
+         onmousemove="onDrag(event)"
+         onmouseup="stopDrag()"
+         onmouseleave="stopDrag()"
+         onclick="onCanvasBg(event)">
+      <svg id="cv-svg" xmlns="http://www.w3.org/2000/svg"
+           style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1;"></svg>
+      <div id="cv-nodes" style="position:absolute;top:0;left:0;width:3000px;height:2000px;pointer-events:none;z-index:2;"></div>
+      <div id="cv-hint">
+        <div class="cv-hint-inner">
+          <i class="bi bi-boxes" style="font-size:2.5rem;opacity:.15;display:block;margin-bottom:.75rem;"></i>
+          <p style="font-size:1rem;font-weight:600;color:var(--text);opacity:.7;margin:0 0 .4rem;">Pod Builder</p>
+          <p style="margin:0 0 1rem;">Click an image in the sidebar to add a container</p>
+          <div class="pb-hint-chips">
+            <span class="pb-hint-chip"><i class="bi bi-cursor me-1"></i>Click to configure</span>
+            <span class="pb-hint-chip"><i class="bi bi-arrows-move me-1"></i>Drag to move</span>
+            <span class="pb-hint-chip"><i class="bi bi-stack me-1"></i>Pick a stack to load a template</span>
+            <span class="pb-hint-chip"><i class="bi bi-code-slash me-1"></i>Generate → podman play kube YAML</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>{# cv-layout #}
+
+
+{# ══ CONFIG MODAL ══════════════════════════════════════════ #}
+<div class="modal fade" id="cfg-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content cv-modal-content">
+
+      <div class="modal-header cv-modal-header">
+        <div class="d-flex align-items-center gap-3">
+          <div id="cfg-header-icon" class="cv-modal-icon">
+            <i class="bi bi-box"></i>
+          </div>
+          <div>
+            <div id="cfg-header-name" class="cv-modal-title">Container</div>
+            <div id="cfg-header-image" class="cv-modal-subtitle text-muted"></div>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <ul class="nav nav-tabs cv-modal-tabs" id="cfg-tabs">
+        <li class="nav-item"><button class="nav-link active" onclick="switchTab('general',this)"><i class="bi bi-gear me-1"></i>General</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchTab('ports',this)"><i class="bi bi-ethernet me-1"></i>Ports</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchTab('storage',this)"><i class="bi bi-folder2 me-1"></i>Storage</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchTab('env',this)"><i class="bi bi-code-slash me-1"></i>Environment</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="switchTab('resources',this)"><i class="bi bi-cpu me-1"></i>Resources</button></li>
+      </ul>
+
+      <div class="modal-body cv-modal-body" id="cfg-body">
+        {# content injected by JS #}
+      </div>
+
+      <div class="modal-footer cv-modal-footer">
+        <button class="btn btn-sm btn-outline-danger me-auto" id="cfg-del-btn" onclick="cfgDelete()">
+          <i class="bi bi-trash me-1"></i>Remove Container
+        </button>
+        <button class="btn btn-sm btn-primary" data-bs-dismiss="modal">Done</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{# ══ OUTPUT MODAL ════════════════════════════════════════ #}
+<div class="modal fade" id="out-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header pb-0" style="border-color:var(--border);">
+        <div class="d-flex align-items-center w-100">
+          <ul class="nav nav-tabs border-0 flex-grow-1">
+            <li class="nav-item"><button id="otab-btn-yaml"  class="nav-link active" onclick="showOutTab('yaml')"><i class="bi bi-file-code me-1"></i>pod.yaml</button></li>
+            <li class="nav-item"><button id="otab-btn-shell" class="nav-link"        onclick="showOutTab('shell')"><i class="bi bi-terminal me-1"></i>deploy.sh</button></li>
+          </ul>
+          <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"></button>
+        </div>
+      </div>
+      <div class="modal-body p-0">
+        <div id="otab-yaml">
+          <div class="cv-out-bar">
+            <span class="text-muted small">Kubernetes YAML for <code>podman play kube</code></span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="copyOut('yaml')"><i class="bi bi-clipboard me-1"></i>Copy</button>
+          </div>
+          <pre id="cv-pre-yaml" class="cv-pre"></pre>
+        </div>
+        <div id="otab-shell" style="display:none;">
+          <div class="cv-out-bar">
+            <span class="text-muted small">Shell script (podman run)</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="copyOut('shell')"><i class="bi bi-clipboard me-1"></i>Copy</button>
+          </div>
+          <pre id="cv-pre-shell" class="cv-pre"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ══ DEBUG MODAL ════════════════════════════════════════════ #}
+<div class="modal fade" id="dbg-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header pb-0" style="border-color:var(--border);">
+        <div class="d-flex align-items-center w-100">
+          <ul class="nav nav-tabs border-0 flex-grow-1">
+            <li class="nav-item"><button id="dtab-btn-state"    class="nav-link active" onclick="showDbgTab('state')"><i class="bi bi-braces me-1"></i>State</button></li>
+            <li class="nav-item"><button id="dtab-btn-formdata" class="nav-link"        onclick="showDbgTab('formdata')"><i class="bi bi-send me-1"></i>POST Data</button></li>
+            <li class="nav-item"><button id="dtab-btn-response" class="nav-link"        onclick="showDbgTab('response')"><i class="bi bi-arrow-return-left me-1"></i>Last Response</button></li>
+            <li class="nav-item"><button id="dtab-btn-validate" class="nav-link"        onclick="showDbgTab('validate')"><i class="bi bi-shield-check me-1"></i>Syntax Check</button></li>
+          </ul>
+          <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"></button>
+        </div>
+      </div>
+      <div class="modal-body p-0">
+        <div id="dtab-state">
+          <div class="cv-out-bar">
+            <span class="text-muted small">Current pod builder state (JS object)</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="copyDbg('state')"><i class="bi bi-clipboard me-1"></i>Copy</button>
+          </div>
+          <pre id="dbg-pre-state" class="cv-pre"></pre>
+        </div>
+        <div id="dtab-formdata" style="display:none;">
+          <div class="cv-out-bar">
+            <span class="text-muted small">toFormData() — what gets sent to the backend</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="copyDbg('formdata')"><i class="bi bi-clipboard me-1"></i>Copy</button>
+          </div>
+          <pre id="dbg-pre-formdata" class="cv-pre"></pre>
+        </div>
+        <div id="dtab-response" style="display:none;">
+          <div class="cv-out-bar">
+            <span class="text-muted small">Last server response (JSON)</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="copyDbg('response')"><i class="bi bi-clipboard me-1"></i>Copy</button>
+          </div>
+          <pre id="dbg-pre-response" class="cv-pre" style="color:#fbbf24;"></pre>
+        </div>
+        <div id="dtab-validate" style="display:none;">
+          <div class="cv-out-bar">
+            <span class="text-muted small">Check configuration for errors</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="runValidation()"><i class="bi bi-arrow-clockwise me-1"></i>Re-check</button>
+          </div>
+          <div id="dbg-validate-body" style="padding:1rem;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{# ══ Fill Variables Modal ════════════════════════════════════════ #}
+<div class="modal fade" id="fill-vars-modal" tabindex="-1">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title"><i class="bi bi-input-cursor-text me-2"></i>Fill in variables</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="fill-vars-body"></div>
+      <div class="modal-footer" style="border-color:var(--border);">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="applyFillVars()">
+          <i class="bi bi-check2 me-1"></i>Apply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ══ Compose Import Modal ════════════════════════════════════════ #}
+<div class="modal fade" id="compose-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title"><i class="bi bi-file-code me-2"></i>Import docker-compose.yml</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="compose-step-1">
+          <p class="text-secondary small mb-2">Paste your <code>docker-compose.yml</code> below or <strong>drop a file</strong> onto the text area. Services will be converted to pod containers.</p>
+          <div id="compose-drop-zone" style="position:relative;">
+            <textarea id="compose-import-ta" class="cv-ctrl" rows="12"
+              style="font-family:monospace;font-size:.78rem;resize:vertical;width:100%;"
+              placeholder="version: '3'&#10;services:&#10;  web:&#10;    image: nginx:alpine&#10;    ports:&#10;      - '8080:80'"
+              ondragover="event.preventDefault();document.getElementById('compose-drop-overlay').style.display='flex';"
+              ondragleave="document.getElementById('compose-drop-overlay').style.display='none';"
+              ondrop="_onComposeDrop(event)"></textarea>
+            <div id="compose-drop-overlay" style="display:none;position:absolute;inset:0;background:rgba(20,184,166,.15);border:2px dashed var(--accent);border-radius:6px;align-items:center;justify-content:center;pointer-events:none;">
+              <span style="color:var(--accent);font-weight:600;"><i class="bi bi-file-earmark-arrow-down me-2"></i>Drop docker-compose.yml</span>
+            </div>
+          </div>
+          <div class="mt-3">
+            <label class="small text-secondary mb-1 d-block"><i class="bi bi-file-earmark-text me-1"></i><code>.env</code> <span class="text-muted">(optional)</span> — fehlende Variablen werden ergänzt</label>
+            <textarea id="compose-env-ta" class="cv-ctrl" rows="4"
+              style="font-family:monospace;font-size:.78rem;resize:vertical;width:100%;"
+              placeholder="POSTGRES_PASSWORD=secret&#10;SECRET_KEY=abc123&#10;REDIS_URL=redis://localhost:6379"></textarea>
+          </div>
+          <div class="mt-2 d-flex align-items-center gap-2">
+            <input type="checkbox" id="compose-include-empty-env" class="form-check-input m-0">
+            <label for="compose-include-empty-env" class="small text-secondary mb-0" style="cursor:pointer">Include empty env vars</label>
+          </div>
+          <p class="text-muted" style="font-size:.68rem;margin-top:.4rem;margin-bottom:0;">
+            <i class="bi bi-clock me-1"></i>Rate-limited: 1 import per 2 minutes.
+            Named volumes and env vars are preserved. Secrets/build sections are ignored.
+          </p>
+        </div>
+        <div id="compose-vars-step" style="display:none">
+          <p class="text-secondary small mb-2">
+            <i class="bi bi-braces me-1"></i>Variables found in the compose file. Pre-filled defaults can be adjusted before import. Empty fields have no default.
+          </p>
+          <div id="compose-vars-list" style="max-height:340px;overflow-y:auto"></div>
+        </div>
+        <div id="compose-import-err" style="display:none;margin-top:.5rem;" class="text-danger small"></div>
+      </div>
+      <div class="modal-footer" style="border-color:var(--border);" id="compose-import-footer-main">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="doComposeImport()">
+          <i class="bi bi-box-arrow-in-down me-1"></i>Import
+        </button>
+      </div>
+      <div class="modal-footer" style="border-color:var(--border);display:none" id="compose-import-footer-vars">
+        <button class="btn btn-secondary" onclick="_backToComposeStep1()">
+          <i class="bi bi-arrow-left me-1"></i>Back
+        </button>
+        <button class="btn btn-primary" onclick="_confirmComposeVars()">
+          <i class="bi bi-box-arrow-in-down me-1"></i>Import
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{# ══ Paste .env Modal ════════════════════════════════════════════ #}
+<div class="modal fade" id="env-paste-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title"><i class="bi bi-file-earmark-text me-2"></i>Paste .env file</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-2">Paste your <code>.env</code> file content. Missing variables will be added to the affected containers. Existing vars won't be overwritten.</p>
+        <textarea id="env-paste-ta" class="cv-ctrl" rows="12"
+          style="font-family:monospace;font-size:.78rem;resize:vertical;width:100%;"
+          placeholder="POSTGRES_PASSWORD=secret&#10;SECRET_KEY=abc123&#10;REDIS_URL=redis://localhost:6379"></textarea>
+        <div id="env-paste-result" style="display:none;margin-top:.5rem;" class="small"></div>
+      </div>
+      <div class="modal-footer" style="border-color:var(--border);">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="_applyEnvPaste()">
+          <i class="bi bi-check2 me-1"></i>Apply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{# ══ Passwords Fix Modal ══════════════════════════════════════════ #}
+<div class="modal fade" id="passwords-fix-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-md modal-dialog-scrollable">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title"><i class="bi bi-key-fill me-2"></i>Review passwords</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-2">These password/secret fields were imported from your compose file. Generate secure random values or enter your own.</p>
+        <button class="btn btn-sm btn-outline-primary mb-3" onclick="_generateAllPasswords()">
+          <i class="bi bi-shuffle me-1"></i>Generate all
+        </button>
+        <div id="passwords-fix-list"></div>
+      </div>
+      <div class="modal-footer" style="border-color:var(--border);">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="_confirmPasswordsFix()">
+          <i class="bi bi-check2 me-1"></i>Apply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{# ══ Host Path Fix Modal ══════════════════════════════════════════ #}
+<div class="modal fade" id="hostpath-fix-modal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title"><i class="bi bi-folder2-open me-2"></i>Use host path</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-2">Enter a base directory on your host. Each volume will be mounted as a subdirectory.</p>
+        <input id="hostpath-base-input" type="text" class="cv-ctrl mb-3" placeholder="/home/user"
+          style="font-family:monospace;font-size:.85rem;width:100%;" oninput="_updateHostpathPreview()">
+        <div id="hostpath-preview" style="font-size:.8rem;font-family:monospace;line-height:1.7;"></div>
+        <p class="text-warning small mt-2 mb-0"><i class="bi bi-exclamation-triangle-fill me-1"></i>Directories must exist and be accessible to the container user. In rootless Podman, <code>chown</code> to the mapped UID may be required.</p>
+      </div>
+      <div class="modal-footer" style="border-color:var(--border);">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="_confirmHostpathFix()">
+          <i class="bi bi-check2 me-1"></i>Apply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{# ══ Env Review Modal (shown before every Generate) ══════════════ #}
+<div class="modal fade" id="env-review-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title"><i class="bi bi-list-check me-2"></i>Review environment variables</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="env-review-body" style="padding:1rem 1.25rem;"></div>
+      <div class="modal-footer" style="border-color:var(--border);">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="_envReviewConfirm()">
+          <i class="bi bi-code-slash me-1"></i>Generate
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{# ══ Warnings Modal (shown before Generate if tips exist) ════════ #}
+<div class="modal fade" id="warnings-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid color-mix(in srgb,#f59e0b 40%,transparent);">
+      <div class="modal-header" style="border-color:color-mix(in srgb,#f59e0b 25%,transparent);background:color-mix(in srgb,#f59e0b 8%,var(--surface-2));">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Warnings before generating</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="warnings-modal-body" style="padding:1rem 1.25rem;"></div>
+      <div class="modal-footer" style="border-color:color-mix(in srgb,#f59e0b 25%,transparent);">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-warning" onclick="bootstrap.Modal.getInstance(document.getElementById('warnings-modal')).hide();_showEnvReview()">
+          <i class="bi bi-code-slash me-1"></i>Generate anyway
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{# ══ Image Inspector Modal ═══════════════════════════════════════ #}
+<div class="modal fade" id="image-inspect-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title" style="font-size:.95rem;">
+          <i class="bi bi-search me-2" style="color:var(--accent);"></i>
+          Image Inspector — <span id="insp-title" style="font-family:monospace;"></span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="insp-body" style="min-height:200px;">
+        <div class="text-center py-4 text-secondary">
+          <div class="spinner-border spinner-border-sm me-2"></div>Loading…
+        </div>
+      </div>
+      <div class="modal-footer" style="border-color:var(--border);">
+        <a id="insp-scout-link" href="#" target="_blank" rel="noopener" class="insp-scout-link me-auto">
+          <i class="bi bi-box-arrow-up-right me-1"></i>View on Docker Scout
+        </a>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ══ Toast ════════════════════════════════════════════════════════ #}
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
+  <div id="app-toast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="app-toast-body"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+'use strict';
+
+// ══ Image Catalog ═════════════════════════════════════════════════
+const CATALOG = [
+  // Web
+  { key:'nginx',     image:'docker.io/nginx:alpine',                        label:'NGINX',           cat:'web',      icon:'bi-globe',           desc:'Web server & reverse proxy' },
+  { key:'caddy',     image:'docker.io/caddy:latest',                        label:'Caddy',           cat:'web',      icon:'bi-globe',           desc:'Auto-HTTPS web server' },
+  { key:'traefik',   image:'docker.io/traefik:latest',                      label:'Traefik',         cat:'web',      icon:'bi-arrow-left-right',desc:'Cloud-native reverse proxy' },
+  { key:'nginx-proxy-manager', image:'docker.io/jc21/nginx-proxy-manager:latest', label:'NGinx PM', cat:'web',      icon:'bi-globe2',          desc:'Reverse proxy + SSL UI' },
+  // Databases
+  { key:'postgres',  image:'docker.io/postgres:16',                         label:'PostgreSQL',      cat:'db',       icon:'bi-database',        desc:'Advanced SQL database' },
+  { key:'mariadb',   image:'docker.io/mariadb:11',                          label:'MariaDB',         cat:'db',       icon:'bi-database',        desc:'MySQL-compatible database' },
+  { key:'mysql',     image:'docker.io/mysql:8',                             label:'MySQL',           cat:'db',       icon:'bi-database',        desc:'Popular relational DB' },
+  { key:'redis',     image:'docker.io/redis:alpine',                        label:'Redis',           cat:'db',       icon:'bi-lightning-charge',desc:'In-memory cache & store' },
+  { key:'mongodb',   image:'docker.io/mongo:7',                             label:'MongoDB',         cat:'db',       icon:'bi-database-fill',   desc:'NoSQL document database' },
+  { key:'influxdb',  image:'docker.io/influxdb:2',                          label:'InfluxDB',        cat:'db',       icon:'bi-graph-up',        desc:'Time-series database' },
+  // Monitoring
+  { key:'grafana',   image:'docker.io/grafana/grafana:latest',              label:'Grafana',         cat:'monitoring',icon:'bi-bar-chart-line', desc:'Metrics & dashboards' },
+  { key:'prometheus',image:'docker.io/prom/prometheus:latest',              label:'Prometheus',      cat:'monitoring',icon:'bi-activity',       desc:'Metrics collection' },
+  { key:'uptime-kuma',image:'docker.io/louislam/uptime-kuma:latest',        label:'Uptime Kuma',     cat:'monitoring',icon:'bi-heart-pulse',    desc:'Service uptime monitor' },
+  // Apps
+  { key:'wordpress', image:'docker.io/wordpress:latest',                    label:'WordPress',       cat:'app',      icon:'bi-pencil-square',   desc:'Blog & CMS platform' },
+  { key:'nextcloud', image:'docker.io/nextcloud:latest',                    label:'Nextcloud',       cat:'app',      icon:'bi-cloud',           desc:'Self-hosted cloud storage' },
+  { key:'gitea',     image:'docker.io/gitea/gitea:latest',                  label:'Gitea',           cat:'app',      icon:'bi-git',             desc:'Self-hosted Git service' },
+  { key:'vaultwarden',image:'docker.io/vaultwarden/server:latest',          label:'Vaultwarden',     cat:'app',      icon:'bi-shield-lock',     desc:'Bitwarden-compatible passwords' },
+  { key:'jellyfin',  image:'docker.io/jellyfin/jellyfin:latest',            label:'Jellyfin',        cat:'app',      icon:'bi-play-circle',     desc:'Free media server' },
+  { key:'photoprism',image:'docker.io/photoprism/photoprism:latest',        label:'PhotoPrism',      cat:'app',      icon:'bi-images',          desc:'AI photo management' },
+  { key:'linkding',  image:'docker.io/sissbruecker/linkding:latest',        label:'Linkding',        cat:'app',      icon:'bi-bookmarks',       desc:'Bookmark manager' },
+  { key:'vikunja',   image:'docker.io/vikunja/vikunja:latest',              label:'Vikunja',         cat:'app',      icon:'bi-check2-square',   desc:'Task & project management' },
+  // Tools
+  { key:'portainer', image:'docker.io/portainer/portainer-ce:latest',       label:'Portainer',       cat:'tools',    icon:'bi-boxes',           desc:'Container management UI' },
+  { key:'minio',     image:'docker.io/minio/minio:latest',                  label:'MinIO',           cat:'tools',    icon:'bi-bucket',          desc:'S3-compatible object storage' },
+  { key:'semaphore', image:'docker.io/semaphoreui/semaphore:latest',        label:'Semaphore',       cat:'tools',    icon:'bi-play-btn',        desc:'Ansible UI & automation' },
+  { key:'code-server',image:'docker.io/linuxserver/code-server:latest',     label:'Code Server',     cat:'tools',    icon:'bi-code-slash',      desc:'VS Code in the browser' },
+  { key:'stirling-pdf',image:'docker.io/stirlingtools/stirling-pdf:latest', label:'Stirling PDF',    cat:'tools',    icon:'bi-file-pdf',        desc:'All-in-one PDF tools' },
+  // Security
+  { key:'keycloak',  image:'docker.io/keycloak/keycloak:latest',            label:'Keycloak',        cat:'security', icon:'bi-person-badge',    desc:'Identity provider & SSO' },
+  { key:'pihole',    image:'docker.io/pihole/pihole:latest',                label:'Pi-hole',         cat:'security', icon:'bi-funnel',          desc:'DNS ad blocker' },
+  { key:'adguardhome',image:'docker.io/adguard/adguardhome:latest',         label:'AdGuard Home',    cat:'security', icon:'bi-funnel',          desc:'Network DNS ad blocker' },
+  { key:'wg-easy',   image:'ghcr.io/wg-easy/wg-easy:latest',               label:'WG-Easy',         cat:'security', icon:'bi-shield-check',    desc:'WireGuard VPN with UI' },
+];
+
+// ══ Port descriptions ════════════════════════════════════════════
+const PORT_NAMES = {
+  21:'FTP', 22:'SSH', 25:'SMTP', 53:'DNS',
+  80:'HTTP', 81:'HTTP (admin)', 443:'HTTPS',
+  2222:'SSH (alt)', 2342:'PhotoPrism',
+  3000:'Web UI', 3001:'Web UI', 3306:'MySQL / MariaDB',
+  3456:'Vikunja', 5000:'Web UI', 5432:'PostgreSQL',
+  6379:'Redis / Valkey', 8000:'HTTP API', 8080:'HTTP (alt)',
+  8086:'InfluxDB', 8096:'Jellyfin', 8123:'Home Assistant',
+  8384:'Syncthing', 8443:'HTTPS (alt)', 8989:'Sonarr',
+  9000:'API / MinIO', 9001:'MinIO Console', 9090:'Prometheus / Grafana',
+  9200:'Elasticsearch', 9443:'HTTPS UI', 9696:'Prowlarr',
+  10050:'Zabbix Agent', 10051:'Zabbix Server',
+  13378:'Audiobookshelf', 27017:'MongoDB',
+  51820:'WireGuard UDP', 51821:'WG-Easy UI',
+};
+
+// ══ Environment variable definitions (friendly labels per image) ══
+const ENV_DEFS = {
+  postgres:    [{key:'POSTGRES_USER',     label:'Username',       ph:'postgres',        pw:false},
+                {key:'POSTGRES_PASSWORD', label:'Password',       ph:'changeme',        pw:true},
+                {key:'POSTGRES_DB',       label:'Database name',  ph:'appdb',           pw:false}],
+  postgresql:  'postgres',
+  mariadb:     [{key:'MARIADB_ROOT_PASSWORD', label:'Root password',  ph:'changeme',    pw:true},
+                {key:'MARIADB_USER',          label:'Username',       ph:'appuser',     pw:false},
+                {key:'MARIADB_PASSWORD',      label:'Password',       ph:'changeme',    pw:true},
+                {key:'MARIADB_DATABASE',      label:'Database name',  ph:'appdb',       pw:false}],
+  mysql:       [{key:'MYSQL_ROOT_PASSWORD', label:'Root password',    ph:'changeme',    pw:true},
+                {key:'MYSQL_USER',           label:'Username',        ph:'appuser',     pw:false},
+                {key:'MYSQL_PASSWORD',       label:'Password',        ph:'changeme',    pw:true},
+                {key:'MYSQL_DATABASE',       label:'Database name',   ph:'appdb',       pw:false}],
+  wordpress:   [{key:'WORDPRESS_DB_HOST',     label:'DB Host',      ph:'127.0.0.1:3306',pw:false},
+                {key:'WORDPRESS_DB_USER',     label:'DB Username',  ph:'wordpress',     pw:false},
+                {key:'WORDPRESS_DB_PASSWORD', label:'DB Password',  ph:'changeme',      pw:true},
+                {key:'WORDPRESS_DB_NAME',     label:'Database name',ph:'wordpress',     pw:false}],
+  nextcloud:   [{key:'NEXTCLOUD_ADMIN_USER',     label:'Admin username', ph:'admin',    pw:false},
+                {key:'NEXTCLOUD_ADMIN_PASSWORD', label:'Admin password', ph:'changeme', pw:true},
+                {key:'MYSQL_HOST',    label:'DB Host',      ph:'127.0.0.1',             pw:false},
+                {key:'MYSQL_DATABASE',label:'DB Name',      ph:'nextcloud',             pw:false},
+                {key:'MYSQL_USER',    label:'DB Username',  ph:'nextcloud',             pw:false},
+                {key:'MYSQL_PASSWORD',label:'DB Password',  ph:'changeme',              pw:true}],
+  grafana:     [{key:'GF_SECURITY_ADMIN_USER',    label:'Admin username', ph:'admin',   pw:false},
+                {key:'GF_SECURITY_ADMIN_PASSWORD', label:'Admin password', ph:'changeme',pw:true}],
+  minio:       [{key:'MINIO_ROOT_USER',     label:'Access key (username)', ph:'admin',   pw:false},
+                {key:'MINIO_ROOT_PASSWORD', label:'Secret key (password)', ph:'changeme',pw:true}],
+  keycloak:    [{key:'KEYCLOAK_ADMIN',          label:'Admin username', ph:'admin',     pw:false},
+                {key:'KEYCLOAK_ADMIN_PASSWORD', label:'Admin password', ph:'changeme',  pw:true},
+                {key:'KC_DB',                   label:'Database type',  ph:'dev-file',  pw:false}],
+  vaultwarden: [{key:'ADMIN_TOKEN',     label:'Admin token',     ph:'change-me-strong-token', pw:true},
+                {key:'SIGNUPS_ALLOWED',label:'Allow signups',   ph:'false',          pw:false}],
+  pihole:      [{key:'WEBPASSWORD', label:'Web UI password', ph:'changeme',           pw:true},
+                {key:'TZ',         label:'Timezone',         ph:'Europe/Vienna',      pw:false}],
+  gitea:       [{key:'GITEA__database__DB_TYPE', label:'DB type', ph:'sqlite3',       pw:false},
+                {key:'GITEA__database__PATH',    label:'DB path', ph:'/data/gitea/gitea.db', pw:false}],
+  influxdb:    [{key:'DOCKER_INFLUXDB_INIT_MODE',     label:'Init mode',    ph:'setup',    pw:false},
+                {key:'DOCKER_INFLUXDB_INIT_USERNAME', label:'Username',     ph:'admin',    pw:false},
+                {key:'DOCKER_INFLUXDB_INIT_PASSWORD', label:'Password',     ph:'changeme', pw:true},
+                {key:'DOCKER_INFLUXDB_INIT_ORG',      label:'Organisation', ph:'myorg',    pw:false},
+                {key:'DOCKER_INFLUXDB_INIT_BUCKET',   label:'Bucket name',  ph:'mybucket', pw:false}],
+  semaphore:   [{key:'SEMAPHORE_ADMIN',          label:'Admin username', ph:'admin',         pw:false},
+                {key:'SEMAPHORE_ADMIN_PASSWORD', label:'Admin password', ph:'changeme',      pw:true},
+                {key:'SEMAPHORE_ADMIN_EMAIL',    label:'Admin e-mail',   ph:'admin@example.com', pw:false},
+                {key:'SEMAPHORE_DB_DIALECT',     label:'DB type',        ph:'bolt',          pw:false}],
+  photoprism:  [{key:'PHOTOPRISM_ADMIN_USER',     label:'Admin username', ph:'admin',    pw:false},
+                {key:'PHOTOPRISM_ADMIN_PASSWORD', label:'Admin password', ph:'changeme', pw:true},
+                {key:'PHOTOPRISM_SITE_URL',       label:'Site URL',       ph:'http://localhost:2342/', pw:false}],
+  'zabbix-server-mysql': [{key:'DB_SERVER_HOST', label:'DB Host',      ph:'127.0.0.1', pw:false},
+                           {key:'MYSQL_USER',     label:'DB Username',  ph:'zabbix',    pw:false},
+                           {key:'MYSQL_PASSWORD', label:'DB Password',  ph:'changeme',  pw:true},
+                           {key:'MYSQL_DATABASE', label:'DB Name',      ph:'zabbix',    pw:false}],
+  'zabbix-server-pgsql': [{key:'DB_SERVER_HOST',  label:'DB Host',     ph:'127.0.0.1', pw:false},
+                           {key:'POSTGRES_USER',   label:'DB Username', ph:'zabbix',    pw:false},
+                           {key:'POSTGRES_PASSWORD',label:'DB Password',ph:'changeme',  pw:true},
+                           {key:'POSTGRES_DB',     label:'DB Name',     ph:'zabbix',    pw:false}],
+  'zabbix-server':       [{key:'DB_SERVER_HOST',  label:'DB Host',     ph:'127.0.0.1', pw:false},
+                           {key:'POSTGRES_USER',   label:'DB Username', ph:'zabbix',    pw:false},
+                           {key:'POSTGRES_PASSWORD',label:'DB Password',ph:'changeme',  pw:true},
+                           {key:'POSTGRES_DB',     label:'DB Name',     ph:'zabbix',    pw:false}],
+  'zabbix-web-nginx-pgsql': [{key:'ZBX_SERVER_HOST', label:'Zabbix Server', ph:'127.0.0.1', pw:false},
+                              {key:'POSTGRES_USER',   label:'DB Username',   ph:'zabbix',    pw:false},
+                              {key:'POSTGRES_PASSWORD',label:'DB Password',  ph:'changeme',  pw:true},
+                              {key:'POSTGRES_DB',     label:'DB Name',       ph:'zabbix',    pw:false},
+                              {key:'PHP_TZ',          label:'Timezone',      ph:'Europe/Vienna', pw:false}],
+};
+
+function getEnvDefs(imageName) {
+  const defs = ENV_DEFS[imageName];
+  if (!defs) return null;
+  if (typeof defs === 'string') return ENV_DEFS[defs] || null;
+  return defs;
+}
+
+// ══ State ════════════════════════════════════════════════════════
+const state = {
+  pod_name: 'mypod', restart_policy: 'Always', mode: 'rootless',
+  host_network: false, host_pid: false, host_ipc: false,
+  hostname: '', host_aliases: '', dns: '', network: '',
+  containers: [], connections: [],
+};
+
+let selectedId  = null; // container id open in config modal
+let drag        = null; // {id, ox, oy, mx, my}
+let activeCat   = 'all';
+let cfgTab      = 'general';
+let cfgModalInst = null;
+
+
+// ══ Utilities ════════════════════════════════════════════════════
+const uid = () => 'c' + Math.random().toString(36).slice(2,11);
+const esc = v => String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const csrf = () => '{{ csrf_token }}';
+
+function iconFor(image) {
+  const n = (image||'').split('/').pop().split(':')[0].toLowerCase();
+  const M = { nginx:'bi-globe', caddy:'bi-globe', apache:'bi-globe', httpd:'bi-globe',
+    traefik:'bi-arrow-left-right', haproxy:'bi-arrow-left-right',
+    postgres:'bi-database', postgresql:'bi-database', mariadb:'bi-database', mysql:'bi-database',
+    mongodb:'bi-database', mongo:'bi-database-fill',
+    redis:'bi-lightning-charge', valkey:'bi-lightning-charge',
+    grafana:'bi-bar-chart-line', prometheus:'bi-activity', influxdb:'bi-graph-up',
+    wordpress:'bi-pencil-square', nextcloud:'bi-cloud', gitea:'bi-git', gitlab:'bi-git',
+    vaultwarden:'bi-shield-lock', jellyfin:'bi-play-circle', sonarr:'bi-film', radarr:'bi-film',
+    portainer:'bi-boxes', keycloak:'bi-person-badge', authentik:'bi-person-badge',
+    minio:'bi-bucket', pihole:'bi-funnel', adguardhome:'bi-funnel',
+    'uptime-kuma':'bi-heart-pulse', photoprism:'bi-images', linkding:'bi-bookmarks',
+    vikunja:'bi-check2-square', semaphore:'bi-play-btn', code:'bi-code-slash',
+    'home-assistant':'bi-house-gear', homeassistant:'bi-house-gear', wg:'bi-shield-check',
+  };
+  for (const [k,v] of Object.entries(M)) { if (n.includes(k)) return v; }
+  return 'bi-box';
+}
+const shortName = img => (img||'').split('/').pop().split(':')[0] || img;
+
+
+// ══ Catalog Rendering ════════════════════════════════════════════
+function renderCatalog() {
+  const q   = '';
+  const cat = activeCat;
+  const items = CATALOG.filter(c =>
+    (cat === 'all' || c.cat === cat) &&
+    (!q || c.label.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q))
+  );
+  const el = document.getElementById('cv-catalog');
+  el.innerHTML = items.length ? items.map(c => `
+    <div class="cv-cat-card" onclick="addFromCatalog('${esc(c.key)}','${esc(c.image)}')" title="${esc(c.desc)}">
+      <div class="cv-cat-card-icon"><i class="bi ${c.icon}"></i></div>
+      <div class="cv-cat-card-name">${esc(c.label)}</div>
+      <div class="cv-cat-card-desc">${esc(c.desc)}</div>
+    </div>`).join('')
+  : '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:.8rem;padding:1.5rem 0;">No matches</div>';
+}
+
+let _warnPopover = null;
+const _issuesCache = new Map(); // container id → issues array
+function showNodeIssuesCached(id, event) {
+  showNodeIssues(event, _issuesCache.get(id) || []);
+}
+
+function showNodeIssues(event, issues) {
+  if (_warnPopover) { _warnPopover.remove(); _warnPopover = null; }
+  const pop = document.createElement('div');
+  pop.className = 'cv-warn-popover';
+  const iconClass = lvl => lvl === 'error' ? 'bi-exclamation-circle-fill error' : 'bi-exclamation-triangle-fill warn';
+  pop.innerHTML = `
+    <div class="cv-warn-popover-title">
+      <i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;"></i>
+      ${issues.length} issue${issues.length > 1 ? 's' : ''}
+    </div>
+    ${issues.map(i => `
+      <div class="cv-warn-popover-item">
+        <i class="bi ${iconClass(i.level)} flex-shrink-0 mt-1"></i>
+        <span>${i.msg}</span>
+      </div>`).join('')}`;
+  document.body.appendChild(pop);
+  _warnPopover = pop;
+  const r = event.target.getBoundingClientRect();
+  let top = r.bottom + 6, left = r.left;
+  if (top + 200 > window.innerHeight) top = r.top - pop.offsetHeight - 6;
+  if (left + 340 > window.innerWidth) left = window.innerWidth - 350;
+  pop.style.top = top + 'px';
+  pop.style.left = Math.max(8, left) + 'px';
+  setTimeout(() => document.addEventListener('click', () => { pop.remove(); _warnPopover = null; }, { once: true }), 0);
+}
+
+function showSideTab(name) {
+  const pane = document.getElementById(name === 'images' ? 'cvs-images-pane' : 'cvs-stacks-pane');
+  if (pane) pane.open = true;
+}
+
+function setCat(cat, btn) {
+  activeCat = cat;
+  document.querySelectorAll('.cv-cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCatalog();
+}
+
+function filterCatalog() { renderCatalog(); }
+
+let _hubTimer = null;
+let _hubCurrentQ = '';
+
+function onSearch(val) {
+  renderCatalog();
+  clearTimeout(_hubTimer);
+  const q = val.trim();
+  const hubSec = document.getElementById('cv-hub-section');
+  if (q.length < 2) { hubSec.style.display = 'none'; _hubCurrentQ = ''; return; }
+  _hubTimer = setTimeout(() => searchHub(q), 500);
+}
+
+function _hubChipHTML(it) {
+  const badge = it.official
+    ? '<span class="cv-hub-official">official</span>'
+    : it.full.startsWith('ghcr.io')
+      ? '<span class="cv-hub-official" style="background:rgba(88,166,255,.15);color:#58a6ff;">ghcr.io</span>'
+      : it.full.startsWith('quay.io')
+        ? '<span class="cv-hub-official" style="background:rgba(200,100,50,.15);color:#e07040;">quay.io</span>'
+        : '';
+  return `<div class="cv-hub-chip" onclick="addHubImage('${esc(it.full)}')" title="${esc(it.desc)}">
+    <div class="cv-hub-chip-top">${badge}<span class="cv-hub-name">${esc(it.full)}</span></div>
+    ${it.desc ? `<div class="cv-hub-desc">${esc(it.desc)}</div>` : ''}
+  </div>`;
+}
+
+function _parseHubHTML(html) {
+  const dom = new DOMParser().parseFromString(html, 'text/html');
+  const items = [];
+  dom.querySelectorAll('button[onclick]').forEach(btn => {
+    const m = btn.getAttribute('onclick').match(/selectImage\(['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]/);
+    if (!m) return;
+    const [, full, ns, name] = m;
+    const official = !!btn.querySelector('.bg-success');
+    const desc = btn.querySelector('.text-secondary')?.textContent?.trim() || '';
+    items.push({ full, ns, name, official, desc });
+  });
+  return items;
+}
+
+function searchHub(q) {
+  const hubSec     = document.getElementById('cv-hub-section');
+  const hubResults = document.getElementById('cv-hub-results');
+  const spinner    = document.getElementById('cv-hub-spinner');
+  hubSec.style.display = '';
+  spinner.style.display = '';
+  hubResults.innerHTML  = '';
+  _hubCurrentQ = q;
+
+  // Phase 1: Docker Hub (schnell)
+  fetch(`/image-search/?q=${encodeURIComponent(q)}&registry=hub`)
+    .then(r => r.text())
+    .then(html => {
+      if (_hubCurrentQ !== q) return; // Suchanfrage hat sich geändert
+      spinner.style.display = 'none';
+      const items = _parseHubHTML(html);
+      if (!items.length) {
+        hubResults.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:.25rem 0;">No results.</div>';
+      } else {
+        hubResults.innerHTML = items.map(_hubChipHTML).join('');
+      }
+      // Phase 2: ghcr.io + quay.io nachladen
+      const extSpinner = document.createElement('div');
+      extSpinner.id = 'cv-hub-ext-spinner';
+      extSpinner.style.cssText = 'font-size:.65rem;color:var(--text-muted);padding:.2rem 0;';
+      extSpinner.textContent = 'Loading ghcr.io, quay.io…';
+      hubResults.appendChild(extSpinner);
+
+      fetch(`/image-search/?q=${encodeURIComponent(q)}&registry=ext`)
+        .then(r => r.text())
+        .then(extHtml => {
+          if (_hubCurrentQ !== q) return;
+          extSpinner.remove();
+          const extItems = _parseHubHTML(extHtml);
+          extItems.forEach(it => {
+            hubResults.insertAdjacentHTML('beforeend', _hubChipHTML(it));
+          });
+        })
+        .catch(() => extSpinner.remove());
+    })
+    .catch(() => {
+      spinner.style.display = 'none';
+      hubResults.innerHTML = '<div style="font-size:.75rem;color:#ef4444;">Search failed.</div>';
+    });
+}
+
+function addHubImage(fullImage) {
+  // Use :latest tag if no tag specified
+  const image = fullImage.includes(':') ? fullImage : fullImage + ':latest';
+  addFromCatalog(image, image);
+  // Clear search
+  const hubInp = document.getElementById('cv-hub-search');
+  if (hubInp) { hubInp.value = ''; document.getElementById('cv-hub-results').innerHTML = ''; }
+}
+
+
+
+function addFromCatalog(key, image) {
+  // Add container immediately — appears on canvas right away
+  const id = addContainer({
+    image, name: shortName(image).replace(/[^a-z0-9-]/gi,'-').toLowerCase(),
+  });
+  // Show loading spinner on node
+  const setLoading = (on) => {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) el.classList.toggle('cv-node-loading', on);
+  };
+  setLoading(true);
+  // Fetch preset in background and apply
+  fetch(`/image-preset/?image=${encodeURIComponent(image)}`)
+    .then(r => r.json())
+    .then(p => {
+      const c = getC(id);
+      if (!c) return;
+      if (p.host_network) state.host_network = true;
+      if (p.ports)        { c.ports = parsePorts(p.ports); c._preset_had_ports = true; }
+      if (p.volumes)      c.volumes      = parseVols(p.volumes);
+      if (p.env)          c.env          = parseEnv(p.env);
+      if (p._preset_name) c.preset_name  = p._preset_name;
+      if (p._no_registry_volumes) c._no_registry_volumes = true;
+      autoGenPasswords(c);
+      if (p.command)      c.command      = p.command;
+      if (p.run_as_user  != null) c.run_as_user  = p.run_as_user;
+      if (p.run_as_group != null) c.run_as_group = p.run_as_group;
+      if (p.memory_limit) c.memory_limit = p.memory_limit;
+      syncDbCredentials();
+      if (_isDb(c.image)) checkDbConflict(c);
+      else suggestDbForContainer(c);
+      setLoading(false);
+      renderNodes(); refreshBadges(id);
+    })
+    .catch(() => setLoading(false));
+}
+
+
+// ══ Container State ══════════════════════════════════════════════
+function mkC(d) {
+  return {
+    id: d.id||uid(),
+    x:  d.x ?? (60 + state.containers.length*25%480),
+    y:  d.y ?? (90 + Math.floor(state.containers.length*25/480)*200),
+    name: d.name || shortName(d.image),
+    image: d.image || '',
+    pull_policy:   d.pull_policy   || '',
+    internal_only: !!d.internal_only,
+    ports:   d.ports   || [],
+    volumes: d.volumes || [],
+    env:     d.env     || [],
+    command:     d.command      || '',
+    args:        d.args         || '',
+    working_dir: d.working_dir  || '',
+    run_as_user:    d.run_as_user    ?? '',
+    run_as_group:   d.run_as_group   ?? '',
+    memory_limit:   d.memory_limit   || '',
+    cpu_limit:      d.cpu_limit      || '',
+    memory_request: d.memory_request || '',
+    cpu_request:    d.cpu_request    || '',
+    read_only_root: !!d.read_only_root,
+    privileged:     !!d.privileged,
+    cap_add:  d.cap_add  || '',
+    cap_drop: d.cap_drop || '',
+    userns:   d.userns   || '',
+    liveness_probe_cmd:     d.liveness_probe_cmd     || '',
+    liveness_initial_delay: d.liveness_initial_delay ?? 30,
+    liveness_period:        d.liveness_period        ?? 10,
+  };
+}
+const getC = id => state.containers.find(c => c.id === id);
+
+function addContainer(d) {
+  pushUndo();
+  const c = mkC(d);
+  state.containers.push(c);
+  renderAll();
+  openCfg(c.id);
+  return c.id;
+}
+
+function removeContainer(id) {
+  pushUndo();
+  state.containers  = state.containers.filter(c => c.id !== id);
+  state.connections = state.connections.filter(([a,b]) => a!==id && b!==id);
+  if (selectedId === id) { selectedId = null; cfgModalInst?.hide(); }
+  renderAll();
+}
+
+function duplicateContainer(id) {
+  const src = getC(id);
+  if (!src) return;
+  pushUndo();
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = uid();
+  copy.x  = src.x + 30;
+  copy.y  = src.y + 30;
+  // make name unique: append -2, -3, …
+  const base = copy.name.replace(/-\d+$/, '');
+  let n = 2;
+  while (state.containers.some(c => c.name === (n === 2 ? base + '-2' : base + '-' + n))) n++;
+  copy.name = base + '-' + n;
+  state.containers.push(copy);
+  renderAll();
+  openCfg(copy.id);
+}
+
+function clearCanvas() {
+  if (state.containers.length && !confirm('Remove all containers?')) return;
+  pushUndo();
+  state.containers = []; state.connections = []; selectedId = null;
+  cfgModalInst?.hide();
+  renderAll();
+}
+
+
+// ══ Rendering ════════════════════════════════════════════════════
+function renderAll() {
+  renderNodes(); renderSvg(); updateCounter();
+  document.getElementById('cv-hint').style.display = state.containers.length ? 'none' : '';
+  scanForTips();
+}
+
+function renderNodes() {
+  const wrap = document.getElementById('cv-nodes');
+  const live = new Set(state.containers.map(c => c.id));
+  wrap.querySelectorAll('.cv-node').forEach(el => { if (!live.has(el.dataset.id)) el.remove(); });
+  state.containers.forEach(c => {
+    let el = wrap.querySelector(`[data-id="${c.id}"]`);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'cv-node'; el.dataset.id = c.id; wrap.appendChild(el);
+    }
+    el.style.left = c.x + 'px'; el.style.top = c.y + 'px';
+    el.classList.toggle('cv-selected', c.id === selectedId);
+    el.innerHTML = nodeHTML(c);
+  });
+}
+
+function openCfgStorage(id) {
+  cfgTab = 'storage';
+  openCfg(id);
+}
+
+function nodeHTML(c) {
+  const pb = c.ports.slice(0,3).map(p=>`<span class="cv-badge cv-bp">${p.host}→${p.container}</span>`).join('');
+  const vb = c.volumes.slice(0,2).map(v=>{
+    const lbl = (v.target||v.src).split('/').pop()||(v.target||v.src);
+    return `<span class="cv-badge cv-bv"><i class="bi bi-folder2"></i> ${esc(lbl)}</span>`;
+  }).join('');
+  const eb = c.env.length ? `<span class="cv-badge cv-be">${c.env.length} env</span>` : '';
+  const issues = _liveIssues(c);
+  _issuesCache.set(c.id, issues);
+  const badge  = issues.length
+    ? `<span class="cv-node-warn-badge ${issues[0].level}" id="wb-${c.id}" onclick="event.stopPropagation();showNodeIssuesCached('${c.id}',event)">${issues.length > 1 ? issues.length : '!'}</span>`
+    : `<span id="wb-${c.id}"></span>`;
+  return `
+    ${badge}
+    <div class="cv-node-head" onmousedown="startDrag(event,'${c.id}')">
+      <div class="cv-node-ico"><i class="bi ${iconFor(c.image)}"></i></div>
+      <div class="cv-node-name" id="nn-${c.id}">${esc(c.name||'container')}</div>
+      <button class="cv-node-dup" title="Duplicate" onclick="event.stopPropagation();duplicateContainer('${c.id}')">
+        <i class="bi bi-copy"></i>
+      </button>
+      <button class="cv-node-del" title="Remove" onclick="event.stopPropagation();removeContainer('${c.id}')">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="cv-node-body" onclick="openCfg('${c.id}')">
+      <div class="cv-node-img">${esc(shortName(c.image)||'no image')}</div>
+      <div class="cv-badges" id="nb-${c.id}">${pb}${vb}${eb}</div>
+    </div>
+    <div class="cv-node-cfg-hint"><i class="bi bi-gear me-1"></i>Click to configure</div>`;
+}
+
+function refreshBadges(id) {
+  const el = document.getElementById(`nb-${id}`);
+  const c  = getC(id);
+  if (!el || !c) return;
+  el.innerHTML =
+    c.ports.slice(0,3).map(p=>`<span class="cv-badge cv-bp">${p.host}→${p.container}</span>`).join('') +
+    c.volumes.slice(0,2).map(v=>{const lbl=(v.target||v.src).split('/').pop()||(v.target||v.src);return`<span class="cv-badge cv-bv"><i class="bi bi-folder2"></i> ${esc(lbl)}</span>`;}).join('') +
+    (c.env.length ? `<span class="cv-badge cv-be">${c.env.length} env</span>` : '');
+  const wb = document.getElementById(`wb-${id}`);
+  if (!wb) return;
+  const issues = _liveIssues(c);
+  _issuesCache.set(id, issues);
+  if (issues.length) {
+    wb.className = `cv-node-warn-badge ${issues[0].level}`;
+    wb.textContent = issues.length > 1 ? issues.length : '!';
+    wb.onclick = e => { e.stopPropagation(); showNodeIssuesCached(id, e); };
+  } else {
+    wb.className = '';
+    wb.textContent = '';
+    wb.onclick = null;
+  }
+}
+
+function renderSvg() {
+  const svg = document.getElementById('cv-svg');
+  svg.innerHTML = '';
+  const cs = state.containers;
+  if (!cs.length) return;
+
+  const NW = 185, NH = 95, PAD = 32;
+
+  // ── Pod network bubble ──────────────────────────────
+  const minX = Math.min(...cs.map(c => c.x)) - PAD;
+  const minY = Math.min(...cs.map(c => c.y)) - PAD - 20;
+  const maxX = Math.max(...cs.map(c => c.x + NW)) + PAD;
+  const maxY = Math.max(...cs.map(c => c.y + NH)) + PAD;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const mk = tag => document.createElementNS(ns, tag);
+  const attr = (el, obj) => { Object.entries(obj).forEach(([k,v]) => el.setAttribute(k,v)); return el; };
+
+  // Bubble background
+  svg.appendChild(attr(mk('rect'), {
+    x: minX, y: minY, width: maxX-minX, height: maxY-minY,
+    rx: 16, ry: 16,
+    fill: 'rgba(99,102,241,0.04)',
+    stroke: 'rgba(99,102,241,0.28)',
+    'stroke-width': 1.5,
+    'stroke-dasharray': '9 5',
+  }));
+
+  // Pod name (top-left)
+  const tPod = attr(mk('text'), {
+    x: minX+14, y: minY+16,
+    fill: 'rgba(99,102,241,0.75)',
+    'font-size': 12,
+    'font-family': 'ui-monospace,monospace',
+    'pointer-events': 'none',
+  });
+  tPod.textContent = `pod: ${state.pod_name || 'mypod'}`;
+  svg.appendChild(tPod);
+
+  // Network type (top-right)
+  const netLabel = state.host_network ? '⚡ host network' : '🔗 localhost (shared)';
+  const tNet = attr(mk('text'), {
+    x: maxX-14, y: minY+16,
+    fill: 'rgba(99,102,241,0.5)',
+    'font-size': 11,
+    'text-anchor': 'end',
+    'font-family': 'system-ui,sans-serif',
+    'pointer-events': 'none',
+  });
+  tNet.textContent = netLabel;
+  svg.appendChild(tNet);
+
+  // ── Mesh lines between all containers (localhost) ──
+  if (cs.length > 1) {
+    for (let i = 0; i < cs.length; i++) {
+      for (let j = i+1; j < cs.length; j++) {
+        const a = cs[i], b = cs[j];
+        svg.appendChild(attr(mk('line'), {
+          x1: a.x+NW/2, y1: a.y+NH/2,
+          x2: b.x+NW/2, y2: b.y+NH/2,
+          stroke: 'rgba(99,102,241,0.45)',
+          'stroke-width': 1.5,
+          'stroke-dasharray': '5 4',
+        }));
+      }
+    }
+  }
+
+  // ── Explicit stack connection lines (bezier + arrow) ──
+  state.connections.forEach(([id1,id2]) => {
+    const c1=getC(id1), c2=getC(id2);
+    if (!c1||!c2) return;
+    const x1=c1.x+NW/2, y1=c1.y+NH/2, x2=c2.x+NW/2, y2=c2.y+NH/2, cx=(x1+x2)/2;
+    svg.appendChild(attr(mk('path'), {
+      d: `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`,
+      stroke: 'var(--accent)', 'stroke-width': 2,
+      fill: 'none', 'stroke-opacity': 0.5, 'stroke-dasharray': '6 3',
+    }));
+    const a = Math.atan2(y2-y1, x2-x1);
+    svg.appendChild(attr(mk('path'), {
+      d: `M${x2},${y2} L${x2-10*Math.cos(a-.4)},${y2-10*Math.sin(a-.4)} L${x2-10*Math.cos(a+.4)},${y2-10*Math.sin(a+.4)}Z`,
+      fill: 'var(--accent)', 'fill-opacity': 0.5,
+    }));
+  });
+}
+
+function updateCounter() {
+  const n = state.containers.length;
+  document.getElementById('cv-counter').textContent = `${n} container${n!==1?'s':''}`;
+}
+
+
+// ══ Drag & Drop ══════════════════════════════════════════════════
+function startDrag(e, id) {
+  e.preventDefault(); e.stopPropagation();
+  const c = getC(id); if (!c) return;
+  drag = { id, ox:c.x, oy:c.y, mx:e.clientX, my:e.clientY };
+}
+function onDrag(e) {
+  if (!drag) return;
+  const c = getC(drag.id); if (!c) return;
+  c.x = Math.max(0, drag.ox + e.clientX - drag.mx);
+  c.y = Math.max(0, drag.oy + e.clientY - drag.my);
+  const el = document.querySelector(`[data-id="${drag.id}"]`);
+  if (el) { el.style.left=c.x+'px'; el.style.top=c.y+'px'; }
+  renderSvg();
+}
+function stopDrag() { drag = null; }
+function onCanvasBg(e) {
+  if (!e.target.closest('.cv-node')) { }
+}
+
+
+// ══ Config Modal ════════════════════════════════════════════════
+function openCfg(id) {
+  selectedId = id;
+  renderNodes();
+  const c = getC(id); if (!c) return;
+  // Update header
+  document.getElementById('cfg-header-icon').innerHTML = `<i class="bi ${iconFor(c.image)}"></i>`;
+  document.getElementById('cfg-header-name').textContent = c.name || 'Container';
+  document.getElementById('cfg-header-image').textContent = shortName(c.image) || 'No image selected';
+  // Render current tab (keep last tab; default to 'general' on first open)
+  const TAB_ORDER = ['general','ports','storage','env','resources'];
+  const tabIdx = TAB_ORDER.indexOf(cfgTab);
+  document.querySelectorAll('#cfg-tabs .nav-link').forEach((b,i) => b.classList.toggle('active', i===(tabIdx<0?0:tabIdx)));
+  renderCfgTab();
+  // Show modal
+  if (!cfgModalInst) cfgModalInst = new bootstrap.Modal(document.getElementById('cfg-modal'));
+  cfgModalInst.show();
+}
+
+function cfgDelete() {
+  cfgModalInst?.hide();
+  setTimeout(() => removeContainer(selectedId), 200);
+}
+
+function switchTab(tab, btn) {
+  cfgTab = tab;
+  document.querySelectorAll('#cfg-tabs .nav-link').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCfgTab();
+}
+
+function renderCfgTab() {
+  const c = getC(selectedId); if (!c) return;
+  const body = document.getElementById('cfg-body');
+  switch (cfgTab) {
+    case 'general':  body.innerHTML = tabGeneral(c); renderVersionPicker(c.image); break;
+    case 'ports':    body.innerHTML = tabPorts(c);    break;
+    case 'storage':  body.innerHTML = tabStorage(c);  break;
+    case 'env':      body.innerHTML = tabEnv(c);      break;
+    case 'resources':body.innerHTML = tabResources(c);break;
+  }
+}
+
+
+// ── General Tab ──────────────────────────────────────────────────
+function tabGeneral(c) {
+  return `
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-tag"></i>Container name</div>
+      <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.name)}"
+        oninput="cfgSet('name',this.value);const nn=document.getElementById('nn-${c.id}');if(nn)nn.textContent=this.value||'container';document.getElementById('cfg-header-name').textContent=this.value||'Container'">
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-box-seam"></i>Container image</div>
+      <div style="display:flex;gap:.4rem;align-items:center;">
+        <input type="text" id="cfg-image-inp" class="cfg-inp cfg-inp-full" value="${esc(c.image)}" placeholder="e.g. nginx:alpine or docker.io/nginx:alpine"
+          oninput="cfgSet('image',this.value);document.getElementById('cfg-header-image').textContent=this.value.split('/').pop().split(':')[0]||this.value;renderVersionPicker(this.value)">
+        <button class="btn btn-sm btn-outline-secondary flex-shrink-0" style="font-size:.72rem;padding:.2rem .5rem;white-space:nowrap;"
+          onclick="openImageInspect()" title="Image Inspector">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+      <div class="cfg-res-hint mt-1">Full image name including registry, e.g. <code>docker.io/nginx:alpine</code></div>
+      <div id="cfg-ver-wrap" style="display:none;">
+        <div style="font-size:.65rem;color:var(--text-muted);margin-top:.4rem;">Pin version:</div>
+        <div id="cfg-ver-btns" class="cfg-ver-btns"></div>
+      </div>
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-arrow-repeat"></i>Image pull policy</div>
+      <select class="cfg-inp cfg-inp-full" onchange="cfgSet('pull_policy',this.value)">
+        <option value=""        ${!c.pull_policy?'selected':''}>Default (IfNotPresent)</option>
+        <option value="Always"  ${c.pull_policy==='Always'?'selected':''}>Always pull</option>
+        <option value="Never"   ${c.pull_policy==='Never'?'selected':''}>Never pull</option>
+      </select>
+    </div>
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-diagram-3"></i>Networking</div>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;cursor:pointer;">
+        <input type="checkbox" ${c.internal_only?'checked':''} style="accent-color:var(--accent);width:15px;height:15px;"
+          onchange="cfgSet('internal_only',this.checked)">
+        Internal only — no host ports needed (e.g. DB backends, internal services)
+      </label>
+    </div>`;
+}
+
+
+// ── Ports Tab ────────────────────────────────────────────────────
+function _portWarn(host, container) {
+  const rootless = state.mode !== 'rootful';
+  if (host > 65535 || container > 65535) return {lvl:'error', msg:'Port must be 1–65535'};
+  if (host < 1 || container < 1)         return {lvl:'error', msg:'Port must be 1–65535'};
+  if (host < 1024 && rootless)           return {lvl:'warn',  msg:`Port ${host} is privileged — rootless podman cannot bind ports below 1024`};
+  return null;
+}
+
+function tabPorts(c) {
+  const rows = c.ports.map((p, i) => {
+    const portName = PORT_NAMES[p.container] || PORT_NAMES[p.host] || '';
+    const warn = _portWarn(p.host, p.container);
+    const warnHtml = warn
+      ? `<div id="pwarn-${i}" style="grid-column:1/-1;font-size:.7rem;padding:.2rem .35rem .05rem;border-radius:3px;color:${warn.lvl==='error'?'#fca5a5':'#fcd34d'};background:${warn.lvl==='error'?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)'};">
+           <i class="bi bi-exclamation-triangle me-1"></i>${warn.msg}</div>`
+      : `<div id="pwarn-${i}" style="display:none;"></div>`;
+    return `
+      <div id="port-row-${i}" style="margin-bottom:.35rem;">
+        <div class="cfg-row" style="margin-bottom:0;">
+          <div style="display:flex;flex-direction:column;flex-shrink:0;">
+            <label style="font-size:.65rem;color:var(--text-muted);margin-bottom:.1rem;text-align:center;">Host</label>
+            <input type="number" class="cfg-inp cfg-inp-sm cfg-inp-num ${warn&&warn.lvl==='error'?'border-danger':warn&&warn.lvl==='warn'?'border-warning':''}" value="${p.host}"
+              placeholder="8080" min="1" max="65535" oninput="setPort(${i},'host',+this.value);validatePortRow(${i})">
+          </div>
+          <span class="cfg-sep" style="margin-top:1.1rem;">→</span>
+          <div style="display:flex;flex-direction:column;flex-shrink:0;">
+            <label style="font-size:.65rem;color:var(--text-muted);margin-bottom:.1rem;text-align:center;">Container</label>
+            <input type="number" class="cfg-inp cfg-inp-sm cfg-inp-num" value="${p.container}"
+              placeholder="80" min="1" max="65535" oninput="setPort(${i},'container',+this.value);refreshPortName(${i},this.value);validatePortRow(${i})">
+          </div>
+          <span id="pname-${i}" class="cfg-port-name ${portName?'known':''}">${portName}</span>
+          <button class="cfg-rdel" style="margin-top:.9rem;" onclick="delPort(${i})"><i class="bi bi-x"></i></button>
+        </div>
+        ${warnHtml}
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="cfg-section">
+      <div class="cfg-section-title" style="justify-content:space-between;">
+        <span><i class="bi bi-ethernet me-1"></i>Port Mappings <span style="font-size:.68rem;color:var(--text-muted);font-weight:400;">HOST → CONTAINER</span></span>
+        <button class="btn btn-sm btn-outline-secondary" style="font-size:.72rem;padding:.15rem .5rem;"
+          onclick="loadPortPreset()" title="Ports aus Backend-Preset laden">
+          <i class="bi bi-magic me-1"></i>Suggestions
+        </button>
+      </div>
+      <div id="port-preset-hints" style="display:none;" class="cfg-preset-hints"></div>
+      ${rows || '<p style="color:var(--text-muted);font-size:.82rem;">No ports configured.</p>'}
+      <button class="cfg-add mt-2" onclick="addPort()"><i class="bi bi-plus"></i> Add Port Mapping</button>
+    </div>
+    <div style="padding:.75rem;background:var(--surface-3);border-radius:var(--r);font-size:.78rem;color:var(--text-dim);">
+      <i class="bi bi-info-circle me-1" style="color:var(--accent);"></i>
+      All containers in a pod share the same network namespace — ports are published at pod level.
+    </div>`;
+}
+
+function validatePortRow(i) {
+  const c = getC(selectedId); if (!c || !c.ports[i]) return;
+  const p = c.ports[i];
+  const warn = _portWarn(p.host, p.container);
+  const warnEl = document.getElementById(`pwarn-${i}`);
+  const rowEl  = document.getElementById(`port-row-${i}`);
+  if (!warnEl) return;
+  if (warn) {
+    warnEl.style.display = '';
+    warnEl.style.color      = warn.lvl==='error'?'#fca5a5':'#fcd34d';
+    warnEl.style.background = warn.lvl==='error'?'rgba(239,68,68,.1)':'rgba(245,158,11,.1)';
+    warnEl.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${warn.msg}`;
+    // highlight host input border
+    const inputs = rowEl?.querySelectorAll('input[type=number]');
+    if (inputs?.[0]) {
+      inputs[0].style.borderColor = warn.lvl==='error'?'#ef4444':'#f59e0b';
+    }
+  } else {
+    warnEl.style.display = 'none';
+    const inputs = rowEl?.querySelectorAll('input[type=number]');
+    if (inputs?.[0]) inputs[0].style.borderColor = '';
+  }
+}
+
+function refreshPortName(i, containerPort) {
+  const el = document.getElementById(`pname-${i}`);
+  if (!el) return;
+  const name = PORT_NAMES[+containerPort] || '';
+  el.textContent = name;
+  el.classList.toggle('known', !!name);
+}
+
+function addPort() {
+  const c = getC(selectedId); if (!c) return;
+  c.ports.push({ host: 8080, container: 80 });
+  renderCfgTab(); refreshBadges(selectedId);
+}
+
+function setPort(i, field, value) {
+  const c = getC(selectedId); if (c && c.ports[i]) { c.ports[i][field] = value; renderNodes(); refreshAllNodeBadges(); validatePortRow(i); scanForTips(); }
+}
+
+function delPort(i) {
+  const c = getC(selectedId); if (!c) return;
+  c.ports.splice(i, 1); renderCfgTab(); renderNodes(); refreshAllNodeBadges(); scanForTips();
+}
+
+
+// ── Storage Tab ──────────────────────────────────────────────────
+function _volIsHostPath(src) {
+  return typeof src === 'string' && (src.startsWith('/') || src.startsWith('~'));
+}
+
+function setVolType(i, type) {
+  const c = getC(selectedId); if (!c || !c.volumes[i]) return;
+  const v = c.volumes[i];
+  if (type === 'hostpath') {
+    if (!_volIsHostPath(v.src)) v.src = '/mnt/data';
+  } else {
+    if (_volIsHostPath(v.src)) v.src = 'mydata';
+  }
+  renderCfgTab(); refreshBadges(selectedId);
+}
+
+function tabStorage(c) {
+  const rows = c.volumes.map((v, i) => {
+    const isHost = _volIsHostPath(v.src);
+    const uid = c.run_as_user != null && c.run_as_user !== '' ? c.run_as_user : null;
+    const gid = c.run_as_group != null && c.run_as_group !== '' ? c.run_as_group : uid;
+    let hostHint = '';
+    if (isHost) {
+      if (uid != null) {
+        hostHint = `<div style="font-size:.72rem;margin-top:.3rem;color:#e6a817;"><i class="bi bi-exclamation-triangle me-1"></i>Run on host: <code style="user-select:all;">chown ${uid}:${gid} ${esc(v.src)||'/mnt/data'}</code></div>`;
+      } else {
+        hostHint = `<div style="font-size:.72rem;margin-top:.3rem;color:var(--text-dim);"><i class="bi bi-info-circle me-1"></i>Ensure host directory is owned by the UID the container runs as.</div>`;
+      }
+    }
+    return `
+      <div style="background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r);padding:.65rem .75rem;margin-bottom:.4rem;">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <select class="cfg-vol-type" onchange="setVolType(${i},this.value)">
+            <option value="named"    ${!isHost?'selected':''}>Named volume</option>
+            <option value="hostpath" ${isHost ?'selected':''}>Host path</option>
+          </select>
+          <button class="cfg-rdel ms-auto" onclick="delVol(${i})" title="Remove volume"><i class="bi bi-trash"></i></button>
+        </div>
+        <div class="d-flex align-items-end gap-2">
+          <div style="flex:1">
+            <label style="font-size:.7rem;color:var(--text-muted);display:block;margin-bottom:.15rem;">${isHost ? 'Host path' : 'Volume name'}</label>
+            <input type="text" class="cfg-inp cfg-inp-sm cfg-inp-full" value="${esc(v.src)}"
+              placeholder="${isHost ? '/mnt/data' : 'mydata'}" oninput="setVol(${i},'src',this.value)">
+            ${hostHint}
+          </div>
+          <span class="cfg-sep mb-1">→</span>
+          <div style="flex:1">
+            <label style="font-size:.7rem;color:var(--text-muted);display:block;margin-bottom:.15rem;">Container path</label>
+            <input type="text" class="cfg-inp cfg-inp-sm cfg-inp-full" value="${esc(v.target)}"
+              placeholder="/data" oninput="setVol(${i},'target',this.value)">
+          </div>
+          <div style="flex-shrink:0;padding-bottom:1px;">
+            <label style="font-size:.7rem;color:var(--text-muted);display:block;margin-bottom:.15rem;text-align:center;">:Z</label>
+            <div style="text-align:center;">
+              <input type="checkbox" ${v.opts&&v.opts.includes('Z')?'checked':''} title="SELinux relabeling (:Z)"
+                style="accent-color:var(--accent);cursor:pointer;width:16px;height:16px;"
+                onchange="setVol(${i},'opts',this.checked?'Z':'')">
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="cfg-section">
+      <div class="cfg-section-title" style="justify-content:space-between;">
+        <span><i class="bi bi-folder2 me-1"></i>Volumes</span>
+        <button class="btn btn-sm btn-outline-secondary" style="font-size:.72rem;padding:.15rem .5rem;"
+          onclick="loadVolPreset()" title="Load volume suggestions">
+          <i class="bi bi-magic me-1"></i>Suggestions
+        </button>
+      </div>
+      <div id="vol-preset-hints" style="display:none;" class="cfg-preset-hints"></div>
+      ${rows || '<p style="color:var(--text-muted);font-size:.82rem;">No volumes configured.</p>'}
+      ${!rows && c._no_registry_volumes ? `<div style="font-size:.75rem;color:var(--text-dim);padding:.35rem .5rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r);margin-bottom:.4rem;"><i class="bi bi-info-circle me-1" style="color:var(--accent);"></i>No volumes or host paths configured — check the image docs for data paths and add a <strong>named volume</strong> or <strong>host path</strong>.</div>` : ''}
+      <button class="cfg-add mt-2" onclick="addVol()"><i class="bi bi-plus"></i> Add Volume</button>
+      <button class="cfg-add mt-2 ms-2" onclick="addVolHostPath()"><i class="bi bi-plus"></i> Add Host Path</button>
+    </div>
+    <div style="padding:.75rem;background:var(--surface-3);border-radius:var(--r);font-size:.78rem;color:var(--text-dim);">
+      <i class="bi bi-info-circle me-1" style="color:var(--accent);"></i>
+      <strong>Named volume:</strong> managed by Podman, persists across restarts (<code>podman volume ls</code>).<br>
+      <strong>Host path:</strong> bindet ein Verzeichnis vom Host direkt ein (absoluter Pfad, z.B. <code>/mnt/data</code>).<br>
+      The <strong>:Z</strong> flag fixes SELinux permissions (recommended on SELinux-enabled systems).
+    </div>`;
+}
+
+
+function addVol() {
+  const c = getC(selectedId); if (!c) return;
+  c.volumes.push({ src: 'mydata', target: '/data', opts: 'Z' });
+  renderCfgTab(); renderNodes(); refreshBadges(selectedId);
+}
+
+function addVolHostPath() {
+  const c = getC(selectedId); if (!c) return;
+  c.volumes.push({ src: '/mnt/data', target: '/data', opts: 'Z' });
+  renderCfgTab(); renderNodes(); refreshBadges(selectedId);
+}
+
+function setVol(i, field, value) {
+  const c = getC(selectedId);
+  if (c && c.volumes[i]) { c.volumes[i][field] = value; renderNodes(); refreshBadges(selectedId); }
+}
+
+function delVol(i) {
+  const c = getC(selectedId); if (!c) return;
+  c.volumes.splice(i, 1); renderCfgTab(); renderNodes(); refreshBadges(selectedId);
+}
+
+
+// ── Environment Tab ──────────────────────────────────────────────
+function tabEnv(c) {
+  const imgName = c.preset_name || shortName(c.image);
+  const defs    = getEnvDefs(imgName);
+  const envMap  = Object.fromEntries(c.env.map(e => [e.key, e.value]));
+  let html = '';
+
+  if (defs && defs.length) {
+    // Known image: show labeled, friendly fields
+    const knownKeys = new Set(defs.map(d => d.key));
+    html += `<div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-person-gear"></i>${esc(imgName)} Configuration</div>
+      ${defs.map(def => {
+        const val = envMap[def.key] ?? '';
+        const fieldId = `envf-${def.key.replace(/[^a-zA-Z0-9]/g,'_')}`;
+        return `
+          <div class="cfg-env-field">
+            <label class="cfg-env-label" for="${fieldId}">${esc(def.label)}</label>
+            <div class="cfg-env-key"><i class="bi bi-code me-1"></i>${esc(def.key)}</div>
+            ${def.pw ? `
+              <div class="cfg-pw-wrap">
+                <input type="password" id="${fieldId}" class="cfg-inp cfg-inp-full" value="${esc(val)}"
+                  placeholder="${esc(def.ph||'')}" oninput="setEnvByKey('${esc(def.key)}',this.value)">
+                <button class="cfg-pw-gen" type="button" onclick="genPw('${esc(def.key)}','${fieldId}')" title="Generate password"><i class="bi bi-shuffle"></i></button>
+                <button class="cfg-pw-toggle" type="button" onclick="togglePw(this)" title="Show/hide"><i class="bi bi-eye"></i></button>
+              </div>` : `
+              <input type="text" id="${fieldId}" class="cfg-inp cfg-inp-full" value="${esc(val)}"
+                placeholder="${esc(def.ph||'')}" oninput="setEnvByKey('${esc(def.key)}',this.value)">`}
+          </div>`;
+      }).join('')}
+    </div>`;
+
+    // Additional / custom vars
+    const custom = c.env.filter(e => !knownKeys.has(e.key));
+    html += `<div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-plus-circle"></i>Additional variables</div>
+      <div id="env-custom-rows">
+        ${custom.map((e,i) => customEnvRow(e, c.env.indexOf(e))).join('')}
+      </div>
+      <button class="cfg-add" onclick="addEnv()"><i class="bi bi-plus"></i> Add Variable</button>
+    </div>`;
+  } else {
+    // Unknown image: raw KEY=VALUE rows + preset loader
+    html += `<div class="cfg-section">
+      <div class="cfg-section-title" style="justify-content:space-between;">
+        <span><i class="bi bi-code-slash me-1"></i>Environment Variables</span>
+        <button class="btn btn-sm btn-outline-secondary" style="font-size:.72rem;padding:.15rem .5rem;"
+          onclick="loadEnvPreset()" id="env-preset-btn" title="Load suggestions from backend">
+          <i class="bi bi-magic me-1"></i>Suggestions
+        </button>
+      </div>
+      <div id="env-preset-hints" style="display:none;" class="cfg-preset-hints"></div>
+      <div id="env-custom-rows">
+        ${c.env.map((e,i) => customEnvRow(e, i)).join('')}
+      </div>
+      <button class="cfg-add" onclick="addEnv()"><i class="bi bi-plus"></i> Add Variable</button>
+    </div>`;
+  }
+  return html;
+}
+
+function loadPortPreset() {
+  const c = getC(selectedId); if (!c) return;
+  const hintsEl = document.getElementById('port-preset-hints');
+  fetch(`/image-preset/?image=${encodeURIComponent(c.image)}`)
+    .then(r => r.json())
+    .then(p => {
+      const suggestions = parsePorts(p.ports || '');
+      if (!suggestions.length) {
+        hintsEl.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:.3rem 0;">No port suggestions for this image.</div>';
+        hintsEl.style.display = ''; return;
+      }
+      const existing = new Set(c.ports.map(p => `${p.host}:${p.container}`));
+      const newOnes  = suggestions.filter(s => !existing.has(`${s.host}:${s.container}`));
+      if (!newOnes.length) {
+        hintsEl.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:.3rem 0;"><i class="bi bi-check-circle me-1"></i>All suggested ports already set.</div>';
+        hintsEl.style.display = ''; return;
+      }
+      const srcLabel = p._from_registry
+        ? '<span style="font-size:.68rem;color:var(--text-muted);font-weight:400;margin-left:.4rem;">(from image metadata)</span>'
+        : '';
+      hintsEl.innerHTML = `
+        <div style="font-size:.72rem;font-weight:600;color:var(--text-muted);margin-bottom:.3rem;display:flex;align-items:center;justify-content:space-between;">
+          <span><i class="bi bi-lightbulb me-1" style="color:var(--accent);"></i>Suggested Ports${srcLabel}</span>
+          ${newOnes.length > 1 ? `<button class="btn btn-xs btn-outline-secondary" style="font-size:.68rem;padding:.1rem .45rem;" onclick="applyAllPorts(${JSON.stringify(newOnes)})">Apply all</button>` : ''}
+        </div>
+        ${newOnes.map(s => {
+          const name = PORT_NAMES[s.container] || '';
+          return `<div class="cfg-preset-chip" onclick="applyPortSuggestion(${s.host},${s.container},this)">
+            <span class="cfg-preset-key">${s.host}</span>
+            <span class="cfg-sep">→</span>
+            <span class="cfg-preset-key">${s.container}</span>
+            ${name ? `<span class="cfg-preset-val">${esc(name)}</span>` : ''}
+          </div>`;
+        }).join('')}`;
+      hintsEl.style.display = '';
+    })
+    .catch(() => { hintsEl.innerHTML = '<div style="font-size:.75rem;color:#ef4444;">Error.</div>'; hintsEl.style.display = ''; });
+}
+
+function applyPortSuggestion(host, container, chip) {
+  const c = getC(selectedId); if (!c) return;
+  c.ports.push({ host, container });
+  chip.style.opacity = '.4'; chip.style.pointerEvents = 'none';
+  chip.innerHTML += ' <i class="bi bi-check" style="color:var(--accent);"></i>';
+  renderCfgTab(); refreshBadges(selectedId);
+}
+function applyAllPorts(newOnes) {
+  const c = getC(selectedId); if (!c) return;
+  const exists = new Set(c.ports.map(p => `${p.host}:${p.container}`));
+  newOnes.forEach(s => { if (!exists.has(`${s.host}:${s.container}`)) c.ports.push(s); });
+  renderCfgTab(); refreshBadges(selectedId);
+}
+function applyAllVols(newOnes) {
+  const c = getC(selectedId); if (!c) return;
+  const existTargets = new Set(c.volumes.map(v => v.target));
+  newOnes.forEach(s => { if (!existTargets.has(s.target)) c.volumes.push(s); });
+  renderCfgTab(); refreshBadges(selectedId);
+}
+
+function loadVolPreset() {
+  const c = getC(selectedId); if (!c) return;
+  const hintsEl = document.getElementById('vol-preset-hints');
+  fetch(`/image-preset/?image=${encodeURIComponent(c.image)}`)
+    .then(r => r.json())
+    .then(p => {
+      const suggestions = parseVols(p.volumes || '');
+      if (!suggestions.length) {
+        hintsEl.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:.3rem 0;">No volume suggestions for this image.</div>';
+        hintsEl.style.display = ''; return;
+      }
+      const existing = new Set(c.volumes.map(v => v.target));
+      const newOnes  = suggestions.filter(s => !existing.has(s.target));
+      if (!newOnes.length) {
+        hintsEl.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:.3rem 0;"><i class="bi bi-check-circle me-1"></i>All suggested volumes already set.</div>';
+        hintsEl.style.display = ''; return;
+      }
+      hintsEl.innerHTML = `
+        <div style="font-size:.72rem;font-weight:600;color:var(--text-muted);margin-bottom:.3rem;display:flex;align-items:center;justify-content:space-between;">
+          <span><i class="bi bi-lightbulb me-1" style="color:var(--accent);"></i>Suggested Volumes</span>
+          ${newOnes.length > 1 ? `<button class="btn btn-xs btn-outline-secondary" style="font-size:.68rem;padding:.1rem .45rem;" onclick="applyAllVols(${JSON.stringify(newOnes)})">Apply all</button>` : ''}
+        </div>
+        ${newOnes.map(s => `
+          <div class="cfg-preset-chip" onclick="applyVolSuggestion('${s.src}','${s.target}','${s.opts||''}',this)">
+            <span class="cfg-preset-key">${s.src}</span>
+            <span class="cfg-sep">→</span>
+            <span class="cfg-preset-val">${s.target}</span>
+          </div>`).join('')}`;
+      hintsEl.style.display = '';
+    })
+    .catch(() => { hintsEl.innerHTML = '<div style="font-size:.75rem;color:#ef4444;">Error.</div>'; hintsEl.style.display = ''; });
+}
+
+function applyVolSuggestion(src, target, opts, chip) {
+  const c = getC(selectedId); if (!c) return;
+  c.volumes.push({ src, target, opts });
+  chip.style.opacity = '.4'; chip.style.pointerEvents = 'none';
+  chip.innerHTML += ' <i class="bi bi-check" style="color:var(--accent);"></i>';
+  renderCfgTab(); refreshBadges(selectedId);
+}
+
+function setMemLimit(val) {
+  const c = getC(selectedId); if (!c) return;
+  c.memory_limit = val;
+  const inp = document.getElementById('mem-limit-inp');
+  if (inp) inp.value = val;
+  document.querySelectorAll('.cfg-res-qbtn').forEach(b => b.classList.toggle('active', b.textContent === val));
+}
+
+function loadEnvPreset() {
+  const c = getC(selectedId); if (!c) return;
+  const btn = document.getElementById('env-preset-btn');
+  const hintsEl = document.getElementById('env-preset-hints');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>';
+  fetch(`/image-preset/?image=${encodeURIComponent(c.image)}`)
+    .then(r => r.json())
+    .then(p => {
+      const envStr = p.env || '';
+      const suggestions = envStr.split('\n')
+        .map(l => l.trim()).filter(Boolean)
+        .map(l => { const i = l.indexOf('='); return i>0 ? {key:l.slice(0,i), value:l.slice(i+1)} : null; })
+        .filter(Boolean);
+
+      if (!suggestions.length) {
+        hintsEl.innerHTML = '<div style="font-size:.75rem;color:var(--text-muted);padding:.3rem 0;">No suggestions available for this image.</div>';
+        hintsEl.style.display = '';
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-1"></i>Suggestions';
+        return;
+      }
+
+      const existing = new Set(c.env.map(e => e.key));
+      const newOnes  = suggestions.filter(s => !existing.has(s.key));
+      const exists   = suggestions.filter(s =>  existing.has(s.key));
+
+      let html = '';
+      if (newOnes.length) {
+        html += `<div style="font-size:.72rem;font-weight:600;color:var(--text-muted);margin-bottom:.3rem;">
+          <i class="bi bi-lightbulb me-1" style="color:var(--accent);"></i>Suggestions (click to apply)
+        </div>`;
+        html += newOnes.map(s => `
+          <div class="cfg-preset-chip" onclick="applyEnvSuggestion('${esc(s.key)}','${esc(s.value)}',this)"
+               title="${esc(s.key)}=${esc(s.value)}">
+            <span class="cfg-preset-key">${esc(s.key)}</span>
+            <span class="cfg-preset-val">${esc(s.value) || '<em style="opacity:.5">empty</em>'}</span>
+          </div>`).join('');
+      }
+      if (exists.length) {
+        html += `<div style="font-size:.7rem;color:var(--text-muted);margin-top:.35rem;">
+          <i class="bi bi-check-circle me-1"></i>Already set: ${exists.map(s=>`<code>${esc(s.key)}</code>`).join(', ')}
+        </div>`;
+      }
+
+      hintsEl.innerHTML = html;
+      hintsEl.style.display = '';
+      btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-1"></i>Suggestions';
+    })
+    .catch(() => {
+      hintsEl.innerHTML = '<div style="font-size:.75rem;color:#ef4444;">Failed to load.</div>';
+      hintsEl.style.display = '';
+      btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-1"></i>Suggestions';
+    });
+}
+
+function applyEnvSuggestion(key, value, chip) {
+  setEnvByKey(key, value);
+  chip.style.opacity = '.4';
+  chip.style.pointerEvents = 'none';
+  chip.innerHTML += ' <i class="bi bi-check" style="color:var(--accent);"></i>';
+  // add row to visible list
+  const c = getC(selectedId); if (!c) return;
+  const idx = c.env.findIndex(e => e.key === key);
+  const rows = document.getElementById('env-custom-rows');
+  if (rows && idx >= 0) {
+    rows.insertAdjacentHTML('beforeend', customEnvRow({key, value}, idx));
+  }
+}
+
+function customEnvRow(e, realIdx) {
+  return `
+    <div class="cfg-row" id="envrow-${realIdx}">
+      <input type="text" class="cfg-inp cfg-inp-sm" style="flex:1;min-width:0;" value="${esc(e.key)}"
+        placeholder="KEY" oninput="setEnv(${realIdx},'key',this.value)">
+      <span class="cfg-sep">=</span>
+      <input type="text" class="cfg-inp cfg-inp-sm" style="flex:1.5;min-width:0;" value="${esc(e.value)}"
+        placeholder="value" oninput="setEnv(${realIdx},'value',this.value)">
+      <button class="cfg-rdel" onclick="delEnv(${realIdx})"><i class="bi bi-x"></i></button>
+    </div>`;
+}
+
+function togglePw(btn) {
+  const inp = btn.closest('.cfg-pw-wrap').querySelector('input');
+  if (!inp) return;
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+}
+
+function _randomPw() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const arr = new Uint8Array(20);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => chars[b % chars.length]).join('');
+}
+
+function autoGenPasswords(c) {
+  const imgName = c.preset_name || shortName(c.image);
+  const defs = getEnvDefs(imgName);
+  if (!defs) return;
+  const pwKeys = new Set(defs.filter(d => d.pw).map(d => d.key));
+  c.env.forEach(e => {
+    if (pwKeys.has(e.key)) e.value = _randomPw();
+  });
+}
+
+function genPw(key, fieldId) {
+  const pw = _randomPw();
+  setEnvByKey(key, pw);
+  const el = document.getElementById(fieldId);
+  if (el) { el.value = pw; el.type = 'text'; }
+}
+
+function updateNetworkState() {
+  const rootful = document.getElementById('cv-mode')?.value === 'rootful';
+  const hostNet = document.getElementById('cv-host-network')?.checked;
+
+  // Bei Host network: Hostname, DNS, Network-Name, Host-Aliases nicht sinnvoll
+  ['field-hostname','field-dns','field-network','field-host-aliases'].forEach(id => {
+    document.getElementById(id)?.classList.toggle('cvs-field-disabled', hostNet);
+  });
+
+  // Show dot indicator on network summary when non-default settings active
+  const hasNet = hostNet || state.host_pid || state.host_ipc ||
+    state.hostname || state.dns || state.network || state.host_aliases;
+  const sumEl = document.querySelector('.cvs-net-summary');
+  if (sumEl) {
+    let dot = sumEl.querySelector('.net-active-dot');
+    if (hasNet && !dot) {
+      dot = document.createElement('span');
+      dot.className = 'net-active-dot';
+      dot.style.cssText = 'width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block;margin-left:.4rem;flex-shrink:0;';
+      sumEl.querySelector('span')?.after(dot);
+    } else if (!hasNet && dot) {
+      dot.remove();
+    }
+  }
+}
+
+function autoExpandNetworkIfNeeded() {
+  const details = document.querySelector('.cvs-net-details');
+  if (!details) return;
+  if (state.host_network || state.host_pid || state.host_ipc ||
+      state.hostname || state.dns || state.network || state.host_aliases) {
+    details.open = true;
+  }
+}
+
+function setEnvByKey(key, value) {
+  const c = getC(selectedId); if (!c) return;
+  const ex = c.env.find(e => e.key === key);
+  if (ex) ex.value = value;
+  else c.env.push({ key, value });
+  refreshBadges(selectedId);
+}
+
+function addEnv() {
+  const c = getC(selectedId); if (!c) return;
+  c.env.push({ key: '', value: '' });
+  renderCfgTab(); refreshBadges(selectedId);
+}
+
+function setEnv(i, field, value) {
+  const c = getC(selectedId);
+  if (c && c.env[i]) { c.env[i][field] = value; renderNodes(); refreshBadges(selectedId); }
+}
+
+function delEnv(i) {
+  const c = getC(selectedId); if (!c) return;
+  c.env.splice(i, 1); renderCfgTab(); renderNodes(); refreshBadges(selectedId);
+}
+
+
+// ── Resources Tab ────────────────────────────────────────────────
+function tabResources(c) {
+  return `
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-memory"></i>Memory & CPU</div>
+      <div class="cfg-res-grid">
+        <div class="cfg-res-field">
+          <label>Memory limit</label>
+          <input type="text" class="cfg-inp cfg-inp-full" id="mem-limit-inp" value="${esc(c.memory_limit)}"
+            placeholder="512Mi" oninput="cfgSet('memory_limit',this.value)">
+          <div class="cfg-res-quickbtns">
+            ${['256Mi','512Mi','1Gi','2Gi','4Gi'].map(v=>
+              `<button class="cfg-res-qbtn ${c.memory_limit===v?'active':''}" onclick="setMemLimit('${v}')">${v}</button>`
+            ).join('')}
+          </div>
+        </div>
+        <div class="cfg-res-field">
+          <label>CPU limit</label>
+          <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.cpu_limit)}"
+            placeholder="0.5" oninput="cfgSet('cpu_limit',this.value)">
+          <div class="cfg-res-hint">e.g. 0.5, 1.0, 2 (number of cores)</div>
+        </div>
+        <div class="cfg-res-field">
+          <label>Memory request</label>
+          <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.memory_request)}"
+            placeholder="128Mi" oninput="cfgSet('memory_request',this.value)">
+          <div class="cfg-res-hint">Minimum guaranteed</div>
+        </div>
+        <div class="cfg-res-field">
+          <label>CPU request</label>
+          <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.cpu_request)}"
+            placeholder="0.1" oninput="cfgSet('cpu_request',this.value)">
+          <div class="cfg-res-hint">Minimum guaranteed</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-person-lock"></i>Security Context</div>
+      <div class="cfg-res-field mt-0 mb-2">
+        <label>User Namespace <span class="cfg-res-hint">(--userns / io.podman.annotations.userns)</span></label>
+        <select class="cfg-inp cfg-inp-full" id="sel-userns"
+          onchange="cfgSet('userns',this.value); updateUsernsState(this.value)">
+          <option value="" ${!c.userns?'selected':''}>— none —</option>
+          <option value="keep-id" ${c.userns==='keep-id'?'selected':''}>keep-id (rootless: same UID/GID)</option>
+          <option value="auto" ${c.userns==='auto'?'selected':''}>auto (assign dynamically)</option>
+          <option value="host" ${c.userns==='host'?'selected':''}>host (no user namespace)</option>
+        </select>
+      </div>
+      <div class="cfg-res-grid" id="uid-gid-fields" ${c.userns==='auto'?'style="opacity:.4;pointer-events:none;"':''}>
+        <div class="cfg-res-field">
+          <label>Run as UID</label>
+          <input type="number" class="cfg-inp cfg-inp-full" value="${c.run_as_user??''}"
+            placeholder="e.g. 999" oninput="cfgSet('run_as_user',this.value===''?null:+this.value)">
+          <div class="cfg-res-hint">Numeric UID only — e.g. 999 (mysql/postgres), 1000 (standard user)</div>
+        </div>
+        <div class="cfg-res-field">
+          <label>Run as Group (GID)</label>
+          <input type="number" class="cfg-inp cfg-inp-full" value="${c.run_as_group??''}"
+            placeholder="1000" oninput="cfgSet('run_as_group',this.value===''?null:+this.value)">
+        </div>
+      </div>
+      <div class="cfg-checkbox-row">
+        <input type="checkbox" id="chk-priv" ${c.privileged?'checked':''} onchange="cfgSet('privileged',this.checked)">
+        <label for="chk-priv">Privileged mode</label>
+        <span class="cfg-res-hint ms-2">Full host access — only if absolutely needed</span>
+      </div>
+      <div class="cfg-checkbox-row">
+        <input type="checkbox" id="chk-ro" ${c.read_only_root?'checked':''} onchange="cfgSet('read_only_root',this.checked)">
+        <label for="chk-ro">Read-only root filesystem</label>
+      </div>
+      <div class="cfg-res-row mt-2">
+        <div class="cfg-res-field">
+          <label>Add capabilities <span class="cfg-res-hint">(one per line or comma-separated)</span></label>
+          <textarea class="cfg-inp cfg-inp-full" rows="2" placeholder="NET_ADMIN&#10;SYS_TIME" oninput="cfgSet('cap_add',this.value)">${esc(c.cap_add||'')}</textarea>
+        </div>
+        <div class="cfg-res-field">
+          <label>Drop capabilities <span class="cfg-res-hint">(one per line or comma-separated)</span></label>
+          <textarea class="cfg-inp cfg-inp-full" rows="2" placeholder="NET_RAW&#10;MKNOD" oninput="cfgSet('cap_drop',this.value)">${esc(c.cap_drop||'')}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-terminal"></i>Command Override</div>
+      <div class="cfg-res-field mb-2">
+        <label>Command (overrides ENTRYPOINT)</label>
+        <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.command)}"
+          placeholder="leave empty to use image default" oninput="cfgSet('command',this.value)">
+      </div>
+      <div class="cfg-res-field mb-2">
+        <label>Args (overrides CMD)</label>
+        <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.args)}"
+          placeholder="leave empty to use image default" oninput="cfgSet('args',this.value)">
+      </div>
+      <div class="cfg-res-field">
+        <label>Working directory</label>
+        <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.working_dir)}"
+          placeholder="/app" oninput="cfgSet('working_dir',this.value)">
+      </div>
+    </div>`;
+}
+
+// Generic setter for simple fields
+function cfgSet(field, value) {
+  const c = getC(selectedId); if (c) { c[field] = value; refreshBadges(selectedId); }
+}
+
+function updateUsernsState(val) {
+  const el = document.getElementById('uid-gid-fields');
+  if (!el) return;
+  const disabled = val === 'auto';
+  el.style.opacity = disabled ? '0.4' : '';
+  el.style.pointerEvents = disabled ? 'none' : '';
+}
+
+function refreshAllNodeBadges() {
+  state.containers.forEach(c => refreshBadges(c.id));
+}
+
+
+// ══ Stack Loading ════════════════════════════════════════════════
+function _applyStackData(d) {
+  pushUndo();
+  state.containers = []; state.connections = []; selectedId = null;
+  if (d.pod_name) { state.pod_name=d.pod_name; document.getElementById('cv-pod-name').value=d.pod_name; }
+  if (d.restart_policy) { state.restart_policy=d.restart_policy; document.getElementById('cv-restart').value=d.restart_policy; }
+  if (d.mode) { state.mode=d.mode; document.getElementById('cv-mode').value=d.mode; }
+  if (d.host_network) { state.host_network=true; const el=document.getElementById('cv-host-network'); if(el) el.checked=true; }
+  if (d.network) { state.network=d.network; const el=document.getElementById('cv-network'); if(el) el.value=d.network; }
+  const addedIds = [];
+  (d.containers||[]).forEach((raw,i) => {
+    const id = uid();
+    state.containers.push(mkC({
+      id, x:60+i*215, y:100,
+      name:raw.name||shortName(raw.image), image:raw.image||'',
+      pull_policy:raw.pull_policy||'',
+      ports:parsePorts(raw.ports||''), volumes:parseVols(raw.volumes||''), env:parseEnv(raw.env||''),
+      command:raw.command||'', args:raw.args||'', working_dir:raw.working_dir||'',
+      run_as_user:raw.run_as_user??'', run_as_group:raw.run_as_group??'',
+      memory_limit:raw.memory_limit||'', cpu_limit:raw.cpu_limit||'',
+      memory_request:raw.memory_request||'', cpu_request:raw.cpu_request||'',
+      read_only_root:!!raw.read_only_root, privileged:!!raw.privileged,
+      cap_add:raw.cap_add||'', cap_drop:raw.cap_drop||'',
+      userns:raw.userns||'',
+      liveness_probe_cmd:raw.liveness_probe_cmd||'',
+      liveness_initial_delay:raw.liveness_initial_delay??30,
+      liveness_period:raw.liveness_period??10,
+    }));
+    addedIds.push(id);
+  });
+  for (let i=0;i<addedIds.length-1;i++) state.connections.push([addedIds[i],addedIds[i+1]]);
+  updateNetworkState();
+  renderAll();
+  if (addedIds.length) openCfg(addedIds[0]);
+}
+
+function loadStack(key) {
+  fetch(`/stack-load/?key=${encodeURIComponent(key)}`)
+    .then(r => r.json())
+    .then(d => { if (!d.error) _applyStackData(d); })
+    .catch(()=>{});
+}
+
+
+function loadCommunityStack(id) {
+  fetch(`/community-stack/?id=${id}`)
+    .then(r => r.json())
+    .then(d => { if (!d.error) _applyStackData(d); })
+    .catch(() => {});
+}
+
+
+function filterStacks(q) {
+  q = (q || '').toLowerCase().trim();
+  document.querySelectorAll('#cvs-stacks-pane .cvs-stack-btn').forEach(btn => {
+    const text = (btn.querySelector('span')?.textContent || btn.textContent).toLowerCase();
+    btn.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+}
+
+
+// ══ Parsers ══════════════════════════════════════════════════════
+const parsePorts = s => (typeof s === 'string' ? s : '').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const[a,b]=l.split(':');return{host:parseInt(a)||0,container:parseInt(b||a)||0};});
+const parseVols  = s => (typeof s === 'string' ? s : '').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const p=l.split(':');return{src:p[0]||'',target:p[1]||'',opts:p[2]||''};});
+const parseEnv   = s => (typeof s === 'string' ? s : '').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.indexOf('=');return{key:i>=0?l.slice(0,i):l,value:i>=0?l.slice(i+1):''};});
+
+
+// ══ YAML Generation ══════════════════════════════════════════════
+function toFormData() {
+  return {
+    pod_name: state.pod_name||'mypod', restart_policy:state.restart_policy||'Always',
+    mode:state.mode||'rootless', host_network:!!state.host_network,
+    host_pid:!!state.host_pid, host_ipc:!!state.host_ipc,
+    hostname:state.hostname||'', host_aliases:state.host_aliases||'',
+    userns:'', dns:state.dns||'', network:state.network||'',
+    init_containers:[],
+    containers: state.containers.map(c => ({
+      name:  c.name  || shortName(c.image) || 'container',
+      image: c.image || 'busybox',
+      pull_policy:  c.pull_policy||'',
+      ports:   c.ports.filter(p=>p.host&&p.container).map(p=>`${p.host}:${p.container}`).join('\n'),
+      volumes: c.volumes.filter(v=>v.src&&v.target).map(v=>v.opts?`${v.src}:${v.target}:${v.opts}`:`${v.src}:${v.target}`).join('\n'),
+      env:     c.env.filter(e=>e.key).map(e=>`${e.key}=${e.value}`).join('\n'),
+      command:c.command||'', args:c.args||'', working_dir:c.working_dir||'',
+      run_as_user:  c.run_as_user!==''&&c.run_as_user!=null?parseInt(c.run_as_user):null,
+      run_as_group: c.run_as_group!==''&&c.run_as_group!=null?parseInt(c.run_as_group):null,
+      memory_limit:c.memory_limit||'', cpu_limit:c.cpu_limit||'',
+      memory_request:c.memory_request||'', cpu_request:c.cpu_request||'',
+      internal_only:!!c.internal_only,
+      read_only_root:!!c.read_only_root, privileged:!!c.privileged,
+      cap_add:c.cap_add||'', cap_drop:c.cap_drop||'',
+      userns:c.userns||'',
+      liveness_probe_cmd:c.liveness_probe_cmd||'',
+      liveness_initial_delay:c.liveness_initial_delay||null,
+      liveness_period:c.liveness_period||null,
+    })),
+  };
+}
+
+let lastResponse = null;
+
+// ── DB Credential Sync ────────────────────────────────────────────
+const _PG_IMAGES = ['postgres', 'postgresql'];
+const _DB_IMAGES = ['mariadb', 'mysql', ..._PG_IMAGES];
+
+// App-seitige Quell-Keys (wo steht die DB-Konfiguration?)
+const _APP_DB_KEYS = {
+  db:   ['MYSQL_DATABASE', 'MARIADB_DATABASE', 'POSTGRES_DB', 'WORDPRESS_DB_NAME'],
+  user: ['MYSQL_USER',     'MARIADB_USER',     'POSTGRES_USER', 'WORDPRESS_DB_USER'],
+  pass: ['MYSQL_PASSWORD', 'MARIADB_PASSWORD', 'POSTGRES_PASSWORD', 'WORDPRESS_DB_PASSWORD'],
+};
+
+// Ziel-Keys je DB-Image
+const _DB_TARGET = {
+  mariadb:    { db: 'MARIADB_DATABASE', user: 'MARIADB_USER', pass: 'MARIADB_PASSWORD' },
+  mysql:      { db: 'MYSQL_DATABASE',   user: 'MYSQL_USER',   pass: 'MYSQL_PASSWORD'   },
+  postgres:   { db: 'POSTGRES_DB',      user: 'POSTGRES_USER', pass: 'POSTGRES_PASSWORD' },
+  postgresql: { db: 'POSTGRES_DB',      user: 'POSTGRES_USER', pass: 'POSTGRES_PASSWORD' },
+};
+
+function _imgBase(img) { return (img||'').toLowerCase().split(':')[0].split('/').pop(); }
+function _isDb(img)    { return _DB_IMAGES.includes(_imgBase(img)); }
+
+function _getEnv(c, keys) {
+  for (const k of keys) {
+    const e = c.env.find(e => e.key === k);
+    if (e?.value) return e.value;
+  }
+  return null;
+}
+function _setEnv(c, key, value) {
+  const e = c.env.find(e => e.key === key);
+  if (e) e.value = value;
+  // nur setzen wenn Key bereits existiert — keine fremden Keys hinzufügen
+}
+function _setOrAddEnv(c, key, value) {
+  const e = c.env.find(e => e.key === key);
+  if (e) e.value = value;
+  else c.env.push({ key, value });
+}
+
+function syncDbCredentials() {
+  const dbCs  = state.containers.filter(c => _isDb(c.image));
+  const appCs = state.containers.filter(c => !_isDb(c.image));
+  if (!dbCs.length || !appCs.length) return;
+
+  // App → DB: sync app credentials into DB container
+  for (const db of dbCs) {
+    const target = _DB_TARGET[_imgBase(db.image)];
+    if (!target) continue;
+    for (const app of appCs) {
+      const dbVal   = _getEnv(app, _APP_DB_KEYS.db);
+      const userVal = _getEnv(app, _APP_DB_KEYS.user);
+      const passVal = _getEnv(app, _APP_DB_KEYS.pass);
+      if (dbVal)   _setEnv(db, target.db,   dbVal);
+      if (userVal) _setEnv(db, target.user, userVal);
+      if (passVal) _setEnv(db, target.pass, passVal);
+    }
+  }
+
+  // ZBX_DB_TYPE containers → sync DB connection vars from DB container into app
+  for (const app of appCs) {
+    const zbxDbTypeEnv = app.env.find(e => e.key === 'ZBX_DB_TYPE');
+    if (!zbxDbTypeEnv) continue;
+    const zbxDbType = zbxDbTypeEnv.value.toLowerCase();
+    const db = dbCs.find(c => {
+      const base = _imgBase(c.image);
+      if (zbxDbType === 'mysql')      return base === 'mysql' || base === 'mariadb';
+      if (zbxDbType === 'postgresql') return _PG_IMAGES.includes(base);
+      return false;
+    });
+    if (!db) continue;
+    const target = _DB_TARGET[_imgBase(db.image)];
+    if (!target) continue;
+    const dbVal   = _getEnv(db, [target.db]);
+    const userVal = _getEnv(db, [target.user]);
+    const passVal = _getEnv(db, [target.pass]);
+    _setOrAddEnv(app, 'ZBX_DB_HOST', '127.0.0.1');
+    if (dbVal)   _setOrAddEnv(app, 'ZBX_DB_NAME',     dbVal);
+    if (userVal) _setOrAddEnv(app, 'ZBX_DB_USER',     userVal);
+    if (passVal) _setOrAddEnv(app, 'ZBX_DB_PASSWORD', passVal);
+  }
+}
+
+// ── DB suggestion hint ───────────────────────────────────────────
+let _suggestedDbImage = null;
+
+const _DB_DETECT = {
+  mysql:    { keys: ['MYSQL_DATABASE','MYSQL_USER','MYSQL_PASSWORD'], image: 'docker.io/mysql:latest',    label: 'MySQL' },
+  postgres: { keys: ['POSTGRES_DB','POSTGRES_USER','POSTGRES_PASSWORD'], image: 'docker.io/postgres:latest', label: 'PostgreSQL' },
+  mariadb:  { keys: ['MARIADB_DATABASE','MARIADB_USER','MARIADB_PASSWORD'], image: 'docker.io/mariadb:latest', label: 'MariaDB' },
+};
+
+function suggestDbForContainer(c) {
+  // Don't suggest if a DB container already exists
+  if (state.containers.some(x => _isDb(x.image))) return;
+  const envKeys = new Set(c.env.map(e => e.key));
+
+  // ZBX_DB_TYPE → suggest matching DB
+  const zbxDbType = (c.env.find(e => e.key === 'ZBX_DB_TYPE')?.value || '').toLowerCase();
+  if (zbxDbType === 'mysql' || zbxDbType === 'mariadb') {
+    _suggestedDbImage = 'docker.io/mysql:latest';
+    document.getElementById('cv-db-hint-msg').textContent = `${shortName(c.image)} needs a MySQL database (ZBX_DB_TYPE=${zbxDbType}).`;
+    document.getElementById('cv-db-hint-btn').textContent = 'Add MySQL';
+    document.getElementById('cv-db-hint').classList.add('show');
+    return;
+  }
+  if (zbxDbType === 'postgresql') {
+    _suggestedDbImage = 'docker.io/postgres:latest';
+    document.getElementById('cv-db-hint-msg').textContent = `${shortName(c.image)} needs a PostgreSQL database (ZBX_DB_TYPE=postgresql).`;
+    document.getElementById('cv-db-hint-btn').textContent = 'Add PostgreSQL';
+    document.getElementById('cv-db-hint').classList.add('show');
+    return;
+  }
+
+  for (const [type, cfg] of Object.entries(_DB_DETECT)) {
+    if (cfg.keys.some(k => envKeys.has(k))) {
+      _suggestedDbImage = cfg.image;
+      document.getElementById('cv-db-hint-msg').textContent =
+        `${shortName(c.image)} needs a ${cfg.label} database.`;
+      document.getElementById('cv-db-hint-btn').textContent = `Add ${cfg.label}`;
+      document.getElementById('cv-db-hint').classList.add('show');
+      return;
+    }
+  }
+}
+
+// Map: which DB image types satisfy which app env key groups
+const _DB_TYPE_MAP = {
+  mysql:      'mysql',
+  mariadb:    'mariadb',
+  postgres:   'postgres',
+  postgresql: 'postgres',
+};
+const _DETECT_TYPE = {
+  mysql:    'mysql',
+  mariadb:  'mariadb',
+  postgres: 'postgres',
+};
+
+function checkDbConflict(dbC) {
+  const dbType = _DB_TYPE_MAP[_imgBase(dbC.image)];
+  if (!dbType) return;
+  const appCs = state.containers.filter(c => !_isDb(c.image));
+  for (const app of appCs) {
+    const envKeys = new Set(app.env.map(e => e.key));
+    for (const [dtype, cfg] of Object.entries(_DB_DETECT)) {
+      if (cfg.keys.some(k => envKeys.has(k)) && dtype !== dbType) {
+        // Mismatch: app needs dtype but we added dbType
+        const hintEl = document.getElementById('cv-db-hint');
+        hintEl.classList.add('show', 'warn');
+        document.getElementById('cv-db-hint-msg').innerHTML =
+          `<i class="bi bi-exclamation-triangle me-1"></i>${shortName(app.image)} expects <strong>${cfg.label}</strong> but ${shortName(dbC.image)} was added.`;
+        _suggestedDbImage = cfg.image;
+        document.getElementById('cv-db-hint-btn').textContent = `Switch to ${cfg.label}`;
+        return;
+      }
+    }
+  }
+  dismissDbHint();
+}
+
+function dismissDbHint() {
+  _suggestedDbImage = null;
+  document.getElementById('cv-db-hint').classList.remove('show', 'warn');
+}
+
+function addSuggestedDb() {
+  if (!_suggestedDbImage) return;
+  const img = _suggestedDbImage;
+  const hintEl = document.getElementById('cv-db-hint');
+  const isConflict = hintEl.classList.contains('warn');
+  // If conflict: remove existing (wrong) DB containers first
+  if (isConflict) {
+    const wrongDbs = state.containers.filter(c => _isDb(c.image));
+    wrongDbs.forEach(c => removeContainer(c.id));
+  }
+  dismissDbHint();
+  addFromCatalog(shortName(img), img);
+}
+
+function _detectDbConflict() {
+  const dbCs  = state.containers.filter(c => _isDb(c.image));
+  const appCs = state.containers.filter(c => !_isDb(c.image));
+  for (const dbC of dbCs) {
+    const dbType = _DB_TYPE_MAP[_imgBase(dbC.image)];
+    if (!dbType) continue;
+    for (const app of appCs) {
+      const envKeys = new Set(app.env.map(e => e.key));
+      for (const [dtype, cfg] of Object.entries(_DB_DETECT)) {
+        if (cfg.keys.some(k => envKeys.has(k)) && dtype !== dbType) {
+          return { app: shortName(app.image), expected: cfg.label, got: shortName(dbC.image) };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function generateYaml() {
+  if (!state.containers.length) { alert('Add at least one container first.'); return; }
+  scanForTips();
+  syncDbCredentials();
+  const conflict = _detectDbConflict();
+  if (conflict) {
+    const ok = confirm(
+      `DB type mismatch: ${conflict.app} expects ${conflict.expected} but ${conflict.got} is configured.\n\nGenerate anyway?`
+    );
+    if (!ok) return;
+  }
+  if (_activeTips.length) {
+    const body = document.getElementById('warnings-modal-body');
+    body.innerHTML = _activeTips.map((t, i) => `
+      <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded" style="background:${t.level==='error'?'rgba(239,68,68,.08)':'rgba(245,158,11,.08)'}">
+        <i class="bi ${t.level==='error'?'bi-exclamation-circle-fill text-danger':'bi-lightbulb-fill text-warning'} mt-1 flex-shrink-0"></i>
+        <span style="font-size:.85rem;flex:1">${t.msg}</span>
+        ${t.applyLabel ? `<button class="btn btn-sm btn-outline-warning flex-shrink-0" style="font-size:.75rem" onclick="_activeTips[${i}].apply();bootstrap.Modal.getInstance(document.getElementById('warnings-modal')).hide()">${esc(t.applyLabel)}</button>` : ''}
+      </div>`).join('');
+    new bootstrap.Modal(document.getElementById('warnings-modal')).show();
+    return;
+  }
+  _showEnvReview();
+}
+
+function _showEnvReview() {
+  const hasEnv = state.containers.some(c => c.env && c.env.length);
+  if (!hasEnv) { _doGenerate(); return; }
+  const body = document.getElementById('env-review-body');
+  body.innerHTML = state.containers.map((c, ci) => {
+    if (!c.env || !c.env.length) return '';
+    const rows = c.env.map((e, ei) => {
+      const unresolved = e.value && e.value.includes('${');
+      return `<tr>
+        <td style="font-family:monospace;font-size:.8rem;white-space:nowrap;padding:.25rem .4rem;color:var(--text-muted);vertical-align:middle">${esc(e.key)}</td>
+        <td style="padding:.25rem .4rem">
+          <input type="text" class="form-control form-control-sm env-review-input"
+            style="font-family:monospace;font-size:.8rem${unresolved ? ';border-color:#ef4444;background:rgba(239,68,68,.05)' : ''}"
+            data-ci="${ci}" data-ei="${ei}" value="${esc(e.value)}">
+        </td>
+      </tr>`;
+    }).join('');
+    return `<div class="mb-3">
+      <div style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem">
+        <i class="bi bi-box me-1"></i>${esc(c.name || c.image || 'Container')}
+      </div>
+      <table style="width:100%;border-collapse:collapse">${rows}</table>
+    </div>`;
+  }).join('');
+  new bootstrap.Modal(document.getElementById('env-review-modal')).show();
+}
+
+function _envReviewConfirm() {
+  document.querySelectorAll('#env-review-body .env-review-input').forEach(inp => {
+    const ci = +inp.dataset.ci, ei = +inp.dataset.ei;
+    if (state.containers[ci]?.env[ei] != null) state.containers[ci].env[ei].value = inp.value;
+  });
+  bootstrap.Modal.getInstance(document.getElementById('env-review-modal')).hide();
+  _doGenerate();
+}
+
+function _doGenerate() {
+  const btn = document.getElementById('cv-gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating…';
+
+  const payload = toFormData();
+
+  // Submit as regular form POST → browser navigates to result page
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/builder/generate/';
+
+  const csrf_field = document.createElement('input');
+  csrf_field.type = 'hidden';
+  csrf_field.name = 'csrfmiddlewaretoken';
+  csrf_field.value = csrf();
+  form.appendChild(csrf_field);
+
+  const data_field = document.createElement('input');
+  data_field.type = 'hidden';
+  data_field.name = 'form_data_json';
+  data_field.value = JSON.stringify(payload);
+  form.appendChild(data_field);
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function openDebug() {
+  document.getElementById('dbg-pre-state').textContent    = JSON.stringify(state, null, 2);
+  document.getElementById('dbg-pre-formdata').textContent = JSON.stringify(toFormData(), null, 2);
+  document.getElementById('dbg-pre-response').textContent = lastResponse
+    ? JSON.stringify(lastResponse, null, 2)
+    : '(no generate run yet)';
+  showDbgTab('state');
+  new bootstrap.Modal(document.getElementById('dbg-modal')).show();
+}
+
+function showDbgTab(tab) {
+  ['state','formdata','response','validate'].forEach(t => {
+    document.getElementById('dtab-'+t).style.display = t===tab ? '' : 'none';
+    document.getElementById('dtab-btn-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab === 'validate') runValidation();
+}
+
+
+// ── Syntax Validation ──────────────────────────────────────────
+function runValidation() {
+  const issues = [];
+  const warnings = [];
+  const ok = [];
+
+  const reK8sName = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+  const reMemory  = /^\d+(\.\d+)?(Mi|Gi|Ki|m|M|G|K)$/;
+  const reCpu     = /^\d+(\.\d+)?$|^\d+m$/;
+
+  // Pod name
+  if (!state.pod_name) {
+    issues.push('Pod name is empty.');
+  } else if (!reK8sName.test(state.pod_name)) {
+    issues.push(`Pod name "${state.pod_name}": only lowercase letters, digits, and hyphens allowed.`);
+  } else {
+    ok.push(`Pod name "${state.pod_name}" is valid.`);
+  }
+
+  // At least one container
+  if (!state.containers.length) {
+    issues.push('No containers configured.');
+  } else {
+    ok.push(`${state.containers.length} container(s) configured.`);
+  }
+
+  // Container checks
+  const names = [];
+  const hostPorts = [];
+  state.containers.forEach((c, ci) => {
+    const label = c.name || `Container #${ci+1}`;
+
+    // Image
+    if (!c.image) issues.push(`${label}: no image specified.`);
+    else ok.push(`${label}: image "${c.image.split('/').pop()}" set.`);
+
+    // Name
+    if (!c.name) {
+      warnings.push(`${label}: no container name set (derived from image).`);
+    } else if (!reK8sName.test(c.name)) {
+      issues.push(`${label}: name "${c.name}" invalid — only lowercase letters, digits, hyphens.`);
+    } else if (names.includes(c.name)) {
+      issues.push(`${label}: name "${c.name}" is duplicate.`);
+    } else {
+      names.push(c.name);
+    }
+
+    // Ports
+    c.ports.forEach((p, pi) => {
+      if (p.host < 1 || p.host > 65535)
+        issues.push(`${label} Port ${pi+1}: host port ${p.host} outside range 1–65535.`);
+      if (p.container < 1 || p.container > 65535)
+        issues.push(`${label} Port ${pi+1}: container port ${p.container} outside range 1–65535.`);
+      if (hostPorts.includes(p.host))
+        issues.push(`${label}: host port ${p.host} used multiple times.`);
+      else hostPorts.push(p.host);
+    });
+
+    // Volumes
+    c.volumes.forEach((v, vi) => {
+      if (!v.src)    issues.push(`${label} Volume ${vi+1}: source (src) missing.`);
+      if (!v.target) issues.push(`${label} Volume ${vi+1}: container path missing.`);
+    });
+
+    // Env
+    const envKeys = [];
+    c.env.forEach((e, ei) => {
+      if (!e.key) issues.push(`${label} Env ${ei+1}: key is empty.`);
+      else if (envKeys.includes(e.key)) warnings.push(`${label}: env key "${e.key}" is duplicate.`);
+      else envKeys.push(e.key);
+    });
+
+    // Memory
+    if (c.memory_limit && !reMemory.test(c.memory_limit))
+      issues.push(`${label}: memory limit "${c.memory_limit}" invalid — expected e.g. 512Mi, 1Gi.`);
+    if (c.memory_request && !reMemory.test(c.memory_request))
+      issues.push(`${label}: memory request "${c.memory_request}" invalid.`);
+
+    // CPU
+    if (c.cpu_limit && !reCpu.test(c.cpu_limit))
+      issues.push(`${label}: CPU limit "${c.cpu_limit}" invalid — expected e.g. 0.5, 1, 500m.`);
+    if (c.cpu_request && !reCpu.test(c.cpu_request))
+      issues.push(`${label}: CPU request "${c.cpu_request}" invalid.`);
+  });
+
+  // Render
+  const body = document.getElementById('dbg-validate-body');
+  let html = '';
+
+  if (!issues.length && !warnings.length) {
+    html += `<div class="dbg-val-summary ok"><i class="bi bi-check-circle-fill me-2"></i>No issues found.</div>`;
+  } else {
+    if (issues.length)
+      html += `<div class="dbg-val-summary error"><i class="bi bi-x-circle-fill me-2"></i>${issues.length} error(s), ${warnings.length} warning(s)</div>`;
+    else
+      html += `<div class="dbg-val-summary warn"><i class="bi bi-exclamation-triangle-fill me-2"></i>${warnings.length} warning(s)</div>`;
+  }
+
+  if (issues.length) {
+    html += `<div class="dbg-val-group"><div class="dbg-val-group-title"><i class="bi bi-x-circle me-1" style="color:#ef4444;"></i>Errors</div>
+      ${issues.map(i => `<div class="dbg-val-item error"><i class="bi bi-x me-1"></i>${esc(i)}</div>`).join('')}
+    </div>`;
+  }
+  if (warnings.length) {
+    html += `<div class="dbg-val-group"><div class="dbg-val-group-title"><i class="bi bi-exclamation-triangle me-1" style="color:#f59e0b;"></i>Warnings</div>
+      ${warnings.map(w => `<div class="dbg-val-item warn"><i class="bi bi-exclamation me-1"></i>${esc(w)}</div>`).join('')}
+    </div>`;
+  }
+  if (ok.length) {
+    html += `<div class="dbg-val-group"><div class="dbg-val-group-title"><i class="bi bi-check-circle me-1" style="color:#22c55e;"></i>OK</div>
+      ${ok.map(o => `<div class="dbg-val-item ok"><i class="bi bi-check me-1"></i>${esc(o)}</div>`).join('')}
+    </div>`;
+  }
+
+  body.innerHTML = html;
+}
+
+function copyDbg(tab) {
+  const pre = document.getElementById('dbg-pre-'+tab);
+  const btn = pre.previousElementSibling?.querySelector('button');
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    if(btn){btn.innerHTML='<i class="bi bi-check me-1"></i>Copied!';setTimeout(()=>{btn.innerHTML='<i class="bi bi-clipboard me-1"></i>Copy';},2000);}
+  });
+}
+
+function showOutTab(tab) {
+  document.getElementById('otab-yaml').style.display  = tab==='yaml'  ? '':'none';
+  document.getElementById('otab-shell').style.display = tab==='shell' ? '':'none';
+  document.getElementById('otab-btn-yaml').classList.toggle('active',  tab==='yaml');
+  document.getElementById('otab-btn-shell').classList.toggle('active', tab==='shell');
+}
+
+function copyOut(tab) {
+  const pre = document.getElementById(tab==='yaml'?'cv-pre-yaml':'cv-pre-shell');
+  const btn = pre.previousElementSibling?.querySelector('button');
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    if(btn){btn.innerHTML='<i class="bi bi-check me-1"></i>Copied!';setTimeout(()=>{btn.innerHTML='<i class="bi bi-clipboard me-1"></i>Copy';},2000);}
+  });
+}
+
+// ══ Tips System ══════════════════════════════════════════════════
+const _activeTips = [];
+
+function scanForTips() {
+  _activeTips.length = 0;
+  const names = new Set(state.containers.map(c => c.name));
+
+  // Tip 1: container names used as hostname in env vars (exact or inside URL)
+  // Only applies to host-like keys (HOST/ADDR/SERVER/…), not to USER/PASSWORD/DATABASE/…
+  const _TIP_HOST_RE     = /HOST|ADDR|SERVER|ENDPOINT|DSN|CONN|URI|URL/i;
+  const _TIP_NON_HOST_RE = /PASSWORD|PASSWD|SECRET|TOKEN|KEY|USER|DATABASE|DB_NAME|DBNAME|_NAME$|_DB$/i;
+  function _isHostEnvKey(key) {
+    return _TIP_HOST_RE.test(key) && !_TIP_NON_HOST_RE.test(key);
+  }
+  function _valueContainsName(val, name) {
+    if (!val) return false;
+    if (val === name) return true;
+    return new RegExp('://' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:[:/?]|$)').test(val);
+  }
+  const affectedContainers = [];
+  for (const c of state.containers) {
+    for (const e of c.env) {
+      if (!_isHostEnvKey(e.key)) continue;
+      const otherNames = [...names].filter(n => n !== c.name);
+      if (otherNames.some(n => _valueContainsName(e.value, n))) {
+        affectedContainers.push(c.name);
+        break;
+      }
+    }
+  }
+  if (affectedContainers.length) {
+    _activeTips.push({
+      level: 'error',
+      msg: `Container names used as hostnames won't resolve in a pod: `
+         + affectedContainers.map(n => `<code>${n}</code>`).join(', ')
+         + ` — should be <code>127.0.0.1</code>`,
+      applyLabel: 'Fix: replace with 127.0.0.1',
+      apply() {
+        state.containers.forEach(c => {
+          const otherNames = [...names].filter(n => n !== c.name);
+          c.env.forEach(e => {
+            if (!_isHostEnvKey(e.key)) return;
+            otherNames.forEach(n => {
+              if (!_valueContainsName(e.value, n)) return;
+              const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              e.value = e.value === n
+                ? '127.0.0.1'
+                : e.value.replace(new RegExp('(://)' + escaped + '(?=[:/?]|$)', 'g'), '$1127.0.0.1');
+            });
+          });
+        });
+        renderAll(); scanForTips();
+      },
+    });
+  }
+
+  // Tip 2: ${VARIABLE} placeholders
+  const varNames = new Set();
+  for (const c of state.containers) {
+    (c.image.match(/\$\{([^}]+)\}/g) || []).forEach(m => varNames.add(m.slice(2, -1)));
+    c.env.forEach(e => {
+      ((e.value||'').match(/\$\{([^}]+)\}/g) || []).forEach(m => varNames.add(m.slice(2, -1)));
+    });
+  }
+  if (varNames.size > 0) {
+    const preview = Array.from(varNames).slice(0, 3).map(v => `<code>${esc(v)}</code>`).join(', ');
+    _activeTips.push({
+      level: 'warn',
+      msg: `${varNames.size} unresolved variable${varNames.size > 1 ? 's' : ''}: ${preview}${varNames.size > 3 ? ` +${varNames.size - 3} more` : ''}`,
+      applyLabel: 'Fill in values…',
+      apply() { openFillVars(varNames); },
+    });
+  }
+
+  // Tip 3: FileOrCreate volumes — parent directory must exist on host
+  const fileCreateParents = new Set();
+  const allContainers = [...state.containers, ...(state.init_containers || [])];
+  for (const c of allContainers) {
+    for (const v of c.volumes) {
+      const src = (v.src || '').trim();
+      const isPath = src.startsWith('/') || src.startsWith('~') || src.startsWith('./') || src.startsWith('../');
+      if (!isPath) continue;
+      const lastSeg = src.replace(/\/$/, '').split('/').pop() || '';
+      const isFile = lastSeg.includes('.') && !src.endsWith('/');
+      if (isFile) {
+        const parent = src.replace(/\/$/, '').split('/').slice(0, -1).join('/') || '.';
+        fileCreateParents.add(parent);
+      }
+    }
+  }
+  if (fileCreateParents.size > 0) {
+    const dirs = Array.from(fileCreateParents).map(d => `<code>${esc(d)}</code>`).join(', ');
+    _activeTips.push({
+      level: 'warn',
+      msg: `File mount${fileCreateParents.size > 1 ? 's' : ''} detected — parent director${fileCreateParents.size > 1 ? 'ies' : 'y'} must exist on host before <code>podman play kube</code>: ${dirs}`,
+    });
+  }
+
+  // Tip 4: privileged ports in rootless mode
+  if (state.mode !== 'rootful') {
+    const privPorts = [];
+    for (const c of allContainers) {
+      for (const p of c.ports) {
+        if (p.host > 0 && p.host < 1024) privPorts.push(`${c.name}:${p.host}`);
+      }
+    }
+    if (privPorts.length) {
+      _activeTips.push({
+        level: 'error',
+        msg: `Privileged host port${privPorts.length>1?'s':''} in rootless mode: <code>${privPorts.join(', ')}</code> — rootless podman cannot bind ports below 1024. Use port ≥ 1024 or switch to Rootful.`,
+      });
+    }
+  }
+
+  renderTips();
+}
+
+function renderTips() {
+  const panel = document.getElementById('cv-tips-panel');
+  if (!_activeTips.length) { panel.classList.remove('show'); panel.innerHTML = ''; return; }
+  panel.innerHTML = _activeTips.map((t, i) => `
+    <div class="cv-tip-row ${t.level === 'error' ? 'error' : ''}">
+      <i class="bi ${t.level === 'error' ? 'bi-exclamation-circle-fill' : 'bi-lightbulb-fill'} cv-tip-icon"></i>
+      <span class="cv-tip-msg">${t.msg}</span>
+      ${t.applyLabel ? `<button class="btn btn-sm btn-outline-warning cv-tip-apply" onclick="_activeTips[${i}].apply()">${esc(t.applyLabel)}</button>` : ''}
+      <button class="cv-tip-dismiss" onclick="dismissTip(${i})" title="Dismiss"><i class="bi bi-x"></i></button>
+    </div>`).join('');
+  panel.classList.add('show');
+}
+
+function dismissTip(i) {
+  _activeTips.splice(i, 1);
+  renderTips();
+}
+
+// Fill Variables modal
+let _fillVarsModalInst = null;
+let _pendingVarNames = null;
+
+function openFillVars(varNames) {
+  _pendingVarNames = varNames;
+  const body = document.getElementById('fill-vars-body');
+  body.innerHTML = `
+    <p class="text-secondary small mb-3">Enter values for each variable. Leave empty to keep the placeholder.</p>
+    ${Array.from(varNames).map(v => `
+      <div class="mb-2 d-flex align-items-center gap-2">
+        <label style="min-width:200px;font-size:.78rem;font-family:monospace;color:var(--text-muted);">\${${esc(v)}}</label>
+        <input type="text" class="cfg-inp cfg-inp-full" id="fv-${esc(v)}" placeholder="value" style="flex:1;">
+      </div>`).join('')}`;
+  if (!_fillVarsModalInst) _fillVarsModalInst = new bootstrap.Modal(document.getElementById('fill-vars-modal'));
+  _fillVarsModalInst.show();
+}
+
+function applyFillVars() {
+  if (!_pendingVarNames) return;
+  const replacements = {};
+  _pendingVarNames.forEach(v => {
+    const inp = document.getElementById(`fv-${v}`);
+    if (inp && inp.value.trim()) replacements[v] = inp.value.trim();
+  });
+  if (!Object.keys(replacements).length) { _fillVarsModalInst.hide(); return; }
+  // Apply to images and env values
+  state.containers.forEach(c => {
+    c.image = c.image.replace(/\$\{([^}]+)\}/g, (m, k) => replacements[k] ?? m);
+    c.env.forEach(e => {
+      e.value = (e.value||'').replace(/\$\{([^}]+)\}/g, (m, k) => replacements[k] ?? m);
+    });
+  });
+  renderAll();
+  _fillVarsModalInst.hide();
+  scanForTips();
+}
+
+// ══ Pod-Name Validation ══════════════════════════════════════════
+function podNameCheck(inp) {
+  const ok = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(inp.value) || inp.value === '';
+  document.getElementById('cv-pod-name-err').classList.toggle('show', !ok && inp.value !== '');
+  inp.classList.toggle('is-invalid', !ok && inp.value !== '');
+}
+
+// ══ Undo / Redo ═══════════════════════════════════════════════════
+const _history = [];
+const _future  = [];
+const _MAX_HISTORY = 25;
+
+function pushUndo() {
+  _history.push(JSON.stringify({
+    containers: state.containers,
+    connections: state.connections,
+  }));
+  _future.length = 0;
+  if (_history.length > _MAX_HISTORY) _history.shift();
+  document.getElementById('cv-undo-btn').disabled = false;
+  document.getElementById('cv-redo-btn').disabled = true;
+}
+
+function undoAction() {
+  if (!_history.length) return;
+  _future.push(JSON.stringify({
+    containers: state.containers,
+    connections: state.connections,
+  }));
+  const snap = JSON.parse(_history.pop());
+  state.containers  = snap.containers;
+  state.connections = snap.connections;
+  selectedId = null;
+  cfgModalInst?.hide();
+  renderAll();
+  document.getElementById('cv-undo-btn').disabled = _history.length === 0;
+  document.getElementById('cv-redo-btn').disabled = false;
+}
+
+function redoAction() {
+  if (!_future.length) return;
+  _history.push(JSON.stringify({
+    containers: state.containers,
+    connections: state.connections,
+  }));
+  const snap = JSON.parse(_future.pop());
+  state.containers  = snap.containers;
+  state.connections = snap.connections;
+  selectedId = null;
+  cfgModalInst?.hide();
+  renderAll();
+  document.getElementById('cv-undo-btn').disabled = false;
+  document.getElementById('cv-redo-btn').disabled = _future.length === 0;
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.target.closest('input, textarea, [contenteditable]')) {
+    e.preventDefault();
+    undoAction();
+  }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z')) && !e.target.closest('input, textarea, [contenteditable]')) {
+    e.preventDefault();
+    redoAction();
+  }
+});
+
+// ══ Save / Load Config ═══════════════════════════════════════════
+function saveConfig() {
+  const data = JSON.stringify({ version: 1, state }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${state.pod_name || 'pod'}-config.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function loadConfig(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const s = parsed.state || parsed;
+      if (!Array.isArray(s.containers)) throw new Error('No containers array found');
+      pushUndo();
+      Object.assign(state, s);
+      // Re-parse containers to ensure correct format (handle both string and array fields)
+      state.containers = s.containers.map(c => mkC({
+        ...c,
+        ports:   Array.isArray(c.ports)   ? c.ports   : parsePorts(c.ports),
+        volumes: Array.isArray(c.volumes) ? c.volumes : parseVols(c.volumes),
+        env:     Array.isArray(c.env)     ? c.env     : parseEnv(c.env),
+      }));
+      state.connections = s.connections || [];
+      // Sync sidebar fields
+      const pn = document.getElementById('cv-pod-name');
+      if (pn) pn.value = state.pod_name || 'mypod';
+      const rs = document.getElementById('cv-restart');
+      if (rs) rs.value = state.restart_policy || 'Always';
+      const mo = document.getElementById('cv-mode');
+      if (mo) mo.value = state.mode || 'rootless';
+      const us = document.getElementById('cv-userns');
+      if (us) us.value = state.userns || '';
+      renderAll();
+      updateNetworkState();
+      scanForTips();
+    } catch(err) {
+      alert('Could not load config: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';  // allow re-loading same file
+}
+
+// ══ Toast ════════════════════════════════════════════════════════
+function showToast(msg, type) {
+  const el = document.getElementById('app-toast');
+  const body = document.getElementById('app-toast-body');
+  el.className = 'toast align-items-center border-0 text-bg-' + (type || 'secondary');
+  body.textContent = msg;
+  bootstrap.Toast.getOrCreateInstance(el, { delay: 5000 }).show();
+}
+
+// ══ Compose Import ═══════════════════════════════════════════════
+let _composeModalInst = null;
+
+if (new URLSearchParams(location.search).get('compose') === '1') {
+  window.addEventListener('load', () => openComposeImport());
+}
+
+function _onComposeDrop(event) {
+  event.preventDefault();
+  document.getElementById('compose-drop-overlay').style.display = 'none';
+  const file = event.dataTransfer?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('compose-import-ta').value = e.target.result;
+  };
+  reader.readAsText(file);
+}
+
+function openComposeImport() {
+  if (!_composeModalInst) {
+    _composeModalInst = new bootstrap.Modal(document.getElementById('compose-modal'));
+  }
+  document.getElementById('compose-import-ta').value = '';
+  document.getElementById('compose-env-ta').value = '';
+  document.getElementById('compose-import-err').style.display = 'none';
+  _backToComposeStep1();
+  _composeModalInst.show();
+}
+
+function _parseEnvFileText(text) {
+  const vars = [];
+  for (const line of text.split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const idx = t.indexOf('=');
+    if (idx < 1) continue;
+    const key = t.slice(0, idx).trim();
+    const val = t.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+    if (key) vars.push({ key, value: val });
+  }
+  return vars;
+}
+
+function _mergeEnvVars(envVars, targetSvcs) {
+  state.containers.forEach(c => {
+    if (targetSvcs && targetSvcs.length && !targetSvcs.includes(c.name)) return;
+    const existing = new Set(c.env.map(e => e.key));
+    envVars.forEach(v => { if (!existing.has(v.key)) c.env.push({ key: v.key, value: v.value }); });
+  });
+}
+
+function _resolveEnvRefs(envVars) {
+  const map = {};
+  envVars.forEach(v => { map[v.key] = v.value; });
+  state.containers.forEach(c => {
+    c.env.forEach(e => {
+      if (e.value && typeof e.value === 'string' && e.value.includes('${')) {
+        e.value = e.value.replace(/\$\{([^}]+)\}/g, (_, k) => (k in map ? map[k] : `\${${k}}`));
+      }
+    });
+  });
+}
+
+function _extractComposeVars(text) {
+  const seen = new Set();
+  const vars = [];
+  const re = /\$\{([A-Za-z_][A-Za-z0-9_]*)(?::?-([^}]*))?\}/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const name = m[1];
+    const defaultVal = m[2] !== undefined ? m[2] : null;
+    if (!seen.has(name)) {
+      seen.add(name);
+      vars.push({ name, defaultVal });
+    }
+  }
+  return vars;
+}
+
+function _showComposeVarEditor(vars, existingVars) {
+  document.getElementById('compose-step-1').style.display = 'none';
+  document.getElementById('compose-vars-step').style.display = '';
+  document.getElementById('compose-import-footer-main').style.display = 'none';
+  document.getElementById('compose-import-footer-vars').style.display = '';
+  window._composeExistingVars = existingVars;
+  const list = document.getElementById('compose-vars-list');
+  list.innerHTML = vars.map(v => {
+    const hasDefault = v.defaultVal !== null;
+    const badge = hasDefault
+      ? `<span class="badge text-bg-secondary" style="font-size:.65rem;font-weight:400">optional</span>`
+      : `<span class="badge text-bg-warning text-dark" style="font-size:.65rem;font-weight:400">no default</span>`;
+    return `
+    <div class="mb-2 d-flex align-items-center gap-2">
+      <div style="min-width:220px;flex-shrink:0">
+        <code style="font-size:.78rem;word-break:break-all;display:block">${esc(v.name)}</code>
+        ${badge}
+      </div>
+      <input type="text" class="cv-ctrl flex-grow-1" style="font-size:.82rem;padding:.3rem .5rem"
+        data-varname="${esc(v.name)}"
+        value="${esc(v.defaultVal ?? '')}"
+        placeholder="${hasDefault ? '' : 'leave empty or fill in'}">
+    </div>`;
+  }).join('');
+}
+
+function _backToComposeStep1() {
+  document.getElementById('compose-step-1').style.display = '';
+  document.getElementById('compose-vars-step').style.display = 'none';
+  document.getElementById('compose-import-footer-main').style.display = '';
+  document.getElementById('compose-import-footer-vars').style.display = 'none';
+}
+
+function _confirmComposeVars() {
+  const inputs = document.querySelectorAll('#compose-vars-list input[data-varname]');
+  const extraVars = [];
+  inputs.forEach(inp => { if (inp.value.trim()) extraVars.push({ key: inp.dataset.varname, value: inp.value }); });
+  _doFetch([...(window._composeExistingVars || []), ...extraVars]);
+}
+
+function doComposeImport() {
+  const ta  = document.getElementById('compose-import-ta');
+  const err = document.getElementById('compose-import-err');
+  err.style.display = 'none';
+  const text = ta.value.trim();
+  if (!text) { err.textContent = 'Please paste a docker-compose.yml first.'; err.style.display = ''; return; }
+
+  const envTaText = (document.getElementById('compose-env-ta')?.value || '').trim();
+  const envVarsFromTa = envTaText ? _parseEnvFileText(envTaText) : [];
+  const alreadySet = new Set(envVarsFromTa.map(v => v.key));
+
+  const composeVars = _extractComposeVars(text).filter(v => !alreadySet.has(v.name));
+  if (composeVars.length > 0) {
+    _showComposeVarEditor(composeVars, envVarsFromTa);
+    return;
+  }
+
+  _doFetch(envVarsFromTa);
+}
+
+function _doFetch(envVars) {
+  const text = document.getElementById('compose-import-ta').value.trim();
+  const err  = document.getElementById('compose-import-err');
+  const envDict = {};
+  (envVars || []).forEach(v => { envDict[v.key] = v.value; });
+  fetch('/builder/compose-import/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+    body: JSON.stringify({ compose: text, env_vars: envDict }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) { err.textContent = data.error; err.style.display = ''; return; }
+    const includeEmpty = document.getElementById('compose-include-empty-env')?.checked ?? false;
+    pushUndo();
+    state.containers = data.containers.map(c => {
+      let env = parseEnv(c.env);
+      if (!includeEmpty) env = env.filter(e => e.value !== '');
+      return mkC({
+        ...c,
+        ports:   parsePorts(c.ports),
+        volumes: parseVols(c.volumes),
+        env,
+      });
+    });
+    state.connections = [];
+    if (data.restart_policy) {
+      state.restart_policy = data.restart_policy;
+      const rs = document.getElementById('cv-restart');
+      if (rs) rs.value = data.restart_policy;
+    }
+    if (data.host_network) {
+      state.host_network = true;
+      const hn = document.getElementById('cv-host-network');
+      if (hn) { hn.checked = true; }
+      updateNetworkState();
+    }
+    if (data.host_aliases) {
+      state.host_aliases = data.host_aliases;
+      const ha = document.getElementById('cv-host-aliases');
+      if (ha) ha.value = data.host_aliases;
+    }
+    autoExpandNetworkIfNeeded();
+    updateNetworkState();
+    if (envVars && envVars.length) {
+      const envFileSvcs = (data.env_file_svcs && data.env_file_svcs.length) ? data.env_file_svcs : null;
+      _mergeEnvVars(envVars, envFileSvcs);
+      _resolveEnvRefs(envVars);
+    }
+    syncDbCredentials();
+    renderAll();
+    scanForTips();
+    _composeModalInst.hide();
+    // Filter out env_file warning if .env was already applied
+    const warnings = envVars && envVars.length
+      ? (data.warnings || []).filter(w => w.fix_type !== 'env_file')
+      : (data.warnings || []);
+    if (warnings.length) {
+      _pendingImportFixes = warnings;
+      const body = document.getElementById('warnings-modal-body');
+      body.innerHTML = warnings.map((w, i) => `
+        <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded" style="background:rgba(245,158,11,.08)">
+          <i class="bi bi-exclamation-triangle-fill text-warning mt-1 flex-shrink-0"></i>
+          <span style="font-size:.85rem;flex:1">${esc(w.msg)}</span>
+          ${w.fix_type ? `<button class="btn btn-sm btn-outline-warning flex-shrink-0" style="font-size:.75rem"
+            onclick="_applyImportFix(${i},this)">
+            <i class="bi bi-magic me-1"></i>${esc(w.fix_label||'Fix')}
+          </button>` : ''}
+        </div>`).join('');
+      const warnModal = document.getElementById('warnings-modal');
+      warnModal.querySelector('.modal-title').innerHTML = '<i class="bi bi-file-code-fill me-2 text-warning"></i>Import warnings';
+      warnModal.querySelector('.modal-footer').innerHTML = '<button class="btn btn-primary" data-bs-dismiss="modal">OK, got it</button>';
+      new bootstrap.Modal(warnModal).show();
+    }
+  })
+  .catch(e => { console.error('[compose-import]', e); err.textContent = 'Network error: ' + e.message; err.style.display = ''; });
+}
+
+// ══ Live Validation Badges ════════════════════════════════════════
+const _DB_NAMES = new Set(['mysql','mariadb','postgres','postgresql','mongodb','mongo','redis']);
+function _isDbImg(img) { return _DB_NAMES.has((img||'').split(':')[0].split('/').pop().toLowerCase()); }
+
+const _DB_PWD_KEYS = {
+  mysql:      'MYSQL_ROOT_PASSWORD',
+  mariadb:    'MARIADB_ROOT_PASSWORD',
+  postgres:   'POSTGRES_PASSWORD',
+  postgresql: 'POSTGRES_PASSWORD',
+  mongodb:    'MONGO_INITDB_ROOT_PASSWORD',
+  mongo:      'MONGO_INITDB_ROOT_PASSWORD',
+};
+
+function _liveIssues(c) {
+  const issues = [];
+  const base = (c.image||'').split(':')[0].split('/').pop().toLowerCase();
+  const tag  = ((c.image||'').split(':')[1] || 'latest');
+
+  // DB-spezifisch
+  if (_isDbImg(c.image)) {
+    if (tag === 'latest') issues.push({ level:'warn', msg:'Using :latest on a DB image — pin a version' });
+    if (!c.volumes.length) issues.push({ level:'error', msg:'No volume — DB data will be lost on restart' });
+    const pwdKey = _DB_PWD_KEYS[base];
+    if (pwdKey && !c.env.find(e => e.key === pwdKey && e.value)) {
+      issues.push({ level:'error', msg:`${pwdKey} not set — DB will likely fail to start` });
+    }
+  }
+
+  // Keine Volumes/Paths bei unbekannten Images
+  if (c._no_registry_volumes && !c.volumes.length && !_isDbImg(c.image)) {
+    issues.push({ level:'warn', msg:'No volumes or host paths configured — check image docs for data paths' });
+  }
+
+  // Keine Ports obwohl Image welche hatte (nicht für DB-Images oder internal-only)
+  if (c._preset_had_ports && !c.ports.length && !_isDbImg(c.image) && !c.internal_only) {
+    issues.push({ level:'warn', msg:'No ports configured — service may not be accessible' });
+  }
+
+  // Privileged
+  if (c.privileged) {
+    issues.push({ level:'warn', msg:'Privileged mode enabled — container has full host access' });
+  }
+
+  // Port-Konflikt im Pod
+  const myHostPorts = new Set(c.ports.map(p => p.host));
+  state.containers.forEach(other => {
+    if (other.id === c.id) return;
+    other.ports.forEach(p => {
+      if (myHostPorts.has(p.host)) {
+        issues.push({ level:'error', msg:`Host port ${p.host} also used by "${other.name||'another container'}"` });
+        myHostPorts.delete(p.host); // nur einmal melden
+      }
+    });
+  });
+
+  // Zabbix DB-Env
+  const zbxDbType = c.env.find(e => e.key === 'ZBX_DB_TYPE')?.value?.toLowerCase();
+  if (zbxDbType && zbxDbType !== 'sqlite3') {
+    const missing = ['ZBX_DB_HOST','ZBX_DB_NAME','ZBX_DB_USER','ZBX_DB_PASSWORD']
+      .filter(k => !c.env.find(e => e.key === k && e.value));
+    if (missing.length) issues.push({ level:'error', msg:`Missing: ${missing.join(', ')}` });
+  }
+
+  return issues;
+}
+
+// ══ Image Inspector ═══════════════════════════════════════════════
+function openImageInspect() {
+  const c = getC(selectedId);
+  if (!c || !c.image) { showToast('Enter an image name first.', 'warning'); return; }
+
+  const modal = new bootstrap.Modal(document.getElementById('image-inspect-modal'));
+  document.getElementById('insp-title').textContent = c.image;
+  document.getElementById('insp-scout-link').href = '#';
+  document.getElementById('insp-body').innerHTML =
+    '<div class="text-center py-4 text-secondary"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>';
+  modal.show();
+
+  fetch(`/builder/image-inspect/?image=${encodeURIComponent(c.image)}`)
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(data => _renderInspect(data, c.image))
+    .catch(() => {
+      document.getElementById('insp-body').innerHTML =
+        '<div class="text-center py-4 text-secondary"><i class="bi bi-exclamation-circle me-2"></i>Could not fetch image info.</div>';
+    });
+}
+
+function _renderInspect(d, image) {
+  // Scout-Link setzen
+  if (d.scout_url) document.getElementById('insp-scout-link').href = d.scout_url;
+
+  let html = '';
+
+  // ── Hub-Metadaten ────────────────────────────────
+  if (d.hub && d.hub.description) {
+    html += `<div class="insp-section">
+      <div class="insp-section-title"><i class="bi bi-info-circle me-1"></i>Info</div>
+      <div class="insp-row"><span class="insp-key">Description</span><span class="insp-val">${esc(d.hub.description)}</span></div>`;
+    if (d.hub.pull_count)  html += `<div class="insp-row"><span class="insp-key">Pulls</span><span class="insp-val">${_fmtNum(d.hub.pull_count)}</span></div>`;
+    if (d.hub.star_count)  html += `<div class="insp-row"><span class="insp-key">Stars</span><span class="insp-val">${d.hub.star_count.toLocaleString()}</span></div>`;
+    if (d.hub.last_updated) html += `<div class="insp-row"><span class="insp-key">Updated</span><span class="insp-val">${esc(d.hub.last_updated)}</span></div>`;
+    if (d.hub.is_official) html += `<div class="insp-row"><span class="insp-key">Official</span><span class="insp-val" style="color:#4ade80;"><i class="bi bi-patch-check-fill me-1"></i>Docker Official Image</span></div>`;
+    html += `</div>`;
+  }
+
+  // ── Vulnerabilities ──────────────────────────────
+  if (d.is_dockerhub) {
+    html += `<div class="insp-section">
+      <div class="insp-section-title"><i class="bi bi-shield-check me-1"></i>Vulnerabilities (tag: <code>${esc(d.tag)}</code>)</div>`;
+    const v = d.vulnerabilities || {};
+    const total = (v.critical||0) + (v.high||0) + (v.medium||0) + (v.low||0);
+    if (total === 0 && Object.keys(v).length === 0) {
+      html += `<div class="insp-stat" style="margin-top:.2rem;"><i class="bi bi-info-circle me-1"></i>No scan data available for this image/tag.
+        <a href="${esc(d.scout_url)}" target="_blank" rel="noopener" class="insp-scout-link ms-1">View on Docker Scout</a></div>`;
+    } else if (total === 0) {
+      html += `<div class="insp-vuln-none"><i class="bi bi-shield-check me-1"></i>No known vulnerabilities found.</div>`;
+    } else {
+      html += `<div class="insp-vuln-bar">`;
+      if (v.critical) html += `<span class="insp-vuln-pill critical"><i class="bi bi-exclamation-octagon-fill me-1"></i>${v.critical} Critical</span>`;
+      if (v.high)     html += `<span class="insp-vuln-pill high"><i class="bi bi-exclamation-triangle-fill me-1"></i>${v.high} High</span>`;
+      if (v.medium)   html += `<span class="insp-vuln-pill medium">${v.medium} Medium</span>`;
+      if (v.low)      html += `<span class="insp-vuln-pill low">${v.low} Low</span>`;
+      html += `</div>
+      <div class="mt-1"><a href="${esc(d.scout_url)}" target="_blank" rel="noopener" class="insp-scout-link">
+        <i class="bi bi-box-arrow-up-right me-1"></i>Full report on Docker Scout</a></div>`;
+    }
+    html += `</div>`;
+  }
+
+  // ── Exposed Ports ────────────────────────────────
+  if (d.ports && d.ports.length) {
+    html += `<div class="insp-section">
+      <div class="insp-section-title"><i class="bi bi-ethernet me-1"></i>Exposed Ports</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.3rem;">`;
+    d.ports.forEach(p => {
+      html += `<code style="background:var(--surface-3);border:1px solid var(--border);border-radius:3px;padding:.1rem .4rem;font-size:.78rem;">${esc(p)}</code>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ── Volumes ──────────────────────────────────────
+  if (d.volumes && d.volumes.length) {
+    html += `<div class="insp-section">
+      <div class="insp-section-title"><i class="bi bi-folder2 me-1"></i>Volume Paths</div>
+      <div style="display:flex;flex-wrap:wrap;gap:.3rem;">`;
+    d.volumes.forEach(v => {
+      html += `<code style="background:var(--surface-3);border:1px solid var(--border);border-radius:3px;padding:.1rem .4rem;font-size:.78rem;">${esc(v)}</code>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ── Env ──────────────────────────────────────────
+  if (d.env && d.env.length) {
+    html += `<div class="insp-section">
+      <div class="insp-section-title"><i class="bi bi-sliders me-1"></i>Environment Variables</div>`;
+    d.env.forEach(e => {
+      html += `<div class="insp-row">
+        <span class="insp-key" style="min-width:0;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(e.key)}">${esc(e.key)}</span>
+        <span class="insp-val" style="color:var(--text-muted);">${esc(e.value) || '<span style="opacity:.4">—</span>'}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ── Tags ─────────────────────────────────────────
+  if (d.tags && d.tags.length) {
+    const currentTag = (image.split(':')[1] || 'latest');
+    html += `<div class="insp-section">
+      <div class="insp-section-title"><i class="bi bi-tags me-1"></i>Available Tags <span class="insp-stat">(click to apply)</span></div>
+      <div class="insp-tag-list">`;
+    d.tags.forEach(t => {
+      html += `<span class="insp-tag ${t===currentTag?'current':''}" onclick="_inspApplyTag('${esc(t)}')">${esc(t)}</span>`;
+    });
+    html += `</div></div>`;
+  }
+
+  if (!html) {
+    html = '<div class="text-center py-3 text-secondary">No data available for this image.</div>';
+  }
+
+  document.getElementById('insp-body').innerHTML = html;
+}
+
+function _inspApplyTag(tag) {
+  const c = getC(selectedId); if (!c) return;
+  const base = c.image.split(':')[0];
+  c.image = `${base}:${tag}`;
+  const inp = document.getElementById('cfg-image-inp');
+  if (inp) { inp.value = c.image; renderVersionPicker(c.image); }
+  cfgSet('image', c.image);
+  document.getElementById('cfg-header-image').textContent = base.split('/').pop();
+  renderNodes();
+  bootstrap.Modal.getInstance(document.getElementById('image-inspect-modal')).hide();
+  showToast(`Tag set to :${tag}`, 'success');
+}
+
+function _fmtNum(n) {
+  if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(0) + 'K';
+  return String(n);
+}
+
+// ══ Version Picker ════════════════════════════════════════════════
+const _IMG_VERSIONS = {
+  mysql:      ['8.4', '8.0', '5.7'],
+  mariadb:    ['11.4', '10.11', '10.6'],
+  postgres:   ['17', '16', '15', '14'],
+  redis:      ['7.4', '7.2', '6.2'],
+  mongodb:    ['8.0', '7.0', '6.0'],
+  nginx:      ['1.27', 'alpine', '1.26'],
+  caddy:      ['2.9', 'alpine', '2.8'],
+  traefik:    ['v3.3', 'v3.2', 'v2.11'],
+  grafana:    ['11.4', '11.3', '10.4'],
+  influxdb:   ['2.7', '1.8'],
+  prometheus: ['v3.1', 'v2.55', 'v2.54'],
+  keycloak:   ['26.1', '25.0', '24.0'],
+  nextcloud:  ['31', '30', '29'],
+  wordpress:  ['6.7', '6.6', 'php8.3-apache'],
+  gitea:      ['1.22', '1.21'],
+  minio:      ['latest', 'RELEASE.2024-01-31T20-20-33Z'],
+  vaultwarden:['testing', '1.32'],
+  headscale:  ['0.23', '0.22'],
+};
+
+function renderVersionPicker(imageVal) {
+  const wrap = document.getElementById('cfg-ver-wrap');
+  const btns = document.getElementById('cfg-ver-btns');
+  if (!wrap || !btns) return;
+  const base    = (imageVal||'').split(':')[0].split('/').pop().toLowerCase();
+  const current = (imageVal||'').split(':')[1] || '';
+  const versions = _IMG_VERSIONS[base];
+  if (!versions) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  btns.innerHTML = versions.map(v =>
+    `<button class="cfg-ver-btn ${current===v?'active':''}" onclick="setImageVersion('${esc(v)}')">${esc(v)}</button>`
+  ).join('');
+}
+
+function setImageVersion(ver) {
+  const c = getC(selectedId); if (!c) return;
+  const base = c.image.split(':')[0];
+  c.image = `${base}:${ver}`;
+  const inp = document.getElementById('cfg-image-inp');
+  if (inp) { inp.value = c.image; renderVersionPicker(c.image); }
+  document.getElementById('cfg-header-image').textContent = base.split('/').pop();
+  const nn = document.getElementById('nn-' + c.id);
+  if (nn) nn.textContent = c.name || 'container';
+  renderNodes();
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+renderCatalog();
+renderAll();
+updateNetworkState();
+
+// Measure navbar + footer so cv-layout fills exactly the remaining viewport
+(function(){
+  const nav    = document.querySelector('nav.navbar');
+  const footer = document.querySelector('footer');
+  const navH    = nav    ? nav.offsetHeight    : 58;
+  const footerH = footer
+    ? footer.offsetHeight + parseInt(getComputedStyle(footer).marginTop || 0)
+    : 0;
+  document.documentElement.style.setProperty('--nav-h', (navH + footerH + 8) + 'px');
+})();
+
+// ── Keyboard shortcuts ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const active = document.activeElement;
+  const typing = active && (active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.isContentEditable);
+  if (typing) return;
+  // Delete / Backspace → remove selected node (only if config modal is closed)
+  if ((e.key==='Delete'||e.key==='Backspace') && selectedId) {
+    const modalOpen = document.getElementById('cfg-modal')?.classList.contains('show');
+    if (!modalOpen) { removeContainer(selectedId); selectedId=null; }
+  }
+  // Escape → deselect
+  if (e.key==='Escape') { selectedId=null; renderNodes(); }
+});
+
+let _envPasteTargetSvcs = [];
+let _envPasteModalInst = null;
+
+function _applyEnvPaste() {
+  const ta = document.getElementById('env-paste-ta');
+  const result = document.getElementById('env-paste-result');
+  const lines = ta.value.split('\n');
+  const parsed = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const idx = trimmed.indexOf('=');
+    if (idx < 1) continue;
+    const key = trimmed.slice(0, idx).trim();
+    const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+    if (key) parsed.push({ key, val });
+  }
+  if (!parsed.length) {
+    result.textContent = 'No valid KEY=VALUE lines found.';
+    result.style.color = 'var(--bs-danger)';
+    result.style.display = '';
+    return;
+  }
+  let added = 0;
+  state.containers.forEach(c => {
+    if (_envPasteTargetSvcs.length && !_envPasteTargetSvcs.includes(c.name)) return;
+    const existingKeys = new Set(c.env.map(e => e.key));
+    parsed.forEach(({ key, val }) => {
+      if (!existingKeys.has(key)) {
+        c.env.push({ key, value: val });
+        added++;
+      }
+    });
+  });
+  renderAll();
+  result.textContent = `Added ${added} variable${added !== 1 ? 's' : ''}.`;
+  result.style.color = added ? 'var(--bs-success)' : 'var(--text-dim)';
+  result.style.display = '';
+  if (added) setTimeout(() => { _envPasteModalInst?.hide(); }, 800);
+}
+
+let _pendingImportFixes = [];
+let _hostpathFixData = [];
+let _hostpathFixBtn = null;
+let _hostpathFixModalInst = null;
+
+let _pwdFixData = [];
+let _pwdFixBtn = null;
+let _pwdFixModalInst = null;
+
+function _genPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const arr = new Uint8Array(24);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => chars[b % chars.length]).join('');
+}
+
+function _generateAllPasswords() {
+  document.querySelectorAll('#passwords-fix-list input[data-pwd-idx]').forEach(inp => {
+    inp.value = _genPassword();
+  });
+}
+
+function _confirmPasswordsFix() {
+  document.querySelectorAll('#passwords-fix-list input[data-pwd-idx]').forEach(inp => {
+    const idx = parseInt(inp.dataset.pwdIdx);
+    const fd = _pwdFixData[idx];
+    if (!fd) return;
+    const c = state.containers.find(c => c.name === fd.svc);
+    if (!c) return;
+    const ev = c.env.find(e => e.key === fd.key);
+    if (ev) ev.value = inp.value;
+  });
+  renderAll();
+  if (_pwdFixBtn) { _pwdFixBtn.disabled = true; _pwdFixBtn.innerHTML = '<i class="bi bi-check2 me-1"></i>Applied'; }
+  _pwdFixModalInst?.hide();
+}
+
+function _updateHostpathPreview() {
+  const base = (document.getElementById('hostpath-base-input').value || '').replace(/\/+$/, '');
+  const preview = document.getElementById('hostpath-preview');
+  if (!_hostpathFixData.length) { preview.innerHTML = ''; return; }
+  preview.innerHTML = _hostpathFixData.map(fd => {
+    const hostPath = base ? `${base}/${fd.named}` : `&lt;base&gt;/${fd.named}`;
+    return `<div class="d-flex gap-2 mb-1"><span class="text-secondary">${esc(fd.svc)}:</span>`
+      + `<span class="text-muted">${esc(fd.named)}</span><span class="text-secondary mx-1">→</span>`
+      + `<span class="text-info">${esc(base)}/${esc(fd.named)}</span></div>`;
+  }).join('');
+}
+
+function _confirmHostpathFix() {
+  const base = (document.getElementById('hostpath-base-input').value || '').replace(/\/+$/, '');
+  const inp = document.getElementById('hostpath-base-input');
+  if (!base) { inp.classList.add('border-danger'); return; }
+  inp.classList.remove('border-danger');
+  _hostpathFixData.forEach(fd => {
+    const c = state.containers.find(c => c.name === fd.svc);
+    if (!c) return;
+    const vol = c.volumes.find(v => v.src === fd.named && (fd.target ? v.target === fd.target : true));
+    if (vol) vol.src = `${base}/${fd.named}`;
+  });
+  renderAll();
+  if (_hostpathFixBtn) {
+    _hostpathFixBtn.disabled = true;
+    _hostpathFixBtn.innerHTML = '<i class="bi bi-check2 me-1"></i>Applied';
+  }
+  _hostpathFixModalInst?.hide();
+}
+
+function _hideWarningsModal() {
+  const inst = bootstrap.Modal.getInstance(document.getElementById('warnings-modal'));
+  if (inst) inst.hide();
+}
+
+function _applyImportFix(idx, btn) {
+  const w = _pendingImportFixes[idx] || {};
+  const fixType = w.fix_type;
+  const fixData = w.fix_data;
+  if (fixType === 'env_file') {
+    _envPasteTargetSvcs = fixData;
+    document.getElementById('env-paste-ta').value = '';
+    document.getElementById('env-paste-result').style.display = 'none';
+    if (!_envPasteModalInst) _envPasteModalInst = new bootstrap.Modal(document.getElementById('env-paste-modal'));
+    _envPasteModalInst.show();
+    return;
+  }
+  if (fixType === 'passwords') {
+    _pwdFixData = fixData;
+    _pwdFixBtn = btn;
+    const list = document.getElementById('passwords-fix-list');
+    list.innerHTML = fixData.map((fd, i) => `
+      <div class="mb-2">
+        <label class="form-label mb-1" style="font-size:.78rem;color:var(--text-muted);">
+          <code>${esc(fd.svc)}</code> / <code>${esc(fd.key)}</code>
+        </label>
+        <div class="d-flex gap-2">
+          <input type="text" class="cv-ctrl flex-1" data-pwd-idx="${i}"
+            value="${esc(fd.value)}" style="font-family:monospace;font-size:.82rem;">
+          <button class="btn btn-sm btn-outline-secondary flex-shrink-0"
+            onclick="this.previousElementSibling.value=_genPassword()" title="Generate">
+            <i class="bi bi-shuffle"></i>
+          </button>
+        </div>
+      </div>`).join('');
+    if (!_pwdFixModalInst) _pwdFixModalInst = new bootstrap.Modal(document.getElementById('passwords-fix-modal'));
+    _pwdFixModalInst.show();
+    return;
+  }
+  if (fixType === 'rel_vol_hostpath') {
+    _hostpathFixData = fixData;
+    _hostpathFixBtn = btn;
+    const _hpInp = document.getElementById('hostpath-base-input');
+    _hpInp.value = '';
+    _hpInp.classList.remove('border-danger');
+    const _hpSvc = fixData[0]?.svc || '';
+    _hpInp.placeholder = _hpSvc ? `/home/user/${_hpSvc}` : '/home/user';
+    _updateHostpathPreview();
+    if (!_hostpathFixModalInst) _hostpathFixModalInst = new bootstrap.Modal(document.getElementById('hostpath-fix-modal'));
+    _hostpathFixModalInst.show();
+    return;
+  }
+  if (fixType === 'healthcheck') {
+    fixData.forEach(fd => {
+      const c = state.containers.find(c => c.name === fd.svc);
+      if (c) {
+        c.liveness_probe_cmd     = fd.cmd;
+        c.liveness_initial_delay = fd.initial_delay;
+        c.liveness_period        = fd.period;
+      }
+    });
+    renderAll();
+  } else if (fixType === 'build_placeholder') {
+    fixData.forEach(fd => {
+      const c = state.containers.find(c => c.name === fd.svc);
+      if (c) c.image = fd.image;
+    });
+    renderAll();
+  }
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Applied';
+}
+
+window.addEventListener('pageshow', function(e) {
+  if (e.persisted) {
+    const btn = document.getElementById('cv-gen-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-code-slash me-1"></i>Generate';
+  }
+});
+</script>
+{% endblock %}

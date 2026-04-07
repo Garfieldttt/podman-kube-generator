@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ col.name }} — Collection{% endblock %}
+{% block meta_robots %}{% if col.is_public %}index, follow{% else %}noindex, nofollow{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a href="{% url 'collections_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+      <div class="flex-grow-1">
+        <h1 class="h4 mb-0"><i class="bi bi-collection me-2"></i>{{ col.name }}</h1>
+        <p class="text-secondary small mb-0">
+          {{ col.user.username }}
+          {% if col.is_public %}&middot; <span class="text-success">Public</span>{% endif %}
+          &middot; {{ items|length }} item{{ items|length|pluralize }}
+        </p>
+      </div>
+    </div>
+
+    {% if col.description %}
+    <p class="text-secondary mb-4">{{ col.description }}</p>
+    {% endif %}
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible py-2 mb-3">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+    {% endif %}
+
+    {% if items %}
+    <div class="list-group mb-4">
+      {% for item in items %}
+      <div class="list-group-item d-flex align-items-center gap-3">
+        <div class="flex-grow-1">
+          <a href="/{{ item.saved_config.uuid }}/" class="fw-semibold text-decoration-none">
+            {{ item.saved_config.name }}
+          </a>
+          {% if item.note %}<span class="text-secondary small ms-2">{{ item.note }}</span>{% endif %}
+          <div class="text-secondary small">{{ item.saved_config.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/{{ item.saved_config.uuid }}/" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-eye"></i>
+          </a>
+          {% if is_owner %}
+          <form method="post" action="{% url 'collection_remove_item' col.pk item.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove from collection">
+              <i class="bi bi-x"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-secondary mb-4">No items in this collection yet.</div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

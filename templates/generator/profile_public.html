@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.username }} — Podman Kube Generator{% endblock %}
+{% block meta_description %}{{ profile_user.username }}'s public profile and community stacks on Podman Kube Generator.{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <!-- Profil-Header -->
+    <div class="card p-4 mb-4">
+      <div class="d-flex align-items-center gap-4 flex-wrap">
+        {% with profile.get_avatar_url as av %}
+        {% if av %}
+        <img src="{{ av }}" alt="Avatar"
+          style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(20,184,166,.3);flex-shrink:0;">
+        {% else %}
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);border:2px solid rgba(20,184,166,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#fff;text-transform:uppercase;">{{ profile_user.username|first }}</div>
+        {% endif %}
+        {% endwith %}
+        <div class="flex-grow-1">
+          <h1 class="h4 mb-1" style="color:var(--text);">{{ profile_user.username }}</h1>
+          {% if profile.bio %}
+          <p class="mb-2 small" style="color:var(--text-dim);">{{ profile.bio }}</p>
+          {% endif %}
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            {% if profile.website %}
+            <a href="{{ profile.website }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;">
+              <i class="bi bi-globe2 me-1"></i>Website
+            </a>
+            {% endif %}
+            {% if profile.github %}
+            <a href="https://github.com/{{ profile.github }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;">
+              <i class="bi bi-github me-1"></i>{{ profile.github }}
+            </a>
+            {% endif %}
+            {% if profile.twitter %}
+            <a href="https://x.com/{{ profile.twitter }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;">
+              <i class="bi bi-twitter-x me-1"></i>@{{ profile.twitter }}
+            </a>
+            {% endif %}
+            {% if profile.mastodon %}
+            <span class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;cursor:default;">
+              <i class="bi bi-mastodon me-1"></i>{{ profile.mastodon }}
+            </span>
+            {% endif %}
+            {% if profile.linkedin %}
+            <a href="https://linkedin.com/in/{{ profile.linkedin }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary" style="font-size:.75rem;">
+              <i class="bi bi-linkedin me-1"></i>{{ profile.linkedin }}
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% if request.user == profile_user %}
+        <a href="{% url 'profile_edit' %}" class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-pencil me-1"></i>Bearbeiten
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Community Stacks -->
+    {% if page_obj.object_list %}
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="h5 mb-0">
+        <i class="bi bi-collection me-2" style="color:var(--accent);"></i>Community Stacks
+      </h2>
+      <span class="badge" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);">
+        {{ page_obj.paginator.count }}
+      </span>
+    </div>
+
+    <div class="d-flex flex-column gap-3">
+      {% for s in page_obj %}
+      <div class="card p-3">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(20,184,166,.1);
+                      border:1px solid rgba(20,184,166,.2);display:flex;align-items:center;
+                      justify-content:center;flex-shrink:0;">
+            <i class="bi {{ s.icon|default:'bi-box' }}" style="color:#5eead4;font-size:.9rem;"></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="fw-semibold" style="color:var(--text);">{{ s.name }}</div>
+            {% if s.description %}<div class="small" style="color:var(--text-dim);">{{ s.description }}</div>{% endif %}
+            <div class="small mt-1" style="color:var(--text-muted);">{{ s.created_at|date:"d.m.Y" }}</div>
+          </div>
+          <div class="d-flex align-items-center gap-3 flex-shrink-0">
+            <span class="small" style="color:var(--text-muted);" title="Likes">
+              <i class="bi bi-heart me-1"></i>{{ s.likes.count }}
+            </span>
+            <span class="small" style="color:var(--text-muted);" title="Views">
+              <i class="bi bi-eye me-1"></i>{{ s.view_count }}
+            </span>
+            <a href="{% url 'community_stack_detail' s.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-chat-dots me-1"></i>Details
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4 d-flex justify-content-center gap-2">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-chevron-left"></i>
+      </a>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <a href="?page={{ num }}"
+        class="btn btn-sm {% if num == page_obj.number %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+        {{ num }}
+      </a>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-chevron-right"></i>
+      </a>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

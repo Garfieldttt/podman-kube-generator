@@ -1,0 +1,28 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Django
+db.sqlite3
+*.sqlite3
+staticfiles/
+media/
+
+# Environment
+.env
+
+# Update-Script Backup
+.update-backup/
+
+# Junk
+~/
+Eingefügtes Bild.png
+
+# Editor
+.idea/
+.vscode/
+*.swp

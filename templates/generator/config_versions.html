@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Versions — {{ config.name }}{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a href="/{{ config.uuid }}/" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+      <div>
+        <h1 class="h4 mb-0">Version history</h1>
+        <p class="text-secondary small mb-0">{{ config.name }}</p>
+      </div>
+    </div>
+
+    {% if diff_html %}
+    <div class="card mb-4">
+      <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">
+          <i class="bi bi-file-diff me-2"></i>
+          Diff: v{{ v2.pk }} → v{{ v1.pk }}
+        </span>
+        <a href="{% url 'config_versions' config.uuid %}" class="btn btn-sm btn-outline-secondary">Clear</a>
+      </div>
+      <div class="card-body p-0">
+        <pre class="m-0 p-3" id="diff-output" style="font-size:.8rem;line-height:1.5;overflow-x:auto;">{% for line in diff_html.splitlines %}<span class="{% if line|slice:':1' == '+' %}text-success{% elif line|slice:':1' == '-' %}text-danger{% elif line|slice:':2' == '@@' %}text-info{% endif %}">{{ line }}
+</span>{% endfor %}</pre>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if versions %}
+    <div class="card mb-3">
+      <div class="card-header py-2 px-3">
+        <span class="fw-semibold"><i class="bi bi-clock-history me-2"></i>{{ versions|length }} version{{ versions|length|pluralize }}</span>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for v in versions %}
+        <div class="list-group-item d-flex align-items-center gap-3">
+          <div class="flex-grow-1">
+            <span class="fw-semibold">{% if v.label %}{{ v.label }}{% else %}v{{ forloop.revcounter }}{% endif %}</span>
+            <span class="text-secondary small ms-2">{{ v.created_at|date:"d.m.Y H:i" }}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary"
+              onclick="document.getElementById('preview-{{ v.pk }}').style.display = document.getElementById('preview-{{ v.pk }}').style.display === 'none' ? 'block' : 'none'">
+              <i class="bi bi-eye"></i>
+            </button>
+            {% if not forloop.first %}
+            <a href="?v1={{ v.pk }}&v2={% for vv in versions %}{% if forloop.counter == forloop.parentloop.counter|add:1 %}{{ vv.pk }}{% endif %}{% endfor %}"
+              class="btn btn-sm btn-outline-secondary" title="Diff with previous">
+              <i class="bi bi-file-diff"></i>
+            </a>
+            {% endif %}
+            <form method="post" action="{% url 'update_config' config.uuid %}" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="yaml_content" value="{{ v.yaml_content }}">
+              <input type="hidden" name="label" value="Restored from v{{ v.pk }}">
+              <button type="submit" class="btn btn-sm btn-outline-warning" title="Restore this version"
+                onclick="return confirm('Restore this version? Current YAML will be saved as a version first.')">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+        <div id="preview-{{ v.pk }}" style="display:none;">
+          <pre class="m-0 p-3 border-top" style="font-size:.75rem;line-height:1.4;max-height:300px;overflow-y:auto;">{{ v.yaml_content }}</pre>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header py-2 px-3">
+        <span class="fw-semibold"><i class="bi bi-file-diff me-2"></i>Compare any two versions</span>
+      </div>
+      <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+          <div class="col-auto">
+            <label class="form-label small mb-1">Newer</label>
+            <select name="v1" class="form-select form-select-sm">
+              {% for v in versions %}
+              <option value="{{ v.pk }}" {% if v1 and v1.pk == v.pk %}selected{% endif %}>
+                {% if v.label %}{{ v.label }}{% else %}v{{ forloop.revcounter }}{% endif %} ({{ v.created_at|date:"d.m.Y H:i" }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-auto">
+            <label class="form-label small mb-1">Older</label>
+            <select name="v2" class="form-select form-select-sm">
+              {% for v in versions %}
+              <option value="{{ v.pk }}" {% if v2 and v2.pk == v.pk %}selected{% endif %}>
+                {% if v.label %}{{ v.label }}{% else %}v{{ forloop.revcounter }}{% endif %} ({{ v.created_at|date:"d.m.Y H:i" }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Show diff</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="text-secondary">No versions saved yet. Versions are created automatically when you save a config.</div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

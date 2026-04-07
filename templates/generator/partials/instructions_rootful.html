@@ -1,0 +1,233 @@
+<!-- OS Auswahl -->
+<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+  <span class="small" style="color:var(--text-dim);">Betriebssystem:</span>
+  <div class="d-flex gap-1 flex-wrap" id="os-sel-rf">
+    <button type="button" class="btn btn-sm btn-outline-secondary active" data-os="debian" onclick="rfOS('debian')">Debian / Ubuntu</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="fedora" onclick="rfOS('fedora')">Fedora / RHEL</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="arch" onclick="rfOS('arch')">Arch Linux</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="alpine" onclick="rfOS('alpine')">Alpine Linux</button>
+  </div>
+</div>
+
+<!-- Podman installieren -->
+<div class="step-block mb-4" style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.04);">
+  <div class="d-flex gap-3">
+    <div class="step-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);">!</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold" style="color:#fcd34d;">
+        Voraussetzung
+        <span class="badge ms-2" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);font-size:.7rem;font-weight:600;">als root</span>
+      </p>
+      <p class="small fw-semibold mb-1" style="color:var(--text-dim);">Podman installieren</p>
+
+      <div class="rf-os" data-os="debian" style="display:block;">
+        <div class="pre-wrap mb-0">
+          <pre id="rf-inst-deb">apt update && apt install -y podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rf-inst-deb')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rf-os" data-os="fedora" style="display:none;">
+        <div class="pre-wrap mb-1">
+          <pre id="rf-inst-fed">dnf install -y podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rf-inst-fed')"><i class="bi bi-clipboard"></i></button>
+        </div>
+        <p class="small mb-0" style="color:var(--text-muted);">RHEL 9 / Rocky / Alma: vorher <code>dnf module enable container-tools:rhel9 -y</code> ausführen.</p>
+      </div>
+
+      <div class="rf-os" data-os="arch" style="display:none;">
+        <div class="pre-wrap mb-0">
+          <pre id="rf-inst-arch">pacman -S podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rf-inst-arch')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rf-os" data-os="alpine" style="display:none;">
+        <div class="pre-wrap mb-0">
+          <pre id="rf-inst-alp">apk add podman crun</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rf-inst-alp')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step-block">
+  <div class="d-flex gap-3">
+    <div class="step-badge" style="background:#d97706;">1</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold">YAML-Datei speichern</p>
+      <div class="pre-wrap">
+        <pre id="rf-step1">sudo mkdir -p /etc/containers/
+# YAML oben kopieren nach:
+sudo nano /etc/containers/{{ pod_name }}.yaml</pre>
+        <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rf-step1')"><i class="bi bi-clipboard"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step-block">
+  <div class="d-flex gap-3">
+    <div class="step-badge" style="background:#d97706;">2</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold">Pod testen (ohne systemd)</p>
+      <div class="pre-wrap">
+        <pre id="rf-step2">sudo podman play kube /etc/containers/{{ pod_name }}.yaml
+
+# Status:
+sudo podman pod ps && sudo podman ps
+
+# Stoppen:
+sudo podman play kube --down /etc/containers/{{ pod_name }}.yaml</pre>
+        <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rf-step2')"><i class="bi bi-clipboard"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Schritte 3–5: systemd (Debian / Fedora / Arch) -->
+<div class="rf-os" data-os="debian fedora arch" style="display:block;">
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge" style="background:#d97706;">3</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Quadlet .kube-Datei erstellen (systemd)</p>
+        <p class="text-secondary small mb-2">Datei ablegen unter <code>/etc/containers/systemd/{{ pod_name }}.kube</code></p>
+        <div class="pre-wrap">
+          <pre id="rf-step3">sudo mkdir -p /etc/containers/systemd/
+cat << 'EOF' | sudo tee /etc/containers/systemd/{{ pod_name }}.kube
+[Unit]
+Description={{ pod_name }} Pod
+
+[Kube]
+Yaml=/etc/containers/{{ pod_name }}.yaml
+
+[Install]
+WantedBy=multi-user.target
+EOF</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rf-step3')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge" style="background:#d97706;">4</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">systemd aktivieren (rootful)</p>
+        <div class="pre-wrap">
+          <pre id="rf-step4">sudo systemctl daemon-reload
+sudo systemctl enable --now {{ pod_name }}-pod.service</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rf-step4')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge" style="background:#d97706;">5</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
+        <div class="pre-wrap">
+          <pre id="rf-step5">sudo systemctl status {{ pod_name }}-pod.service
+sudo journalctl -u {{ pod_name }}-pod.service -f
+sudo podman pod ps
+sudo podman ps</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rf-step5')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Schritte 3–5: Alpine Linux (OpenRC) -->
+<div class="rf-os" data-os="alpine" style="display:none;">
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge" style="background:#d97706;">3</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">OpenRC-Service einrichten</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Alpine nutzt OpenRC — kein Quadlet. Init-Script als root anlegen:</p>
+        <div class="pre-wrap">
+          <pre id="rf-alp-init">cat > /etc/init.d/{{ pod_name }}-pod << 'INITEOF'
+#!/sbin/openrc-run
+name="{{ pod_name }}-pod"
+description="{{ pod_name }} Pod (Podman rootful)"
+command="/usr/bin/podman"
+command_args="play kube /etc/containers/{{ pod_name }}.yaml"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+    need net cgroups
+}
+
+stop() {
+    ebegin "Stopping ${name}"
+    start-stop-daemon --stop --pidfile "${pidfile}"
+    podman play kube --down /etc/containers/{{ pod_name }}.yaml
+    eend $?
+}
+INITEOF
+chmod +x /etc/init.d/{{ pod_name }}-pod
+rc-update add cgroups boot
+rc-update add {{ pod_name }}-pod default
+rc-service {{ pod_name }}-pod start</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rf-alp-init')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge" style="background:#d97706;">4</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
+        <div class="pre-wrap">
+          <pre id="rf-alp-status">rc-service {{ pod_name }}-pod status
+podman pod ps && podman ps</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rf-alp-status')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert border-secondary mt-2" style="background:#12141f;">
+    <strong><i class="bi bi-info-circle me-1 text-secondary"></i> Alpine / OpenRC:</strong>
+    <ul class="mb-0 mt-2 small">
+      <li>Kein systemd → kein Quadlet. Der Pod wird direkt per <code>podman play kube</code> über OpenRC gestartet.</li>
+      <li>Logs: <code>podman logs &lt;container-name&gt;</code> oder <code>/var/log/messages</code></li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="alert border-warning mt-3" style="background:#12141f;">
+  <strong><i class="bi bi-exclamation-triangle me-1 text-warning"></i> Rootful-Betrieb:</strong>
+  <ul class="mb-0 mt-2 small">
+    <li>Container laufen als root — nur für vertrauenswürdige Images verwenden</li>
+    <li>Ports &lt; 1024 direkt bindbar</li>
+    <li>Kein <code>loginctl enable-linger</code> nötig — systemd verwaltet den Service</li>
+    <li class="rf-os" data-os="debian fedora arch" style="display:list-item;">Quadlet-Pfad: <code>/etc/containers/systemd/</code> (nicht <code>~/.config/</code>)</li>
+  </ul>
+</div>
+
+{% include "generator/partials/tips_de.html" with pod_name=pod_name %}
+
+<script>
+function rfOS(os) {
+  document.querySelectorAll('#os-sel-rf button').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.os === os);
+  });
+  document.querySelectorAll('.rf-os').forEach(function(el) {
+    el.style.display = el.dataset.os.split(' ').includes(os) ? '' : 'none';
+  });
+}
+</script>

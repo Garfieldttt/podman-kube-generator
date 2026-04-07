@@ -1,0 +1,246 @@
+<!-- ── Tips (Tabs) ──────────────────────────────────────────────── -->
+<hr style="border-color:var(--border);margin:2rem 0 1.25rem;">
+<div class="mb-2 section-label" style="color:var(--text-dim);font-size:1rem;font-weight:600;"><i class="bi bi-lightbulb me-1"></i> Useful Tips</div>
+
+<ul class="nav nav-tabs mb-0" id="tips-tabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tips-netz" type="button">
+      <i class="bi bi-diagram-3 me-1"></i>Networking
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tips-storage" type="button">
+      <i class="bi bi-hdd me-1"></i>Storage
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tips-updates" type="button">
+      <i class="bi bi-arrow-repeat me-1"></i>Updates
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tips-debug" type="button">
+      <i class="bi bi-terminal me-1"></i>Debugging
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content" style="border:1px solid var(--border);border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg);background:var(--surface);padding:1.25rem;">
+
+  <!-- Networking -->
+  <div class="tab-pane fade show active" id="tips-netz" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Ports &lt; 1024 (e.g. 80, 443)</p>
+          <p class="small mb-2" style="color:var(--text-dim);">Rootless cannot open privileged ports. Solution:</p>
+          <div class="pre-wrap">
+            <pre id="tip-ports" style="font-size:.77rem;">sysctl net.ipv4.ip_unprivileged_port_start=80</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-ports')"><i class="bi bi-clipboard"></i></button>
+          </div>
+          <p class="small mt-2 mb-0" style="color:var(--text-dim);">Make persistent in <code>/etc/sysctl.d/99-podman.conf</code>.</p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Containers communicate via localhost</p>
+          <p class="small mb-2" style="color:var(--text-dim);">All containers in the pod share the same network namespace. Always use <code>localhost</code>, not container names.</p>
+          <div class="pre-wrap">
+            <pre id="tip-localhost" style="font-size:.77rem;"># Correct (e.g. app → db):
+localhost:5432
+
+# Wrong (doesn't work in a pod):
+db-container:5432</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-localhost')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">List open ports</p>
+          <p class="small mb-1" style="color:var(--text-dim);">Which ports is the running pod listening on?</p>
+          <div class="pre-wrap">
+            <pre id="tip-ports-list" style="font-size:.77rem;">podman port {{ pod_name }}-pod</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-ports-list')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Custom DNS for the pod</p>
+          <p class="small mb-1" style="color:var(--text-dim);">Set a custom DNS server (e.g. local Pi-hole):</p>
+          <div class="pre-wrap">
+            <pre id="tip-dns" style="font-size:.77rem;"># In YAML under spec.dnsConfig:
+spec:
+  dnsConfig:
+    nameservers:
+      - 192.168.1.x</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-dns')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Storage -->
+  <div class="tab-pane fade" id="tips-storage" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Set volume ownership</p>
+          <p class="small mb-1" style="color:var(--text-dim);">Fix permission errors by adjusting UID/GID in the user namespace:</p>
+          <div class="pre-wrap">
+            <pre id="tip-chown" style="font-size:.77rem;">podman unshare chown 1000:1000 /path/to/volume</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-chown')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">SELinux volume labels</p>
+          <p class="small mb-1" style="color:var(--text-dim);">On SELinux systems (RHEL, Fedora) set the volume suffix:</p>
+          <div class="pre-wrap">
+            <pre id="tip-selinux" style="font-size:.77rem;">/host/path:/container/path:Z   # private
+/host/path:/container/path:z   # shared</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-selinux')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">List all volumes</p>
+          <div class="pre-wrap">
+            <pre id="tip-vol-list" style="font-size:.77rem;">podman volume ls
+podman volume inspect &lt;volume-name&gt;</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-vol-list')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Volume backup</p>
+          <p class="small mb-1" style="color:var(--text-dim);">Back up data from a named volume:</p>
+          <div class="pre-wrap">
+            <pre id="tip-vol-backup" style="font-size:.77rem;">podman run --rm \
+  -v &lt;volume-name&gt;:/data:ro \
+  -v $(pwd):/backup \
+  busybox tar czf /backup/backup.tar.gz /data</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-vol-backup')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Cleanup</p>
+          <p class="small mb-1" style="color:var(--text-dim);">Remove unused images, containers and volumes:</p>
+          <div class="pre-wrap">
+            <pre id="tip-prune" style="font-size:.77rem;">podman system prune -f        # containers + images
+podman image prune -f         # untagged images only
+podman volume prune -f        # unused volumes</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-prune')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Updates -->
+  <div class="tab-pane fade" id="tips-updates" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="step-block mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Automatic image updates (podman-auto-update)</p>
+          <p class="small mb-2" style="color:var(--text-dim);">Podman can automatically update images and restart the pod. Enable once:</p>
+          <div class="pre-wrap mb-2">
+            <pre id="tip-autoupdate" style="font-size:.77rem;">systemctl --user start podman.socket
+systemctl --user daemon-reload
+systemctl --user enable --now podman-auto-update.timer
+systemctl --user status podman-auto-update.timer</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-autoupdate')"><i class="bi bi-clipboard"></i></button>
+          </div>
+          <p class="small mb-1" style="color:var(--text-dim);">Test without actually updating:</p>
+          <div class="pre-wrap">
+            <pre id="tip-autoupdate-dry" style="font-size:.77rem;">podman auto-update --dry-run</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-autoupdate-dry')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Manual update</p>
+          <p class="small mb-1" style="color:var(--text-dim);">Pull a new image version and restart the pod:</p>
+          <div class="pre-wrap">
+            <pre id="tip-manual-update" style="font-size:.77rem;">podman pull &lt;image&gt;:&lt;tag&gt;
+podman play kube --replace \
+  ~/.config/containers/{{ pod_name }}.yaml</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-manual-update')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Find outdated images</p>
+          <p class="small mb-1" style="color:var(--text-dim);">Check local images against the registry:</p>
+          <div class="pre-wrap">
+            <pre id="tip-outdated" style="font-size:.77rem;">podman images --filter dangling=false
+podman pull --all-tags &lt;image&gt;</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-outdated')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debugging -->
+  <div class="tab-pane fade" id="tips-debug" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Shell into a running container</p>
+          <div class="pre-wrap">
+            <pre id="tip-shell" style="font-size:.77rem;">podman exec -it {{ pod_name }}-&lt;container&gt; /bin/sh
+# or bash:
+podman exec -it {{ pod_name }}-&lt;container&gt; /bin/bash</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-shell')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Follow live logs</p>
+          <div class="pre-wrap">
+            <pre id="tip-logs" style="font-size:.77rem;"># All containers in the pod:
+podman pod logs -f {{ pod_name }}-pod
+
+# Single container:
+podman logs -f {{ pod_name }}-&lt;container&gt;</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-logs')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Pod info &amp; resource usage</p>
+          <div class="pre-wrap">
+            <pre id="tip-inspect" style="font-size:.77rem;">podman pod inspect {{ pod_name }}-pod
+podman stats {{ pod_name }}-pod</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-inspect')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Restart pod without data loss</p>
+          <div class="pre-wrap">
+            <pre id="tip-restart" style="font-size:.77rem;">podman pod restart {{ pod_name }}-pod
+
+# or via systemd:
+systemctl --user restart {{ pod_name }}-pod.service</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-restart')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

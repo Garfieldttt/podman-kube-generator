@@ -1,0 +1,430 @@
+<!-- OS Auswahl -->
+<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+  <span class="small" style="color:var(--text-dim);">Betriebssystem:</span>
+  <div class="d-flex gap-1 flex-wrap" id="os-sel-rl">
+    <button type="button" class="btn btn-sm btn-outline-secondary active" data-os="debian" onclick="rlOS('debian')">Debian / Ubuntu</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="fedora" onclick="rlOS('fedora')">Fedora / RHEL</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="arch" onclick="rlOS('arch')">Arch Linux</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="alpine" onclick="rlOS('alpine')">Alpine Linux</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="macos" onclick="rlOS('macos')">macOS</button>
+  </div>
+</div>
+
+<!-- ── Voraussetzungen (als root) ───────────────────────────────── -->
+<div class="step-block mb-4" style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.04);">
+  <div class="d-flex gap-3">
+    <div class="step-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);">!</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold" style="color:#fcd34d;">
+        Voraussetzungen
+        <span class="rl-os" data-os="debian fedora arch alpine" style="display:inline;">
+          <span class="badge ms-2" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);font-size:.7rem;font-weight:600;">einmalig als root</span>
+        </span>
+      </p>
+
+      <!-- 0. Podman installieren -->
+      <p class="small fw-semibold mb-1" style="color:var(--text-dim);">0. Podman installieren</p>
+
+      <div class="rl-os" data-os="debian" style="display:block;">
+        <div class="pre-wrap mb-3">
+          <pre id="rl-inst-deb">apt update && apt install -y podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-inst-deb')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rl-os" data-os="fedora" style="display:none;">
+        <div class="pre-wrap mb-1">
+          <pre id="rl-inst-fed">dnf install -y podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-inst-fed')"><i class="bi bi-clipboard"></i></button>
+        </div>
+        <p class="small mb-3" style="color:var(--text-muted);">RHEL 9 / Rocky / Alma: vorher <code>dnf module enable container-tools:rhel9 -y</code> ausführen.</p>
+      </div>
+
+      <div class="rl-os" data-os="arch" style="display:none;">
+        <div class="pre-wrap mb-3">
+          <pre id="rl-inst-arch">pacman -S podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-inst-arch')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rl-os" data-os="alpine" style="display:none;">
+        <div class="pre-wrap mb-3">
+          <pre id="rl-inst-alp">apk add podman crun</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-inst-alp')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rl-os" data-os="macos" style="display:none;">
+        <div class="pre-wrap mb-1">
+          <pre id="rl-inst-mac">brew install podman
+podman machine init
+podman machine start</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-inst-mac')"><i class="bi bi-clipboard"></i></button>
+        </div>
+        <p class="small mb-3" style="color:var(--text-muted);">Alternativ: Installer-Paket von <strong>podman.io</strong>. Podman Desktop (optional) verwaltet die Machine automatisch beim Login.</p>
+      </div>
+
+      <!-- 1. User anlegen -->
+      <div class="rl-os" data-os="debian fedora arch" style="display:block;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">1. User anlegen (falls nicht vorhanden)</p>
+        <div class="pre-wrap mb-3">
+          <pre id="rl-user-lin">useradd -m -s /bin/bash {{ pod_name }}
+passwd {{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-user-lin')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rl-os" data-os="alpine" style="display:none;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">1. User anlegen (falls nicht vorhanden)</p>
+        <div class="pre-wrap mb-3">
+          <pre id="rl-user-alp">adduser -D -s /bin/sh {{ pod_name }}
+passwd {{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-user-alp')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rl-os" data-os="macos" style="display:none;">
+        <p class="small mb-3" style="color:var(--text-muted);"><i class="bi bi-info-circle me-1"></i>Auf macOS läuft Podman in einer VM — kein separater System-User nötig. Als normaler User weiterarbeiten.</p>
+      </div>
+
+      <!-- 2. subuid / subgid -->
+      <div class="rl-os" data-os="debian" style="display:block;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">2. subuid/subgid einrichten</p>
+        <div class="pre-wrap mb-3">
+          <pre id="rl-sub-deb">usermod --add-subuids 100000-165535 --add-subgids 100000-165535 {{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-sub-deb')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rl-os" data-os="fedora" style="display:none;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">2. subuid/subgid</p>
+        <p class="small mb-1" style="color:var(--text-muted);"><i class="bi bi-check-circle text-success me-1"></i>Fedora richtet subuid/subgid beim Anlegen neuer User automatisch ein.</p>
+        <p class="small mb-3" style="color:var(--text-muted);">Für RHEL / Rocky / Alma oder bestehende User: <code>usermod --add-subuids 100000-165535 --add-subgids 100000-165535 {{ pod_name }}</code></p>
+      </div>
+
+      <div class="rl-os" data-os="arch" style="display:none;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">2. subuid/subgid</p>
+        <p class="small mb-1" style="color:var(--text-muted);"><i class="bi bi-check-circle text-success me-1"></i>Ab shadow ≥ 4.11.1-3 (Standard seit 2022) werden subuid/subgid automatisch angelegt.</p>
+        <p class="small mb-3" style="color:var(--text-muted);">Bei <code>linux-hardened</code>-Kernel zusätzlich: <code>sysctl kernel.unprivileged_userns_clone=1</code> (dauerhaft in <code>/etc/sysctl.d/</code>).</p>
+      </div>
+
+      <div class="rl-os" data-os="alpine" style="display:none;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">2. subuid/subgid einrichten</p>
+        <div class="pre-wrap mb-3">
+          <pre id="rl-sub-alp">echo "{{ pod_name }}:100000:65536" >> /etc/subuid
+echo "{{ pod_name }}:100000:65536" >> /etc/subgid</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-sub-alp')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <!-- 3. Linger / Autostart -->
+      <div class="rl-os" data-os="debian fedora arch" style="display:block;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">3. Linger aktivieren <span style="color:var(--text-muted);font-weight:400;">(Service läuft nach Reboot ohne Login)</span></p>
+        <div class="pre-wrap mb-0">
+          <pre id="rl-linger">loginctl enable-linger {{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-linger')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rl-os" data-os="alpine" style="display:none;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">3. OpenRC-Service einrichten <span style="color:var(--text-muted);font-weight:400;">(Autostart statt loginctl)</span></p>
+        <p class="small mb-2" style="color:var(--text-muted);">Alpine nutzt OpenRC — kein systemd, kein <code>loginctl</code>. Init-Script erstellen:</p>
+        <div class="pre-wrap mb-2">
+          <pre id="rl-openrc">cat > /etc/init.d/{{ pod_name }}-pod << 'INITEOF'
+#!/sbin/openrc-run
+name="{{ pod_name }}-pod"
+description="{{ pod_name }} Pod (Podman rootless)"
+command_user="{{ pod_name }}"
+command="/usr/bin/podman"
+command_args="play kube /home/{{ pod_name }}/.config/containers/{{ pod_name }}.yaml"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+    need net cgroups
+}
+
+stop() {
+    ebegin "Stopping ${name}"
+    start-stop-daemon --stop --pidfile "${pidfile}"
+    su - {{ pod_name }} -c "podman play kube --down /home/{{ pod_name }}/.config/containers/{{ pod_name }}.yaml"
+    eend $?
+}
+INITEOF
+chmod +x /etc/init.d/{{ pod_name }}-pod
+rc-update add cgroups boot
+rc-update add {{ pod_name }}-pod default</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-openrc')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rl-os" data-os="macos" style="display:none;">
+        <p class="small mb-0" style="color:var(--text-muted);"><i class="bi bi-info-circle me-1"></i>Auf macOS sind keine Root-Schritte nötig. Podman Machine und Autostart werden als normaler User eingerichtet (siehe Schritt 3 unten).</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Ab hier als Deployment-User ────────────────────────────── -->
+<div class="step-block">
+  <div class="d-flex gap-3">
+    <div class="step-badge">1</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold">YAML-Datei speichern</p>
+      <div class="pre-wrap">
+        <pre id="rl-step1b">mkdir -p ~/.config/containers/
+# YAML oben kopieren nach:
+nano ~/.config/containers/{{ pod_name }}.yaml</pre>
+        <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rl-step1b')"><i class="bi bi-clipboard"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step-block">
+  <div class="d-flex gap-3">
+    <div class="step-badge">2</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold">Pod testen (ohne Autostart)</p>
+      <div class="pre-wrap">
+        <pre id="rl-step2">podman play kube ~/.config/containers/{{ pod_name }}.yaml
+
+# Status prüfen:
+podman pod ps && podman ps
+
+# Stoppen:
+podman play kube --down ~/.config/containers/{{ pod_name }}.yaml</pre>
+        <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rl-step2')"><i class="bi bi-clipboard"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Schritte 3–6: systemd (Debian / Fedora / Arch) ───────── -->
+<div class="rl-os" data-os="debian fedora arch" style="display:block;">
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">3</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Quadlet .kube-Datei erstellen</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Ablegen unter <code>~/.config/containers/systemd/{{ pod_name }}.kube</code></p>
+        <div class="pre-wrap">
+          <pre id="rl-step3">mkdir -p ~/.config/containers/systemd/
+cat > ~/.config/containers/systemd/{{ pod_name }}.kube << 'EOF'
+[Unit]
+Description={{ pod_name }} Pod
+
+[Kube]
+Yaml=%h/.config/containers/{{ pod_name }}.yaml
+
+[Install]
+WantedBy=default.target
+EOF</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rl-step3')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">4</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">systemd Service aktivieren</p>
+        <div class="pre-wrap">
+          <pre id="rl-step4">systemctl --user daemon-reload
+systemctl --user enable --now {{ pod_name }}-pod.service</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rl-step4')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">5</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
+        <div class="pre-wrap">
+          <pre id="rl-step5">systemctl --user status {{ pod_name }}-pod.service
+journalctl --user -u {{ pod_name }}-pod.service -f
+podman pod ps
+podman ps</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rl-step5')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">6</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Image-Update einspielen</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Neue Image-Versionen laden und Pod neu starten:</p>
+        <div class="pre-wrap">
+          <pre id="rl-step6">podman pull docker.io/&lt;image&gt;:&lt;tag&gt;
+podman play kube --replace ~/.config/containers/{{ pod_name }}.yaml
+
+# oder via systemd:
+systemctl --user restart {{ pod_name }}-pod.service</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rl-step6')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Schritte 3–5: Alpine Linux (OpenRC) ───────────────────── -->
+<div class="rl-os" data-os="alpine" style="display:none;">
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">3</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Service starten</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Das Init-Script wurde in den Voraussetzungen angelegt. Service jetzt starten:</p>
+        <div class="pre-wrap">
+          <pre id="rl-alp-start">rc-service {{ pod_name }}-pod start</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-alp-start')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">4</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
+        <div class="pre-wrap">
+          <pre id="rl-alp-status">rc-service {{ pod_name }}-pod status
+podman pod ps && podman ps</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-alp-status')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">5</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Image-Update einspielen</p>
+        <div class="pre-wrap">
+          <pre id="rl-alp-update">podman pull docker.io/&lt;image&gt;:&lt;tag&gt;
+rc-service {{ pod_name }}-pod restart</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-alp-update')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert border-secondary mt-2" style="background:#12141f;">
+    <strong><i class="bi bi-info-circle me-1 text-secondary"></i> Alpine / OpenRC:</strong>
+    <ul class="mb-0 mt-2 small">
+      <li>Kein systemd → kein Quadlet. Der Pod wird direkt per <code>podman play kube</code> über OpenRC gestartet.</li>
+      <li>Logs: <code>podman logs &lt;container-name&gt;</code> oder <code>/var/log/messages</code></li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ── Schritte 3–5: macOS ───────────────────────────────────── -->
+<div class="rl-os" data-os="macos" style="display:none;">
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">3</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Autostart via launchd einrichten</p>
+        <p class="small mb-2" style="color:var(--text-dim);">LaunchAgent für den aktuellen User erstellen. Die Podman Machine muss beim Login bereits laufen (z.B. über Podman Desktop).</p>
+        <div class="pre-wrap">
+          <pre id="rl-mac-launchd">mkdir -p ~/Library/LaunchAgents/
+cat > ~/Library/LaunchAgents/com.podman.{{ pod_name }}.plist << 'EOF'
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+  &lt;key&gt;Label&lt;/key&gt;
+  &lt;string&gt;com.podman.{{ pod_name }}&lt;/string&gt;
+  &lt;key&gt;ProgramArguments&lt;/key&gt;
+  &lt;array&gt;
+    &lt;string&gt;/usr/local/bin/podman&lt;/string&gt;
+    &lt;string&gt;play&lt;/string&gt;
+    &lt;string&gt;kube&lt;/string&gt;
+    &lt;string&gt;/Users/DEINUSER/.config/containers/{{ pod_name }}.yaml&lt;/string&gt;
+  &lt;/array&gt;
+  &lt;key&gt;RunAtLoad&lt;/key&gt;
+  &lt;true/&gt;
+  &lt;key&gt;StandardOutPath&lt;/key&gt;
+  &lt;string&gt;/tmp/{{ pod_name }}-pod.log&lt;/string&gt;
+  &lt;key&gt;StandardErrorPath&lt;/key&gt;
+  &lt;string&gt;/tmp/{{ pod_name }}-pod.log&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+EOF
+launchctl load ~/Library/LaunchAgents/com.podman.{{ pod_name }}.plist</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-mac-launchd')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">4</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
+        <div class="pre-wrap">
+          <pre id="rl-mac-status">launchctl list | grep com.podman.{{ pod_name }}
+podman pod ps && podman ps
+cat /tmp/{{ pod_name }}-pod.log</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-mac-status')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">5</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Image-Update einspielen</p>
+        <div class="pre-wrap">
+          <pre id="rl-mac-update">podman pull docker.io/&lt;image&gt;:&lt;tag&gt;
+launchctl stop com.podman.{{ pod_name }}
+launchctl start com.podman.{{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rl-mac-update')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert border-secondary mt-2" style="background:#12141f;">
+    <strong><i class="bi bi-info-circle me-1 text-secondary"></i> macOS:</strong>
+    <ul class="mb-0 mt-2 small">
+      <li>Podman läuft in einer Linux-VM (Podman Machine) — Quadlet-Dateien auf dem macOS-Host werden <strong>nicht</strong> unterstützt.</li>
+      <li>Pfad zu <code>podman</code>: Homebrew Apple Silicon → <code>/opt/homebrew/bin/podman</code>, Intel → <code>/usr/local/bin/podman</code></li>
+      <li><code>DEINUSER</code> im plist durch deinen macOS-Benutzernamen ersetzen (<code>echo $USER</code>).</li>
+    </ul>
+  </div>
+
+</div>
+
+{% include "generator/partials/tips_de.html" with pod_name=pod_name %}
+
+<script>
+function rlOS(os) {
+  document.querySelectorAll('#os-sel-rl button').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.os === os);
+  });
+  document.querySelectorAll('.rl-os').forEach(function(el) {
+    el.style.display = el.dataset.os.split(' ').includes(os) ? '' : 'none';
+  });
+}
+</script>

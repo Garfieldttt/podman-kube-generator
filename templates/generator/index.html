@@ -1,0 +1,872 @@
+{% extends "base.html" %}
+{% block title %}Podman Kube Generator — Kubernetes YAML for podman play kube{% endblock %}
+
+{% block meta_description %}Generate Kubernetes YAML for podman play kube for free. Create pod configurations, multi-container stacks (WordPress, Nextcloud, Gitea, Immich and more), systemd Quadlet integration and ready-to-run shell scripts in seconds. No account required.{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Podman Kube Generator",
+  "description": "Generate Kubernetes YAML for podman play kube. Create pod configurations, multi-container stacks and systemd Quadlet guides for free.",
+  "url": "{{ site_url }}/",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Linux",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Person",
+    "name": "{{ site.footer_author }}"
+  },
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+  },
+  "featureList": [
+    "Kubernetes YAML Generator for podman play kube",
+    "Ready-to-use Multi-Container Stacks (WordPress, Nextcloud, Gitea, Immich, Grafana and more)",
+    "Podman Shell-Script Generator",
+    "systemd Quadlet .kube Integration",
+    "Docker Hub Image Search with Tag Selection",
+    "Rootless and Rootful Podman support",
+    "Shareable links for saved configurations"
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-11">
+
+    <div class="d-flex align-items-start justify-content-between gap-3 mb-4 flex-wrap">
+      <div>
+        <h1 class="mb-1" style="font-size:1.5rem;font-weight:700;letter-spacing:-.02em;">{{ site.home_heading }}</h1>
+        <p class="mb-0" style="color:var(--text-dim);">{{ site.home_intro }}</p>
+      </div>
+      <div class="d-flex gap-2 flex-shrink-0">
+        {% if site.canvas_enabled %}
+        <a href="{% url 'builder' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-boxes me-1"></i>Visual Builder
+        </a>
+        {% endif %}
+        <a href="{% url 'builder' %}?compose=1" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-file-code me-1"></i>Import Compose
+        </a>
+      </div>
+    </div>
+
+    <!-- Stack-Vorlagen -->
+    <div class="card mb-4" style="border-color:rgba(20,184,166,.3);background:linear-gradient(135deg,rgba(20,184,166,.05),rgba(34,211,238,.02));">
+      <div class="card-header d-flex align-items-center justify-content-between" style="background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.25);">
+        <span class="fw-semibold" style="color:#5eead4;font-size:.85rem;">
+          <i class="bi bi-collection me-2"></i>Quick Start — Predefined Stacks
+        </span>
+        <span class="small" style="color:var(--text-muted);">Pre-fills the form below — customize before generating</span>
+      </div>
+      <div class="card-body py-3">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+
+          <div class="dropdown" id="stack-picker">
+            <button type="button" class="btn dropdown-toggle"
+              id="stack-picker-btn"
+              data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              aria-expanded="false"
+              style="background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);color:#5eead4;min-width:230px;text-align:left;font-size:.875rem;">
+              <i class="bi bi-layers me-2"></i>
+              <span id="stack-picker-label">Select stack...</span>
+            </button>
+
+            <div class="dropdown-menu p-0"
+              id="stack-picker-menu"
+              style="min-width:300px;z-index:1050;border-color:rgba(20,184,166,.3) !important;">
+
+              <div class="p-2" style="border-bottom:1px solid var(--border);">
+                <input type="text" id="stack-search"
+                  class="form-control form-control-sm"
+                  placeholder="Search…" autocomplete="off"
+                  oninput="filterStacks(this.value)">
+              </div>
+
+              <div id="stack-list" style="max-height:340px;overflow-y:auto;">
+                {% regroup stacks by category as grouped_stacks %}
+                {% for group in grouped_stacks %}
+                <div class="stack-group pt-2 px-1" data-category="{{ group.grouper|lower }}">
+                  <div class="px-3 pb-1" style="color:var(--text-muted);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">
+                    {{ group.grouper }}
+                  </div>
+                  {% for stack in group.list %}
+                  <button type="button"
+                    class="stack-item w-100 text-start px-3 py-2 border-0 d-block"
+                    style="background:transparent;color:#f9fafb;font-size:.85rem;cursor:pointer;transition:background .1s;"
+                    data-label="{{ stack.label }}"
+                    data-cat="{{ stack.category|lower }}"
+                    onclick="pickStack('{{ stack.key }}', '{{ stack.label }}')"
+                    onmouseover="this.style.background='rgba(20,184,166,.12)'"
+                    onmouseout="this.style.background='transparent'">
+                    <i class="{{ stack.icon }} me-2" style="color:#5eead4;"></i>{{ stack.label }}
+                    {% if stack.description %}
+                    <div style="font-size:.72rem;color:var(--text-muted);padding-left:1.4rem;line-height:1.3;margin-top:.1rem;">{{ stack.description }}</div>
+                    {% endif %}
+                  </button>
+                  {% endfor %}
+                </div>
+                {% endfor %}
+                {% if community_stacks %}
+                <div class="stack-group pt-2 px-1" data-category="community" id="community-stack-group">
+                  <div class="px-3 pb-1 d-flex align-items-center gap-2" style="color:var(--text-muted);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">
+                    <span>Community</span>
+                    <i class="bi bi-people-fill" style="font-size:.75rem;"></i>
+                  </div>
+                  {% for cs in community_stacks %}
+                  <button type="button"
+                    class="stack-item w-100 text-start px-3 py-2 border-0 d-block"
+                    style="background:transparent;color:#f9fafb;font-size:.85rem;cursor:pointer;transition:background .1s;"
+                    data-label="{{ cs.name }}"
+                    data-cat="community"
+                    onclick="pickCommunityStack({{ cs.pk }}, '{{ cs.user.username|escapejs }}', '{{ cs.name|escapejs }}')"
+                    onmouseover="this.style.background='rgba(20,184,166,.12)'"
+                    onmouseout="this.style.background='transparent'">
+                    <i class="bi bi-person-badge me-2" style="color:#5eead4;"></i>{{ cs.name }}
+                    <span style="font-size:.72rem;color:var(--text-muted);margin-left:.4rem;">by {{ cs.user.username }}</span>
+                    {% if cs.description %}<div style="font-size:.72rem;color:var(--text-muted);padding-left:1.4rem;line-height:1.3;margin-top:.1rem;">{{ cs.description }}</div>{% endif %}
+                  </button>
+                  {% endfor %}
+                </div>
+                {% endif %}
+                <div id="stack-no-results" class="px-3 py-3 small" style="display:none;color:var(--text-muted);">
+                  No search results.
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Stack-Info-Panel -->
+    <div id="stack-info" style="display:none;" class="mb-4">
+      <div class="card" style="border-color:rgba(20,184,166,.2);background:rgba(20,184,166,.03);">
+        <div class="card-body py-3 px-4">
+          <div class="d-flex align-items-start gap-3">
+            <i id="si-icon" class="bi" style="color:#5eead4;font-size:1.4rem;margin-top:.1rem;flex-shrink:0;"></i>
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span id="si-label" class="fw-semibold" style="font-size:.95rem;"></span>
+                <span id="si-category" class="badge" style="background:rgba(20,184,166,.12);color:#5eead4;border:1px solid rgba(20,184,166,.25);font-size:.65rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;"></span>
+              </div>
+              <p id="si-desc" class="mb-2 small" style="color:var(--text-dim);"></p>
+              <div id="si-containers" class="d-flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if editing_stack_id %}
+    <div class="alert mb-4 d-flex align-items-center gap-3" style="background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.3);border-radius:8px;">
+      <i class="bi bi-pencil-square" style="color:#5eead4;font-size:1.2rem;flex-shrink:0;"></i>
+      <div>
+        <div class="fw-semibold" style="color:#5eead4;font-size:.9rem;">Editing stack: {{ editing_stack_name }}</div>
+        <div class="small" style="color:var(--text-dim);">Changes must be re-approved by the admin after saving.</div>
+      </div>
+      <a href="{% url 'my_stacks' %}" class="btn btn-sm btn-outline-secondary ms-auto">Cancel</a>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-danger border-danger" style="background:#1a0a0a;">
+      <i class="bi bi-exclamation-triangle me-2"></i>Please fill in all required fields.
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'generate' %}" id="main-form">
+      {% csrf_token %}
+      <input type="hidden" name="container_count" id="container_count" value="{{ container_forms|length }}">
+      <input type="hidden" name="init_count" id="init_count" value="{{ init_forms|length }}">
+      {% if editing_stack_id %}
+      <input type="hidden" name="editing_stack_id" value="{{ editing_stack_id }}">
+      <input type="hidden" name="editing_stack_name" value="{{ editing_stack_name }}">
+      <input type="hidden" name="editing_stack_description" value="{{ editing_stack_description }}">
+      <input type="hidden" name="editing_stack_icon" value="{{ editing_stack_icon }}">
+      <input type="hidden" name="editing_stack_category" value="{{ editing_stack_category }}">
+      {% endif %}
+
+      <!-- Pod-Einstellungen -->
+      <div class="card mb-4">
+        <div class="card-header py-2 px-3">
+          <span class="fw-semibold" style="color:var(--text);"><i class="bi bi-layers me-2"></i>Pod Settings</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label>{{ pod_form.pod_name.label }}</label>
+              {{ pod_form.pod_name }}
+            </div>
+            <div class="col-md-4">
+              <label>{{ pod_form.restart_policy.label }}</label>
+              {{ pod_form.restart_policy }}
+            </div>
+            <div class="col-md-4">
+              <label>{{ pod_form.mode.label }}</label>
+              {{ pod_form.mode }}
+              <div class="form-text text-secondary small">Affects the deployment guide</div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+              data-bs-toggle="collapse" data-bs-target="#adv-pod">
+              <i class="bi bi-sliders me-1"></i> Advanced Pod Options
+            </button>
+            <div class="collapse mt-3" id="adv-pod">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label>{{ pod_form.hostname.label }}</label>
+                  {{ pod_form.hostname }}
+                </div>
+                <div class="col-md-4">
+                  <label>{{ pod_form.userns.label }}</label>
+                  {{ pod_form.userns }}
+                </div>
+                <div class="col-md-4">
+                  <label>{{ pod_form.dns.label }}</label>
+                  {{ pod_form.dns }}
+                </div>
+                <div class="col-md-4">
+                  <label>{{ pod_form.network.label }}</label>
+                  {{ pod_form.network }}
+                </div>
+                <div class="col-md-6">
+                  <label>{{ pod_form.host_aliases.label }}</label>
+                  {{ pod_form.host_aliases }}
+                </div>
+                <div class="col-md-6 d-flex flex-column justify-content-end gap-2 pb-1">
+                  <div class="form-check">
+                    {{ pod_form.host_network }}
+                    <label class="form-check-label">{{ pod_form.host_network.label }}</label>
+                  </div>
+                  <div class="form-check">
+                    {{ pod_form.host_pid }}
+                    <label class="form-check-label">{{ pod_form.host_pid.label }}</label>
+                  </div>
+                  <div class="form-check">
+                    {{ pod_form.host_ipc }}
+                    <label class="form-check-label">{{ pod_form.host_ipc.label }}</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Init-Container -->
+      <div class="card mb-3">
+        <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold" style="color:#5eead4;">
+            <i class="bi bi-arrow-clockwise me-2"></i>Init Containers
+            <span class="text-secondary small fw-normal ms-2">run before main containers</span>
+          </span>
+          <button type="button" class="btn btn-sm btn-outline-secondary"
+            hx-get="{% url 'add_init_container' %}"
+            hx-target="#init-containers-wrapper"
+            hx-swap="beforeend"
+            hx-vals="js:{index: getCount('init_count')}"
+            onclick="incrementCount('init_count')">
+            <i class="bi bi-plus-circle me-1"></i> Add Init Container
+          </button>
+        </div>
+        <div class="card-body">
+          <div id="init-containers-wrapper">
+            {% for form in init_forms %}
+              {% include "generator/partials/init_container_form.html" with form=form index=forloop.counter0 %}
+            {% endfor %}
+          </div>
+          <p id="no-init-hint" class="text-secondary small mb-0 {% if init_forms %}d-none{% endif %}">
+            No init containers configured.
+          </p>
+        </div>
+      </div>
+
+      <!-- Hauptcontainer -->
+      <div id="containers-wrapper">
+        {% for form in container_forms %}
+          {% include "generator/partials/container_form.html" with form=form index=forloop.counter0 %}
+        {% endfor %}
+      </div>
+
+      <div class="d-flex gap-2 mb-4">
+        <button type="button" class="btn btn-outline-secondary"
+          hx-get="{% url 'add_container' %}"
+          hx-target="#containers-wrapper"
+          hx-swap="beforeend"
+          hx-vals="js:{index: getCount('container_count')}"
+          onclick="incrementCount('container_count')">
+          <i class="bi bi-plus-circle me-1"></i> Add Container
+        </button>
+      </div>
+
+      <!-- Verbindungs-Assistent -->
+      <div class="card mb-4" id="connection-assistant" style="display:none;">
+        <div class="card-header py-2 px-3" style="background:#0a1f12; border-color:#166534;">
+          <span class="fw-semibold text-success">
+            <i class="bi bi-diagram-3 me-2"></i>Connection Assistant
+          </span>
+          <span class="text-secondary small ms-2">Containers in the pod communicate via <code>localhost</code></span>
+        </div>
+        <div class="card-body">
+          <p class="text-secondary small mb-3">
+            Select which container needs access to which — env vars are filled automatically.
+          </p>
+          <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+              <label class="small text-secondary">This container needs access...</label>
+              <select class="form-select form-select-sm" id="conn-from" style="background:#12141f; border-color:#2d3148; color:#e2e8f0;"></select>
+            </div>
+            <div class="col-auto pt-3 text-secondary">→</div>
+            <div class="col-md-4">
+              <label class="small text-secondary">...to this container</label>
+              <select class="form-select form-select-sm" id="conn-to" style="background:#12141f; border-color:#2d3148; color:#e2e8f0;" onchange="loadConnectionHints()"></select>
+            </div>
+            <div class="col-md-3">
+              <button type="button" class="btn btn-sm btn-success w-100" onclick="applyConnection()">
+                <i class="bi bi-plus-circle me-1"></i>Enter env vars
+              </button>
+            </div>
+          </div>
+          <div id="conn-hints" class="mt-3" style="display:none;">
+            <p class="small text-secondary mb-1">Following variables will be entered:</p>
+            <div id="conn-hints-list" class="font-monospace small" style="color:#a8ff78;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <button type="submit" class="btn btn-primary px-4">
+          <i class="bi bi-code-slash me-2"></i>Generate
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- DB-Picker Modal -->
+<div class="modal fade" id="db-picker-modal" tabindex="-1" aria-labelledby="db-picker-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title" id="db-picker-title" style="font-size:.9rem;">
+          <i class="bi bi-database me-2" style="color:var(--accent);"></i>Select database
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="db-picker-options" class="d-flex flex-column gap-2"></div>
+        <div id="db-picker-ext-form" style="display:none;">
+          <p class="small mb-1" style="color:var(--text-dim);">Database type:</p>
+          <div id="db-ext-type-options" class="d-flex flex-column gap-1 mb-3"></div>
+          <p class="small mb-1" style="color:var(--text-dim);">Hostname or IP of the database server:</p>
+          <input type="text" id="db-ext-host" class="form-control form-control-sm mb-3"
+            placeholder="e.g. 192.168.1.100 or db.local"
+            style="background:var(--surface-3);border-color:var(--border);color:var(--text);"
+            onkeydown="if(event.key==='Enter')confirmExternalDb()">
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1" onclick="showDbPickerOptions()">
+              <i class="bi bi-arrow-left me-1"></i>Back
+            </button>
+            <button type="button" class="btn btn-sm btn-primary flex-grow-1" onclick="confirmExternalDb()">
+              Apply
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.db-picker-btn {
+  display: flex; align-items: center; gap: .75rem;
+  background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--text); border-radius: var(--r); padding: .6rem 1rem;
+  cursor: pointer; transition: border-color .15s, background .15s;
+  font-size: .85rem; width: 100%; text-align: left;
+}
+.db-picker-btn:hover, .db-picker-btn.active { border-color: var(--accent); background: var(--accent-soft); }
+.db-picker-icon { font-size: 1.1rem; color: var(--accent); flex-shrink: 0; }
+</style>
+<script>
+const _IX = {
+  twoContainers: "Please select two different containers.",
+  noHints: "No connection hints available for this image.",
+  externalDb: "External database",
+};
+
+function getCount(id) {
+  return parseInt(document.getElementById(id).value);
+}
+function incrementCount(id) {
+  const el = document.getElementById(id);
+  el.value = parseInt(el.value) + 1;
+}
+function updateCount(id, selector) {
+  document.getElementById(id).value = document.querySelectorAll(selector).length;
+}
+document.body.addEventListener('htmx:afterSwap', function(e) {
+  if (e.detail.target.id === 'init-containers-wrapper') {
+    document.getElementById('no-init-hint')?.classList.add('d-none');
+  }
+  refreshConnectionAssistant();
+});
+
+// ── Stack-Picker Dropdown ─────────────────────────────────────────
+// Bootstrap dropdown — focus search on open
+document.addEventListener('shown.bs.dropdown', function(e) {
+  if (e.target.id === 'stack-picker-btn') {
+    const search = document.getElementById('stack-search');
+    if (search) { search.value = ''; filterStacks(''); search.focus(); }
+  }
+});
+
+function filterStacks(q) {
+  q = q.toLowerCase().trim();
+  let anyVisible = false;
+  document.querySelectorAll('.stack-item').forEach(btn => {
+    const match = !q
+      || btn.dataset.label.toLowerCase().includes(q)
+      || btn.dataset.cat.includes(q);
+    btn.style.display = match ? '' : 'none';
+    if (match) anyVisible = true;
+  });
+  document.querySelectorAll('.stack-group').forEach(g => {
+    const visible = [...g.querySelectorAll('.stack-item')].some(b => b.style.display !== 'none');
+    g.style.display = visible ? '' : 'none';
+  });
+  document.getElementById('stack-no-results').style.display = anyVisible ? 'none' : 'block';
+}
+
+let _pendingStack = null;
+
+function showStackInfo(stack) {
+  const meta = stack._meta;
+  if (!meta) return;
+  const lang = document.documentElement.lang || 'de';
+  const desc = (lang === 'en' && meta.description_en) ? meta.description_en : meta.description;
+  document.getElementById('si-icon').className = 'bi ' + (meta.icon || 'bi-collection');
+  document.getElementById('si-label').textContent = meta.label || '';
+  document.getElementById('si-category').textContent = meta.category || '';
+  document.getElementById('si-desc').textContent = desc || '';
+
+  const containers = stack.containers || [];
+  const box = document.getElementById('si-containers');
+  box.innerHTML = containers.map(c => {
+    const rawPorts = c.ports || '';
+    const portList = typeof rawPorts === 'string'
+      ? rawPorts.split('\n').filter(Boolean)
+      : (Array.isArray(rawPorts) ? rawPorts : []);
+    const ports = portList.map(p => {
+      const s = typeof p === 'object' ? String(p.host_port || p.container_port || '') : String(p);
+      return `<span style="color:#5eead4;font-family:ui-monospace,monospace;">:${s.split(':')[0]}</span>`;
+    }).join(' ');
+    const img = (c.image || '').replace(/^(docker\.io\/library\/|docker\.io\/)/, '').split(':')[0];
+    return `<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:.25rem .65rem;font-size:.75rem;color:var(--text-dim);">
+      <span class="font-monospace" style="color:var(--text);">${c.name}</span>
+      <span style="color:var(--text-muted);margin:0 .3rem;">·</span><span style="color:var(--text-muted);">${img}</span>
+      ${ports ? '<span style="margin-left:.3rem;">' + ports + '</span>' : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('stack-info').style.display = '';
+}
+
+async function pickCommunityStack(id, username, name) {
+  document.getElementById('stack-picker-label').textContent = name + ' (' + username + ')';
+  const btn = document.getElementById('stack-picker-btn');
+  bootstrap.Dropdown.getInstance(btn)?.hide();
+
+  const r = await fetch(`/community-stack/?id=${id}`);
+  const stack = await r.json();
+  if (stack.error) return;
+
+  showStackInfo(stack);
+  await fillStack(stack);
+}
+
+async function pickStack(key, label) {
+  document.getElementById('stack-picker-label').textContent = label;
+  const btn = document.getElementById('stack-picker-btn');
+  bootstrap.Dropdown.getInstance(btn)?.hide();
+
+  const r = await fetch(`/stack-load/?key=${key}`);
+  const stack = await r.json();
+  if (stack.error) return;
+
+  showStackInfo(stack);
+  if (stack.db_variants) {
+    _pendingStack = stack;
+    const opts = stack.db_variants.options;
+    const container = document.getElementById('db-picker-options');
+    container.innerHTML = opts.map(o => `
+      <button type="button" class="db-picker-btn" onclick="selectDb('${o.key}')">
+        <i class="bi ${o.icon || 'bi-database'} db-picker-icon"></i>
+        <span>${o.label}</span>
+      </button>
+    `).join('')
+    + (stack.sqlite_option ? `
+      <hr style="border-color:var(--border);margin:.35rem 0;">
+      <button type="button" class="db-picker-btn" onclick="selectDb('__sqlite__')">
+        <i class="bi bi-file-earmark-binary db-picker-icon"></i>
+        <span>SQLite</span>
+      </button>` : '')
+    + `
+      <hr style="border-color:var(--border);margin:.35rem 0;">
+      <button type="button" class="db-picker-btn" onclick="selectDb('__external__')">
+        <i class="bi bi-hdd-network db-picker-icon"></i>
+        <span>${_IX.externalDb}</span>
+      </button>`;
+    showDbPickerOptions();
+    new bootstrap.Modal(document.getElementById('db-picker-modal')).show();
+  } else {
+    await fillStack(stack);
+  }
+}
+
+function showDbPickerOptions() {
+  document.getElementById('db-picker-options').style.display = '';
+  document.getElementById('db-picker-ext-form').style.display = 'none';
+}
+
+let _extDbSelectedKey = null;
+
+function showExternalDbForm() {
+  document.getElementById('db-picker-options').style.display = 'none';
+  document.getElementById('db-picker-ext-form').style.display = '';
+
+  // DB-Typ-Buttons aus den verfügbaren Optionen bauen
+  const opts = _pendingStack?.db_variants?.options || [];
+  const container = document.getElementById('db-ext-type-options');
+  container.innerHTML = opts.map(o => `
+    <button type="button" class="db-picker-btn" id="db-ext-type-${o.key}" onclick="selectExtDbType('${o.key}')">
+      <i class="bi ${o.icon || 'bi-database'} db-picker-icon"></i>
+      <span>${o.label}</span>
+    </button>
+  `).join('');
+
+  // Ersten Typ vorauswählen
+  _extDbSelectedKey = opts.length ? opts[0].key : null;
+  if (_extDbSelectedKey) {
+    document.getElementById(`db-ext-type-${_extDbSelectedKey}`)?.classList.add('active');
+  }
+
+  setTimeout(() => document.getElementById('db-ext-host').focus(), 100);
+}
+
+function selectExtDbType(key) {
+  _extDbSelectedKey = key;
+  document.querySelectorAll('#db-ext-type-options .db-picker-btn').forEach(b => {
+    b.classList.toggle('active', b.id === `db-ext-type-${key}`);
+  });
+}
+
+async function confirmExternalDb() {
+  const host = document.getElementById('db-ext-host').value.trim();
+  if (!host) { document.getElementById('db-ext-host').focus(); return; }
+  bootstrap.Modal.getInstance(document.getElementById('db-picker-modal'))?.hide();
+  showDbPickerOptions();
+  if (!_pendingStack) return;
+  const stack = _pendingStack;
+  _pendingStack = null;
+
+  const replaceName = stack.db_variants.replace;
+  stack.containers = stack.containers.filter(c => c.name !== replaceName);
+
+  // Passende app_env für den gewählten DB-Typ laden
+  const variant = stack.db_variants.options.find(o => o.key === _extDbSelectedKey);
+  if (variant?.app_env) {
+    let replaced = false;
+    stack.containers = stack.containers.map(c => {
+      if (!replaced && c.name !== (variant.container?.name)) {
+        replaced = true;
+        return { ...c, env: variant.app_env.replace(/127\.0\.0\.1/g, host) };
+      }
+      return c;
+    });
+  } else {
+    // Fallback: nur IP ersetzen
+    stack.containers = stack.containers.map(c => {
+      if (!c.env) return c;
+      return { ...c, env: c.env.replace(/127\.0\.0\.1/g, host) };
+    });
+  }
+
+  await fillStack(stack);
+}
+
+async function selectDb(key) {
+  if (key === '__external__') {
+    showExternalDbForm();
+    return;
+  }
+
+  bootstrap.Modal.getInstance(document.getElementById('db-picker-modal'))?.hide();
+  if (!_pendingStack) return;
+  const stack = _pendingStack;
+  _pendingStack = null;
+
+  if (key === '__sqlite__') {
+    const replaceName = stack.db_variants.replace;
+    stack.containers = stack.containers.filter(c => c.name !== replaceName);
+    if (stack.sqlite_env) {
+      let replaced = false;
+      stack.containers = stack.containers.map(c => {
+        if (!replaced) {
+          replaced = true;
+          const updated = { ...c, env: stack.sqlite_env };
+          if (stack.sqlite_volumes_append) {
+            updated.volumes = (c.volumes ? c.volumes + '\n' : '') + stack.sqlite_volumes_append;
+          }
+          return updated;
+        }
+        return c;
+      });
+    }
+    await fillStack(stack);
+    return;
+  }
+
+  const variant = stack.db_variants.options.find(o => o.key === key);
+  if (!variant) { await fillStack(stack); return; }
+
+  // Replace DB container
+  const replaceName = stack.db_variants.replace;
+  stack.containers = stack.containers.map(c =>
+    c.name === replaceName ? variant.container : c
+  );
+
+  // Optionally replace first non-db container's env
+  if (variant.app_env) {
+    let replaced = false;
+    stack.containers = stack.containers.map(c => {
+      if (!replaced && c.name !== variant.container.name) {
+        replaced = true;
+        return { ...c, env: variant.app_env };
+      }
+      return c;
+    });
+  }
+
+  await fillStack(stack);
+}
+
+// ── Stack laden (sequentiell — garantierte Reihenfolge) ──────────
+async function loadStack(key) {
+  const r = await fetch(`/stack-load/?key=${key}`);
+  const stack = await r.json();
+  if (stack.error) return;
+  await fillStack(stack);
+}
+
+async function fillStack(stack) {
+  // Pod-Felder
+  document.getElementById('id_pod_name').value = stack.pod_name || '';
+  document.getElementById('id_restart_policy').value = stack.restart_policy || 'Always';
+  document.getElementById('id_mode').value = stack.mode || 'rootless';
+
+  // Erweiterte Pod-Optionen: hostNetwork
+  const hnEl = document.getElementById('id_host_network');
+  if (hnEl) hnEl.checked = !!stack.host_network;
+
+  // Bestehende Container entfernen
+  document.getElementById('containers-wrapper').innerHTML = '';
+  document.getElementById('container_count').value = 0;
+
+  // Container sequentiell laden → garantierte Reihenfolge
+  const containers = stack.containers || [];
+  for (let i = 0; i < containers.length; i++) {
+    const html = await fetch(`/add-container/?index=${i}`).then(r => r.text());
+    document.getElementById('containers-wrapper').insertAdjacentHTML('beforeend', html);
+    document.getElementById('container_count').value = i + 1;
+    // Kleines Timeout damit DOM fertig gerendert ist
+    await new Promise(res => setTimeout(res, 30));
+    fillContainerBlock(i, containers[i]);
+  }
+  refreshConnectionAssistant();
+}
+
+function fillContainerBlock(idx, c) {
+  const block = document.getElementById(`container-${idx}`);
+  if (!block) return;
+
+  // Name
+  const nameEl = block.querySelector('input[name$="-name"]');
+  if (nameEl) nameEl.value = c.name || '';
+
+  // Image (Suchfeld + verstecktes Feld)
+  const searchEl = document.getElementById(`img-search-${idx}`);
+  const hiddenEl = block.querySelector('input[name$="-image"]');
+  if (searchEl) searchEl.value = c.image || '';
+  if (hiddenEl) hiddenEl.value = c.image || '';
+
+  // Felder
+  const set = (sel, val) => { const el = block.querySelector(sel); if (el && val !== undefined) el.value = val || ''; };
+  const setCheck = (sel, val) => { const el = block.querySelector(sel); if (el) el.checked = !!val; };
+
+  set('textarea[name$="-ports"]', c.ports);
+  set('textarea[name$="-env"]', c.env);
+  set('textarea[name$="-volumes"]', c.volumes);
+  set('input[name$="-command"]', c.command);
+  set('input[name$="-args"]', c.args);
+  set('input[name$="-working_dir"]', c.working_dir);
+  set('input[name$="-memory_limit"]', c.memory_limit);
+  set('input[name$="-cpu_limit"]', c.cpu_limit);
+  set('input[name$="-run_as_user"]', c.run_as_user ?? '');
+  set('input[name$="-run_as_group"]', c.run_as_group ?? '');
+  setCheck('input[name$="-privileged"]', c.privileged);
+  setCheck('input[name$="-read_only_root"]', c.read_only_root);
+
+  // Erweiterte Optionen aufklappen wenn nötig
+  if (c.run_as_user || c.memory_limit) {
+    const advTarget = block.querySelector('[data-bs-target]')?.getAttribute('data-bs-target');
+    if (advTarget) document.querySelector(advTarget)?.classList.add('show');
+  }
+}
+
+// ── Verbindungs-Assistent ────────────────────────────────────────
+function getContainerList() {
+  const blocks = document.querySelectorAll('#containers-wrapper .container-block');
+  const list = [];
+  blocks.forEach((block, i) => {
+    const nameEl = block.querySelector('input[name$="-name"]');
+    const imageEl = block.querySelector('input[name$="-image"]');
+    const portsEl = block.querySelector('textarea[name$="-ports"]');
+    const name = nameEl?.value?.trim() || `Container ${i+1}`;
+    const image = imageEl?.value?.trim() || '';
+    const ports = (portsEl?.value || '').split('\n')
+      .map(l => l.trim()).filter(l => l.includes(':'))
+      .map(l => parseInt(l.split(':')[1])).filter(p => !isNaN(p));
+    list.push({ idx: i, name, image, ports });
+  });
+  return list;
+}
+
+function refreshConnectionAssistant() {
+  const containers = getContainerList();
+  const assistant = document.getElementById('connection-assistant');
+  if (containers.length < 2) { assistant.style.display = 'none'; return; }
+  assistant.style.display = 'block';
+
+  const fromSel = document.getElementById('conn-from');
+  const toSel = document.getElementById('conn-to');
+  const fromVal = fromSel.value;
+  const toVal = toSel.value;
+
+  fromSel.innerHTML = containers.map(c => `<option value="${c.idx}">${c.name}</option>`).join('');
+  toSel.innerHTML = containers.map(c => `<option value="${c.idx}">${c.name} ${c.ports.length ? '(Port '+c.ports.join(', ')+')' : ''}</option>`).join('');
+
+  // Auswahl wiederherstellen
+  if (fromVal) fromSel.value = fromVal;
+  if (toVal) toSel.value = toVal;
+  loadConnectionHints();
+}
+
+function loadConnectionHints() {
+  const containers = getContainerList();
+  const toIdx = parseInt(document.getElementById('conn-to').value);
+  const target = containers.find(c => c.idx === toIdx);
+  if (!target || !target.image) { document.getElementById('conn-hints').style.display = 'none'; return; }
+
+  fetch(`/connection-hints/?image=${encodeURIComponent(target.image)}`)
+    .then(r => r.json())
+    .then(hints => {
+      const hintsList = document.getElementById('conn-hints-list');
+      const allHints = Object.values(hints).flat();
+      if (!allHints.length) { document.getElementById('conn-hints').style.display = 'none'; return; }
+      hintsList.innerHTML = allHints.map(h => `<div>${h}</div>`).join('');
+      document.getElementById('conn-hints').style.display = 'block';
+    });
+}
+
+function applyConnection() {
+  const containers = getContainerList();
+  const fromIdx = parseInt(document.getElementById('conn-from').value);
+  const toIdx = parseInt(document.getElementById('conn-to').value);
+  if (fromIdx === toIdx) { alert(_IX.twoContainers); return; }
+
+  const target = containers.find(c => c.idx === toIdx);
+  if (!target) return;
+
+  fetch(`/connection-hints/?image=${encodeURIComponent(target.image)}`)
+    .then(r => r.json())
+    .then(hints => {
+      const allHints = Object.values(hints).flat();
+      if (!allHints.length) { alert(_IX.noHints); return; }
+
+      // Env-Vars in "from"-Container eintragen
+      const fromBlock = document.getElementById(`container-${fromIdx}`);
+      if (!fromBlock) return;
+      const envEl = fromBlock.querySelector('textarea[name$="-env"]');
+      if (!envEl) return;
+      const existing = envEl.value.trim();
+      const toAdd = allHints.join('\n');
+      envEl.value = existing ? existing + '\n' + toAdd : toAdd;
+
+      // Visuelles Feedback
+      envEl.style.borderColor = '#22c55e';
+      setTimeout(() => { envEl.style.borderColor = ''; }, 2000);
+
+      // Erweiterte Optionen nicht nötig — env ist sichtbar
+    });
+}
+
+// Verbindungs-Assistent aktualisieren wenn Container-Namen sich ändern
+document.addEventListener('input', function(e) {
+  if (e.target.matches('input[name$="-name"]')) refreshConnectionAssistant();
+});
+document.addEventListener('change', function(e) {
+  if (e.target.matches('select[id="id_mode"]')) {}
+});
+
+// Auto-load stack from URL param ?stack=key
+(function() {
+  const p = new URLSearchParams(window.location.search).get('stack');
+  if (p) window.addEventListener('DOMContentLoaded', () => pickStack(p, p));
+})();
+
+// Auto-load community stack from URL param ?cs=<id>
+(function() {
+  const cs = new URLSearchParams(window.location.search).get('cs');
+  if (cs) window.addEventListener('DOMContentLoaded', () => pickCommunityStack(cs, '', ''));
+})();
+
+{% if prefill_json %}
+// ── Re-Edit: Formular aus gespeicherter Config vorbefüllen ────────
+(async function() {
+  const data = {{ prefill_json|safe }};
+  document.getElementById('id_pod_name').value = data.pod_name || '';
+  document.getElementById('id_restart_policy').value = data.restart_policy || 'Always';
+  document.getElementById('id_mode').value = data.mode || 'rootless';
+  const hn = document.getElementById('id_host_network');
+  if (hn) hn.checked = !!data.host_network;
+  const netEl = document.getElementById('id_network');
+  if (netEl && data.network) netEl.value = data.network;
+
+  document.getElementById('containers-wrapper').innerHTML = '';
+  const containers = data.containers || [];
+  for (let i = 0; i < containers.length; i++) {
+    const html = await fetch(`/add-container/?index=${i}`).then(r => r.text());
+    document.getElementById('containers-wrapper').insertAdjacentHTML('beforeend', html);
+    document.getElementById('container_count').value = i + 1;
+    await new Promise(res => setTimeout(res, 30));
+    fillContainerBlock(i, containers[i]);
+  }
+  refreshConnectionAssistant();
+})();
+{% endif %}
+</script>
+{% endblock %}

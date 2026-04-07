@@ -1,0 +1,11 @@
+{% comment %}
+  Params: picker_id (z.B. "submit" oder "update")
+  Erwartet: <i id="icon-preview-<picker_id>"> und input[name=icon] im umgebenden Form
+{% endcomment %}
+{% for ic in icons %}
+<button type="button" class="btn btn-sm p-1" title="{{ ic }}"
+  style="background:var(--surface-2);border:1px solid var(--border);width:30px;height:30px;"
+  onclick="this.closest('form').querySelector('[name=icon]').value='{{ ic }}';document.getElementById('icon-preview-{{ picker_id }}').className='bi {{ ic }}'">
+  <i class="bi {{ ic }}" style="font-size:.85rem;color:#5eead4;"></i>
+</button>
+{% endfor %}

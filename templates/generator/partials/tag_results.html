@@ -1,0 +1,15 @@
+{% if tags %}
+<ul class="list-unstyled mb-0">
+  {% for tag in tags %}
+  <li>
+    <button type="button" class="dropdown-item py-1"
+      onclick="selectTag('{{ namespace }}', '{{ name }}', '{{ tag }}', this)"
+      style="background:none; border:none; width:100%; text-align:left; color:#e2e8f0; cursor:pointer; font-family:monospace;">
+      {{ tag }}
+    </button>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="text-secondary small px-2 mb-0">No tags found.</p>
+{% endif %}

@@ -1,0 +1,456 @@
+# English translations
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+
+msgid "Podman Pod Generator"
+msgstr "Podman Pod Generator"
+
+msgid "Configure your pod — get ready-to-use Kubernetes YAML for podman play kube."
+msgstr "Configure your pod — get ready-to-use Kubernetes YAML for podman play kube."
+
+msgid "Quick Start — Predefined Stacks"
+msgstr "Quick Start — Predefined Stacks"
+
+msgid "Select stack..."
+msgstr "Select stack..."
+
+msgid "Fills the form completely — including correct 127.0.0.1 connections."
+msgstr "Fills the form completely — including correct 127.0.0.1 connections."
+
+msgid "Pod Settings"
+msgstr "Pod Settings"
+
+msgid "Advanced Pod Options"
+msgstr "Advanced Pod Options"
+
+msgid "Affects the deployment guide"
+msgstr "Affects the deployment guide"
+
+msgid "Init Containers"
+msgstr "Init Containers"
+
+msgid "Add Init Container"
+msgstr "Add Init Container"
+
+msgid "Add Container"
+msgstr "Add Container"
+
+msgid "Generate YAML"
+msgstr "Generate YAML"
+
+msgid "Connection Assistant"
+msgstr "Connection Assistant"
+
+msgid "Select which container needs access to which — env vars are filled automatically."
+msgstr "Select which container needs access to which — env vars are filled in automatically."
+
+msgid "This container needs access..."
+msgstr "This container needs access to..."
+
+msgid "...to this container"
+msgstr "...this container"
+
+msgid "Show connection"
+msgstr "Show connection"
+
+msgid "for Kubernetes YAML + systemd Quadlet"
+msgstr "for Kubernetes YAML + systemd Quadlet"
+
+msgid "Copy"
+msgstr "Copy"
+
+msgid "Immediately executable — for testing without systemd"
+msgstr "Immediately executable — for testing without systemd"
+
+msgid "Ports are published on the pod (not on individual containers) — this is how the network works correctly. Init containers run before main containers and then exit. Stop commands are commented out — activate at the end if needed."
+msgstr "Ports are published on the pod (not on individual containers) — this ensures correct networking. Init containers run before main containers and then exit. Stop commands are commented out — uncomment if needed."
+
+msgid "Save as link (shareable)"
+msgstr "Save as link (shareable)"
+
+msgid "Deployment Guide"
+msgstr "Deployment Guide"
+
+msgid "Saved on"
+msgstr "Saved on"
+
+msgid "Download YAML"
+msgstr "Download YAML"
+
+msgid "Download Shell Script"
+msgstr "Download Shell Script"
+
+msgid "New Pod"
+msgstr "New Pod"
+
+msgid "Copy link"
+msgstr "Copy link"
+
+msgid "Edit"
+msgstr "Edit"
+
+msgid "Imprint"
+msgstr "Imprint"
+
+msgid "No search results."
+msgstr "No stacks found."
+
+msgid "Pod-internal network — containers communicate via localhost"
+msgstr "Pod-internal network — containers communicate via localhost"
+
+msgid "All containers share the same network namespace. Connections go via localhost, NOT via the container name (as in docker-compose)."
+msgstr "All containers share the same network namespace. Connections go via localhost, NOT via the container name (as in docker-compose)."
+
+msgid "Essential"
+msgstr "Essential"
+
+msgid "Required for the site to function (session, CSRF). Always active."
+msgstr "Required for the site to function (session, CSRF). Always active."
+
+msgid "Always active"
+msgstr "Always active"
+
+msgid "Save selection"
+msgstr "Save selection"
+
+msgid "Create Account"
+msgstr "Create Account"
+
+msgid "Registration is currently disabled."
+msgstr "Registration is currently disabled."
+
+msgid "Activation link sent"
+msgstr "Activation link sent"
+
+msgid "We sent an email to <strong>%(email)s</strong>. Click the link to activate your account."
+msgstr "We sent an email to <strong>%(email)s</strong>. Click the link to activate your account."
+
+msgid "Registration received"
+msgstr "Registration received"
+
+msgid "Your account has been created and is waiting for manual approval. You will be notified once it is activated."
+msgstr "Your account has been created and is waiting for manual approval. You will be notified once it is activated."
+
+msgid "Register"
+msgstr "Register"
+
+msgid "Already have an account?"
+msgstr "Already have an account?"
+
+msgid "Log in"
+msgstr "Log in"
+
+msgid "My Profile"
+msgstr "My Profile"
+
+msgid "Logged in as"
+msgstr "Logged in as"
+
+msgid "Public Profile"
+msgstr "Public Profile"
+
+msgid "Upload image"
+msgstr "Upload image"
+
+msgid "JPG / PNG / WebP · cropped to 256×256 px"
+msgstr "JPG / PNG / WebP · cropped to 256×256 px"
+
+msgid "Remove avatar"
+msgstr "Remove avatar"
+
+msgid "About me"
+msgstr "About me"
+
+msgid "(max. 300 characters)"
+msgstr "(max. 300 characters)"
+
+msgid "Short description about yourself..."
+msgstr "Short description about yourself..."
+
+msgid "username"
+msgstr "username"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Back"
+msgstr "Back"
+
+msgid "Delete account"
+msgstr "Delete account"
+
+msgid "Deletes your account and all your Community Stacks permanently (GDPR Art. 17)."
+msgstr "Deletes your account and all your Community Stacks permanently (GDPR Art. 17)."
+
+msgid "Really delete account?"
+msgstr "Really delete account?"
+
+msgid "This action cannot be undone. All your stacks will also be deleted. Confirm with your current password."
+msgstr "This action cannot be undone. All your stacks will also be deleted. Confirm with your current password."
+
+msgid "Your password"
+msgstr "Your password"
+
+msgid "Yes, delete account"
+msgstr "Yes, delete account"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Uploading…"
+msgstr "Uploading…"
+
+msgid "Saved ✓"
+msgstr "Saved ✓"
+
+msgid "Upload error."
+msgstr "Upload error."
+
+msgid "Network error."
+msgstr "Network error."
+
+msgid "Avatar removed."
+msgstr "Avatar removed."
+
+msgid "Reset password"
+msgstr "Reset password"
+
+msgid "Enter your email address. You will receive a link to reset your password."
+msgstr "Enter your email address. You will receive a link to reset your password."
+
+msgid "Email address"
+msgstr "Email address"
+
+msgid "Send link"
+msgstr "Send link"
+
+msgid "← Back to login"
+msgstr "← Back to login"
+
+msgid "Email sent"
+msgstr "Email sent"
+
+msgid "If an account with this email address exists, a password reset link has been sent. Please check your inbox."
+msgstr "If an account with this email address exists, a password reset link has been sent. Please check your inbox."
+
+msgid "To login"
+msgstr "To login"
+
+msgid "Password changed"
+msgstr "Password changed"
+
+msgid "Your password has been changed successfully. You can now log in."
+msgstr "Your password has been changed successfully. You can now log in."
+
+msgid "New password"
+msgstr "New password"
+
+msgid "Set new password"
+msgstr "Set new password"
+
+msgid "Save password"
+msgstr "Save password"
+
+msgid "Invalid link"
+msgstr "Invalid link"
+
+msgid "The link has expired or has already been used."
+msgstr "The link has expired or has already been used."
+
+msgid "Request new link"
+msgstr "Request new link"
+
+msgid "Activate account"
+msgstr "Activate account"
+
+msgid "Account activated"
+msgstr "Account activated"
+
+msgid "Your account is now active. You can log in."
+msgstr "Your account is now active. You can log in."
+
+msgid "The activation link has expired or is invalid."
+msgstr "The activation link has expired or is invalid."
+
+msgid "To homepage"
+msgstr "To homepage"
+
+msgid "My Area"
+msgstr "My Area"
+
+msgid "Create new stack"
+msgstr "Create new stack"
+
+msgid "Set up a stack in the Pod Generator, generate YAML and submit it as a Community Stack — it becomes publicly visible after admin approval."
+msgstr "Set up a stack in the Pod Generator, generate YAML and submit it as a Community Stack — it becomes publicly visible after admin approval."
+
+msgid "Open Pod Generator"
+msgstr "Open Pod Generator"
+
+msgid "My Community Stacks"
+msgstr "My Community Stacks"
+
+msgid "Submitted stacks are shown in the dropdown under your username after admin approval."
+msgstr "Submitted stacks are shown in the dropdown under your username after admin approval."
+
+msgid "Approved"
+msgstr "Approved"
+
+msgid "Waiting for approval"
+msgstr "Waiting for approval"
+
+msgid "Delete stack?"
+msgstr "Delete stack?"
+
+msgid "No stacks submitted yet."
+msgstr "No stacks submitted yet."
+
+msgid "Generate a pod and click <strong>\"Submit as Community Stack\"</strong>."
+msgstr "Generate a pod and click <strong>\"Submit as Community Stack\"</strong>."
+
+msgid "Create first stack"
+msgstr "Create first stack"
+
+msgid "Update stack"
+msgstr "Update stack"
+
+msgid "Description (optional)"
+msgstr "Description (optional)"
+
+msgid "Category"
+msgstr "Category"
+
+msgid "After updating, the stack needs to be re-approved by the admin."
+msgstr "After updating, the stack needs to be re-approved by the admin."
+
+msgid "Update"
+msgstr "Update"
+
+msgid "Preview"
+msgstr "Preview"
+
+msgid "Edit mode"
+msgstr "Edit mode"
+
+msgid "Copied"
+msgstr "Copied"
+
+msgid "Kubernetes YAML for"
+msgstr "Kubernetes YAML for"
+
+msgid "contributors"
+msgstr "contributors"
+
+msgid "approved stacks"
+msgstr "approved stacks"
+
+msgid "Submit stack"
+msgstr "Submit stack"
+
+msgid "Leaderboard"
+msgstr "Leaderboard"
+
+msgid "Latest contributions"
+msgstr "Latest contributions"
+
+msgid "Open"
+msgstr "Open"
+
+msgid "No approved Community Stacks yet."
+msgstr "No approved Community Stacks yet."
+
+msgid "All"
+msgstr "All"
+
+msgid "Newest"
+msgstr "Newest"
+
+msgid "Most liked"
+msgstr "Most liked"
+
+msgid "Most viewed"
+msgstr "Most viewed"
+
+msgid "No stacks found for this filter."
+msgstr "No stacks found for this filter."
+
+msgid "Reset filter"
+msgstr "Reset filter"
+
+msgid "run before main containers"
+msgstr "run before main containers"
+
+msgid "No init containers configured."
+msgstr "No init containers configured."
+
+msgid "Containers in the pod communicate via"
+msgstr "Containers in the pod communicate via"
+
+msgid "Enter env vars"
+msgstr "Enter env vars"
+
+msgid "Following variables will be entered:"
+msgstr "Following variables will be entered:"
+
+msgid "Select database"
+msgstr "Select database"
+
+msgid "External database"
+msgstr "External database"
+
+msgid "Hostname or IP of the database server:"
+msgstr "Hostname or IP of the database server:"
+
+msgid "e.g. 192.168.1.100 or db.local"
+msgstr "e.g. 192.168.1.100 or db.local"
+
+msgid "Apply"
+msgstr "Apply"
+
+msgid "Please fill in all required fields."
+msgstr "Please fill in all required fields."
+
+msgid "Editing stack: %(name)s"
+msgstr "Editing stack: %(name)s"
+
+msgid "Changes must be re-approved by the admin after saving."
+msgstr "Changes must be re-approved by the admin after saving."
+
+msgid "Please select two different containers."
+msgstr "Please select two different containers."
+
+msgid "No connection hints available for this image."
+msgstr "No connection hints available for this image."
+
+msgid "The imprint has not been filled out yet. Please fill it in in the <a href=\"%(admin_url)s\" class=\"alert-link\">admin area</a>."
+msgstr "The imprint has not been filled out yet. Please fill it in in the <a href=\"%(admin_url)s\" class=\"alert-link\">admin area</a>."
+
+msgid "View profile"
+msgstr "View profile"
+
+msgid "My Stacks"
+msgstr "My Stacks"
+
+msgid "Edit profile"
+msgstr "Edit profile"
+
+msgid "Loading tags…"
+msgstr "Loading tags…"
+
+msgid "Click me!"
+msgstr "Click me!"
+
+msgid "Search…"
+msgstr "Search…"
+
+msgid "Open in Generator"
+msgstr "Open in Generator"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Show YAML"
+msgstr "Show YAML"

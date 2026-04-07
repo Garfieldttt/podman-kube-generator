@@ -1,0 +1,63 @@
+<div class="container-block" id="init-container-{{ index }}" style="border-color:rgba(20,184,166,.27);">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="badge px-3 py-2" style="background:rgba(20,184,166,.12); color:#5eead4; border:1px solid rgba(20,184,166,.3);">
+      <i class="bi bi-arrow-clockwise me-1"></i> Init-Container {{ index|add:1 }}
+    </span>
+    <button type="button" class="btn btn-sm btn-outline-danger"
+      onclick="this.closest('.container-block').remove(); updateCount('init_count', '[id^=init-container-]');">
+      <i class="bi bi-trash"></i>
+    </button>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label>{{ form.name.label }}</label>
+      {{ form.name }}
+    </div>
+    <div class="col-md-5">
+      <label>Image</label>
+      <div class="position-relative" id="img-wrap-i{{ index }}">
+        <input type="text" class="form-control" placeholder="busybox, alpine..."
+          autocomplete="off" id="img-search-i{{ index }}"
+          oninput="triggerImageSearch(this, 'i{{ index }}')"
+          onfocus="triggerImageSearch(this, 'i{{ index }}')"
+          onblur="setTimeout(() => closeDropdown('i{{ index }}'), 200)">
+        {{ form.image }}
+        <div id="img-results-i{{ index }}" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1000;
+          background:#1a1d27; border:1px solid #14b8a6; border-radius:6px; max-height:200px; overflow-y:auto;">
+          <div id="img-results-inner-i{{ index }}"></div>
+        </div>
+      </div>
+      <div id="tag-wrap-i{{ index }}" style="display:none; margin-top:.4rem;">
+        <div class="position-relative">
+          <input type="text" class="form-control form-control-sm font-monospace"
+            placeholder="Tag..." id="tag-search-i{{ index }}" oninput="filterTags(this, 'i{{ index }}')">
+          <div id="tag-results-i{{ index }}" style="position:absolute; top:100%; left:0; right:0; z-index:1001;
+            background:#1a1d27; border:1px solid #2d3148; border-radius:6px; max-height:180px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 d-flex align-items-end pb-1">
+      <div class="form-check">
+        {{ form.run_always }}
+        <label class="form-check-label small">{{ form.run_always.label }}</label>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <label>{{ form.command.label }}</label>
+      {{ form.command }}
+    </div>
+    <div class="col-md-4">
+      <label>{{ form.args.label }}</label>
+      {{ form.args }}
+    </div>
+    <div class="col-md-4">
+      <label>{{ form.env.label }}</label>
+      {{ form.env }}
+    </div>
+    <div class="col-12">
+      <label>{{ form.volumes.label }}</label>
+      {{ form.volumes }}
+    </div>
+  </div>
+</div>

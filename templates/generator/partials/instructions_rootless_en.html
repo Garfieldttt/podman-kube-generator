@@ -1,0 +1,391 @@
+<!-- OS Selector -->
+<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+  <span class="small" style="color:var(--text-dim);">Operating System:</span>
+  <div class="d-flex gap-1 flex-wrap" id="os-sel-rlen">
+    <button type="button" class="btn btn-sm btn-outline-secondary active" data-os="debian" onclick="rlenOS('debian')">Debian / Ubuntu</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="fedora" onclick="rlenOS('fedora')">Fedora / RHEL</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="arch" onclick="rlenOS('arch')">Arch Linux</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="alpine" onclick="rlenOS('alpine')">Alpine Linux</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="macos" onclick="rlenOS('macos')">macOS</button>
+  </div>
+</div>
+
+<!-- ── Prerequisites (as root) ─────────────────────────────────── -->
+<div class="step-block mb-4" style="border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.04);">
+  <div class="d-flex gap-3">
+    <div class="step-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);">!</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold" style="color:#fcd34d;">
+        Prerequisites
+        <span class="rlen-os" data-os="debian fedora arch alpine" style="display:inline;">
+          <span class="badge ms-2" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);font-size:.7rem;font-weight:600;">once as root</span>
+        </span>
+      </p>
+
+      <!-- 0. Install Podman -->
+      <p class="small fw-semibold mb-1" style="color:var(--text-dim);">0. Install Podman</p>
+
+      <div class="rlen-os" data-os="debian" style="display:block;">
+        <div class="pre-wrap mb-3">
+          <pre id="rlen-inst-deb">apt update && apt install -y podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-inst-deb')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rlen-os" data-os="fedora" style="display:none;">
+        <div class="pre-wrap mb-1">
+          <pre id="rlen-inst-fed">dnf install -y podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-inst-fed')"><i class="bi bi-clipboard"></i></button>
+        </div>
+        <p class="small mb-3" style="color:var(--text-muted);">RHEL 9 / Rocky / Alma: run <code>dnf module enable container-tools:rhel9 -y</code> first.</p>
+      </div>
+
+      <div class="rlen-os" data-os="arch" style="display:none;">
+        <div class="pre-wrap mb-3">
+          <pre id="rlen-inst-arch">pacman -S podman</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-inst-arch')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rlen-os" data-os="alpine" style="display:none;">
+        <div class="pre-wrap mb-3">
+          <pre id="rlen-inst-alp">apk add podman crun</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-inst-alp')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rlen-os" data-os="macos" style="display:none;">
+        <div class="pre-wrap mb-1">
+          <pre id="rlen-inst-mac">brew install podman
+podman machine init
+podman machine start</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-inst-mac')"><i class="bi bi-clipboard"></i></button>
+        </div>
+        <p class="small mb-3" style="color:var(--text-muted);">Alternatively: installer package from <strong>podman.io</strong>. Podman Desktop (optional) manages the machine automatically at login.</p>
+      </div>
+
+      <!-- 1. Create user -->
+      <div class="rlen-os" data-os="debian fedora arch" style="display:block;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">1. Create user (if not existing)</p>
+        <div class="pre-wrap mb-3">
+          <pre id="rlen-user-lin">useradd -m -s /bin/bash {{ pod_name }}
+passwd {{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-user-lin')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rlen-os" data-os="alpine" style="display:none;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">1. Create user (if not existing)</p>
+        <div class="pre-wrap mb-3">
+          <pre id="rlen-user-alp">adduser -D -s /bin/sh {{ pod_name }}
+passwd {{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-user-alp')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rlen-os" data-os="macos" style="display:none;">
+        <p class="small mb-3" style="color:var(--text-muted);"><i class="bi bi-info-circle me-1"></i>On macOS, Podman runs inside a VM — no separate system user required. Continue as your normal user.</p>
+      </div>
+
+
+      <!-- 3. Linger / Autostart -->
+      <div class="rlen-os" data-os="debian fedora arch" style="display:block;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">2. Enable linger <span style="color:var(--text-muted);font-weight:400;">(service runs after reboot without login)</span></p>
+        <div class="pre-wrap mb-0">
+          <pre id="rlen-linger">loginctl enable-linger {{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-linger')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rlen-os" data-os="alpine" style="display:none;">
+        <p class="small fw-semibold mb-1" style="color:var(--text-dim);">2. Set up OpenRC service <span style="color:var(--text-muted);font-weight:400;">(replaces loginctl)</span></p>
+        <p class="small mb-2" style="color:var(--text-muted);">Alpine uses OpenRC — no systemd, no <code>loginctl</code>. Create an init script:</p>
+        <div class="pre-wrap mb-2">
+          <pre id="rlen-openrc">cat > /etc/init.d/{{ pod_name }}-pod << 'INITEOF'
+#!/sbin/openrc-run
+name="{{ pod_name }}-pod"
+description="{{ pod_name }} Pod (Podman rootless)"
+command_user="{{ pod_name }}"
+command="/usr/bin/podman"
+command_args="play kube /home/{{ pod_name }}/.config/containers/{{ pod_name }}.yaml"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+    need net cgroups
+}
+
+stop() {
+    ebegin "Stopping ${name}"
+    start-stop-daemon --stop --pidfile "${pidfile}"
+    su - {{ pod_name }} -c "podman play kube --down /home/{{ pod_name }}/.config/containers/{{ pod_name }}.yaml"
+    eend $?
+}
+INITEOF
+chmod +x /etc/init.d/{{ pod_name }}-pod
+rc-update add cgroups boot
+rc-update add {{ pod_name }}-pod default</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-openrc')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+
+      <div class="rlen-os" data-os="macos" style="display:none;">
+        <p class="small mb-0" style="color:var(--text-muted);"><i class="bi bi-info-circle me-1"></i>No root steps required on macOS. Podman Machine and autostart are configured as a normal user (see Step 3 below).</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── From here on as deployment user ────────────────────────── -->
+<div class="step-block">
+  <div class="d-flex gap-3">
+    <div class="step-badge">1</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold">Save the YAML file</p>
+      <div class="pre-wrap">
+        <pre id="rlen-step1b">mkdir -p ~/.config/containers/
+# Copy the YAML above to:
+nano ~/.config/containers/{{ pod_name }}.yaml</pre>
+        <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step1b')"><i class="bi bi-clipboard"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="step-block">
+  <div class="d-flex gap-3">
+    <div class="step-badge">2</div>
+    <div class="flex-grow-1">
+      <p class="mb-2 fw-semibold">Test the pod (without autostart)</p>
+      <div class="pre-wrap">
+        <pre id="rlen-step2">podman play kube ~/.config/containers/{{ pod_name }}.yaml
+
+# Check status:
+podman pod ps && podman ps
+
+# Stop:
+podman play kube --down ~/.config/containers/{{ pod_name }}.yaml</pre>
+        <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step2')"><i class="bi bi-clipboard"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Steps 3–6: systemd (Debian / Fedora / Arch) ───────────── -->
+<div class="rlen-os" data-os="debian fedora arch" style="display:block;">
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">3</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Create Quadlet .kube file</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Copy the <code>{{ pod_name }}.kube</code> file from the tab above and save it to:</p>
+        <div class="pre-wrap">
+          <pre id="rlen-step3">~/.config/containers/systemd/{{ pod_name }}.kube</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step3')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">4</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Enable systemd service</p>
+        <div class="pre-wrap">
+          <pre id="rlen-step4">systemctl --user daemon-reload
+systemctl --user enable --now {{ pod_name }}-pod.service</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step4')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">5</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
+        <div class="pre-wrap">
+          <pre id="rlen-step5">systemctl --user status {{ pod_name }}-pod.service
+journalctl --user -u {{ pod_name }}-pod.service -f
+podman pod ps
+podman ps</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step5')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">6</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Apply image updates</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Pull new image versions and restart the pod:</p>
+        <div class="pre-wrap">
+          <pre id="rlen-step6">podman pull docker.io/&lt;image&gt;:&lt;tag&gt;
+podman play kube --replace ~/.config/containers/{{ pod_name }}.yaml
+
+# or via systemd:
+systemctl --user restart {{ pod_name }}-pod.service</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step6')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Steps 3–5: Alpine Linux (OpenRC) ──────────────────────── -->
+<div class="rlen-os" data-os="alpine" style="display:none;">
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">3</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Start the service</p>
+        <p class="small mb-2" style="color:var(--text-dim);">The init script was created in the prerequisites. Start the service now:</p>
+        <div class="pre-wrap">
+          <pre id="rlen-alp-start">rc-service {{ pod_name }}-pod start</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-alp-start')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">4</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
+        <div class="pre-wrap">
+          <pre id="rlen-alp-status">rc-service {{ pod_name }}-pod status
+podman pod ps && podman ps</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-alp-status')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">5</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Apply image updates</p>
+        <div class="pre-wrap">
+          <pre id="rlen-alp-update">podman pull docker.io/&lt;image&gt;:&lt;tag&gt;
+rc-service {{ pod_name }}-pod restart</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-alp-update')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert border-secondary mt-2" style="background:#12141f;">
+    <strong><i class="bi bi-info-circle me-1 text-secondary"></i> Alpine / OpenRC:</strong>
+    <ul class="mb-0 mt-2 small">
+      <li>No systemd → no Quadlet. The pod is started directly via <code>podman play kube</code> through OpenRC.</li>
+      <li>Logs: <code>podman logs &lt;container-name&gt;</code> or <code>/var/log/messages</code></li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ── Steps 3–5: macOS ──────────────────────────────────────── -->
+<div class="rlen-os" data-os="macos" style="display:none;">
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">3</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Set up autostart via launchd</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Create a LaunchAgent for the current user. The Podman Machine must already be running at login (e.g. via Podman Desktop).</p>
+        <div class="pre-wrap">
+          <pre id="rlen-mac-launchd">mkdir -p ~/Library/LaunchAgents/
+cat > ~/Library/LaunchAgents/com.podman.{{ pod_name }}.plist << 'EOF'
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+  &lt;key&gt;Label&lt;/key&gt;
+  &lt;string&gt;com.podman.{{ pod_name }}&lt;/string&gt;
+  &lt;key&gt;ProgramArguments&lt;/key&gt;
+  &lt;array&gt;
+    &lt;string&gt;/usr/local/bin/podman&lt;/string&gt;
+    &lt;string&gt;play&lt;/string&gt;
+    &lt;string&gt;kube&lt;/string&gt;
+    &lt;string&gt;/Users/YOURUSER/.config/containers/{{ pod_name }}.yaml&lt;/string&gt;
+  &lt;/array&gt;
+  &lt;key&gt;RunAtLoad&lt;/key&gt;
+  &lt;true/&gt;
+  &lt;key&gt;StandardOutPath&lt;/key&gt;
+  &lt;string&gt;/tmp/{{ pod_name }}-pod.log&lt;/string&gt;
+  &lt;key&gt;StandardErrorPath&lt;/key&gt;
+  &lt;string&gt;/tmp/{{ pod_name }}-pod.log&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+EOF
+launchctl load ~/Library/LaunchAgents/com.podman.{{ pod_name }}.plist</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-mac-launchd')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">4</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
+        <div class="pre-wrap">
+          <pre id="rlen-mac-status">launchctl list | grep com.podman.{{ pod_name }}
+podman pod ps && podman ps
+cat /tmp/{{ pod_name }}-pod.log</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-mac-status')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge">5</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Apply image updates</p>
+        <div class="pre-wrap">
+          <pre id="rlen-mac-update">podman pull docker.io/&lt;image&gt;:&lt;tag&gt;
+launchctl stop com.podman.{{ pod_name }}
+launchctl start com.podman.{{ pod_name }}</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-mac-update')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert border-secondary mt-2" style="background:#12141f;">
+    <strong><i class="bi bi-info-circle me-1 text-secondary"></i> macOS:</strong>
+    <ul class="mb-0 mt-2 small">
+      <li>Podman runs inside a Linux VM (Podman Machine) — Quadlet files on the macOS host are <strong>not</strong> supported.</li>
+      <li>Path to <code>podman</code>: Homebrew Apple Silicon → <code>/opt/homebrew/bin/podman</code>, Intel → <code>/usr/local/bin/podman</code></li>
+      <li>Replace <code>YOURUSER</code> in the plist with your macOS username (<code>echo $USER</code>).</li>
+    </ul>
+  </div>
+
+</div>
+
+{% include "generator/partials/tips_en.html" with pod_name=pod_name %}
+
+<script>
+function rlenOS(os) {
+  document.querySelectorAll('#os-sel-rlen button').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.os === os);
+  });
+  document.querySelectorAll('.rlen-os').forEach(function(el) {
+    el.style.display = el.dataset.os.split(' ').includes(os) ? '' : 'none';
+  });
+}
+</script>

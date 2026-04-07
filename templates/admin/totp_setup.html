@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+{% block title %}TOTP einrichten{% endblock %}
+
+{% block content %}
+<div style="max-width:480px; margin:2rem auto;">
+  <h1 style="font-size:1.4rem; margin-bottom:1rem;">Zwei-Faktor-Authentifizierung einrichten</h1>
+
+  <p style="color:#666; margin-bottom:1.5rem;">
+    Scanne den QR-Code mit deiner Authenticator-App (z.B. Google Authenticator, Aegis, Bitwarden).
+    Gib anschließend den angezeigten Code ein — erst dann wird TOTP aktiviert.
+  </p>
+
+  <div style="text-align:center; margin-bottom:1.5rem; background:#fff; padding:1rem; display:inline-block; border:1px solid #ddd; border-radius:4px;">
+    <img src="data:image/png;base64,{{ qr_b64 }}" alt="TOTP QR-Code" style="width:220px; height:220px;">
+  </div>
+
+  <p style="margin-bottom:.5rem; font-size:.85rem; color:#666;">
+    Kein QR-Scanner? Manueller Schlüssel:
+  </p>
+  <code style="display:block; background:#f5f5f5; padding:.5rem .75rem; border-radius:4px; font-size:.9rem; letter-spacing:.1em; margin-bottom:1.5rem; word-break:break-all;">{{ secret }}</code>
+
+  {% if error %}
+  <p style="color:#ba2121; background:#fff0f0; border:1px solid #f5c6cb; padding:.6rem .9rem; border-radius:4px; margin-bottom:1rem;">
+    {{ error }}
+  </p>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <label style="display:block; font-weight:600; margin-bottom:.4rem;">Code aus der Authenticator-App</label>
+    <input type="text" name="code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7"
+           autocomplete="one-time-code" autofocus
+           style="width:100%; padding:.6rem .75rem; font-size:1.2rem; letter-spacing:.25em;
+                  border:1px solid {% if error %}#ba2121{% else %}#ccc{% endif %};
+                  border-radius:4px; margin-bottom:1rem; box-sizing:border-box;">
+    <button type="submit"
+            style="width:100%; padding:.7rem; background:#417690; color:#fff;
+                   border:none; border-radius:4px; font-size:1rem; cursor:pointer;">
+      Bestätigen &amp; TOTP aktivieren
+    </button>
+  </form>
+</div>
+{% endblock %}

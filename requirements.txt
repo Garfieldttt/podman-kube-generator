@@ -1,0 +1,11 @@
+Django>=4.2,<7.0
+PyYAML>=6.0,<7.0
+python-dotenv>=1.0,<2.0
+whitenoise>=6.6,<8.0
+gunicorn>=21.2,<24.0
+django-ratelimit>=4.1,<5.0
+user-agents>=2.2,<3.0
+Pillow>=10.0,<12.0
+pyotp>=2.9,<3.0
+qrcode[pil]>=7.4,<9.0
+geoip2>=4.8,<5.0

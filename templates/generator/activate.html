@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Activate account — Podman Kube Generator{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5 text-center mt-4">
+    {% if success %}
+    <i class="bi bi-check-circle" style="font-size:3rem;color:var(--accent);"></i>
+    <h1 class="h4 mt-3">Account activated</h1>
+    <p style="color:var(--text-dim);">Your account is now active. You can log in.</p>
+    <a href="/login/" class="btn btn-primary mt-2">To login</a>
+    {% else %}
+    <i class="bi bi-x-circle" style="font-size:3rem;color:#f87171;"></i>
+    <h1 class="h4 mt-3">Invalid link</h1>
+    <p style="color:var(--text-dim);">The activation link has expired or is invalid.</p>
+    <a href="/" class="btn btn-outline-secondary mt-2">To homepage</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

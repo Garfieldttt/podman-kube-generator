@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Register — Podman Kube Generator{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5 col-lg-4">
+    <h1 class="h4 mb-4">Create Account</h1>
+
+    {% if disabled %}
+    <div class="alert alert-warning">Registration is currently disabled.</div>
+
+    {% elif sent %}
+    <div class="card p-4 text-center">
+      <i class="bi bi-envelope-check" style="font-size:2.5rem;color:var(--accent);"></i>
+      <h2 class="h5 mt-3 mb-2">Activation link sent</h2>
+      <p class="small" style="color:var(--text-dim);">We sent an email to <strong>{{ email }}</strong>. Click the link to activate your account.</p>
+    </div>
+
+    {% elif pending %}
+    <div class="card p-4 text-center">
+      <i class="bi bi-hourglass-split" style="font-size:2.5rem;color:var(--accent);"></i>
+      <h2 class="h5 mt-3 mb-2">Registration received</h2>
+      <p class="small" style="color:var(--text-dim);">Your account has been created and is waiting for manual approval. You will be notified once it is activated.</p>
+    </div>
+
+    {% else %}
+    <div class="card p-4">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        {% if field.name == 'tos_accepted' %}
+        <div class="mb-3">
+          <details class="mb-2">
+            <summary class="small fw-semibold" style="color:var(--accent);cursor:pointer;">
+              Terms of Service
+            </summary>
+            <div class="mt-2 p-3 rounded small" style="background:rgba(255,255,255,.04);border:1px solid var(--border);max-height:220px;overflow-y:auto;color:var(--text-dim);line-height:1.6;">
+              Operated by: Thomas (Austria). Contact: see Legal Notice.<br><br>
+              1. <strong>Use:</strong> This service provides a tool for generating Podman/Kubernetes YAML configurations. Free to use without registration. Registration is only required to submit Community Stacks.<br><br>
+              2. <strong>Community Stacks:</strong> Submitted stacks become publicly visible after manual approval. You are responsible for the content of your submissions. Illegal, harmful, or copyrighted content must not be submitted. The operator may remove content at any time without stating reasons.<br><br>
+              3. <strong>Privacy:</strong> Upon registration, your username and email address are stored. This data will not be shared with third parties. Access logs may be stored for security purposes.<br><br>
+              4. <strong>Disclaimer:</strong> This service is provided without warranty. No uptime or correctness is guaranteed. No liability is accepted for damages arising from using generated configurations.<br><br>
+              5. <strong>Changes:</strong> These terms may be updated at any time.
+            </div>
+          </details>
+          <div class="form-check">
+            {{ field }}
+            <label class="form-check-label small" for="{{ field.id_for_label }}" style="color:var(--text-dim);">
+              I accept the terms of service.
+            </label>
+          </div>
+          {% if field.errors %}
+          <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="mb-3">
+          <label class="form-label small" style="color:var(--text-dim);">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+          <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+          {% endif %}
+          {% if field.help_text %}
+          <div class="form-text small" style="color:var(--text-muted);">{{ field.help_text }}</div>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+      </form>
+    </div>
+    <p class="text-center mt-3 small" style="color:var(--text-dim);">
+      Already have an account? <a href="/login/" style="color:var(--accent);">Log in</a>
+    </p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

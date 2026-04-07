@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}My Area — Podman Kube Generator{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div>
+        <h1 class="h4 mb-0">My Area</h1>
+        <p class="small mb-0" style="color:var(--text-dim);">Logged in as <strong>{{ request.user.username }}</strong></p>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    {% for m in messages %}
+    <div class="alert mb-4 border-0" style="{% if m.tags == 'error' %}background:rgba(239,68,68,.1);color:#f87171;border-left:3px solid #ef4444 !important;{% else %}background:rgba(74,222,128,.1);color:#4ade80;border-left:3px solid #4ade80 !important;{% endif %}">
+      <i class="bi {% if m.tags == 'error' %}bi-exclamation-circle{% else %}bi-check-circle{% endif %} me-2"></i>{{ m }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- CTA: Neuen Stack erstellen -->
+    <div class="card mb-4 p-4" style="border-color:rgba(20,184,166,.3);background:rgba(20,184,166,.05);">
+      <div class="d-flex align-items-center gap-4 flex-wrap">
+        <div class="flex-grow-1">
+          <div class="fw-semibold mb-1" style="color:var(--text);font-size:1rem;">
+            <i class="bi bi-plus-circle me-2" style="color:var(--accent);"></i>Create new stack
+          </div>
+          <p class="small mb-0" style="color:var(--text-dim);">
+            Set up a stack in the Pod Generator, generate YAML and submit it as a Community Stack — it becomes publicly visible after admin approval.
+          </p>
+        </div>
+        <a href="/" class="btn btn-primary">
+          <i class="bi bi-plus-lg me-1"></i>Open Pod Generator
+        </a>
+      </div>
+    </div>
+
+    <!-- Community Stacks -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="h5 mb-0">
+        <i class="bi bi-collection me-2" style="color:var(--accent);"></i>My Community Stacks
+      </h2>
+      <span class="badge" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);">
+        {{ page_obj.paginator.count }} Stack{{ page_obj.paginator.count|pluralize:"s" }}
+      </span>
+    </div>
+
+    <p class="small mb-3" style="color:var(--text-dim);">
+      <i class="bi bi-info-circle me-1"></i>
+      Submitted stacks are shown in the dropdown under your username after admin approval.
+    </p>
+
+    {% if page_obj.object_list %}
+    <div class="d-flex flex-column gap-3">
+      {% for s in page_obj %}
+      <div class="card p-3 d-flex flex-row align-items-center gap-3">
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(20,184,166,.1);
+                    border:1px solid rgba(20,184,166,.2);display:flex;align-items:center;
+                    justify-content:center;flex-shrink:0;">
+          <i class="bi bi-box" style="color:#5eead4;font-size:.9rem;"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="fw-semibold" style="color:var(--text);">{{ s.name }}</div>
+          {% if s.description %}<div class="small" style="color:var(--text-dim);">{{ s.description }}</div>{% endif %}
+          <div class="small mt-1" style="color:var(--text-muted);">
+            {{ s.created_at|date:"d.m.Y H:i" }} —
+            {% if s.is_approved %}
+            <span style="color:#4ade80;"><i class="bi bi-check-circle me-1"></i>Approved</span>
+            {% else %}
+            <span style="color:#fbbf24;"><i class="bi bi-hourglass me-1"></i>Waiting for approval</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/view-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Show YAML">
+            <i class="bi bi-code-square"></i>
+          </a>
+          <a href="/edit-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <form method="post" action="/delete-stack/{{ s.pk }}/" onsubmit="return confirm('Delete stack?')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4 d-flex justify-content-center gap-2">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-chevron-left"></i>
+      </a>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+      <a href="?page={{ num }}"
+        class="btn btn-sm {% if num == page_obj.number %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+        {{ num }}
+      </a>
+      {% endfor %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-chevron-right"></i>
+      </a>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="card p-4 text-center" style="border-style:dashed;">
+      <i class="bi bi-inbox" style="font-size:2rem;color:var(--text-muted);"></i>
+      <p class="mt-2 mb-3 small" style="color:var(--text-dim);">
+        No stacks submitted yet.<br>
+        Generate a pod and click <strong>"Submit as Community Stack"</strong>.
+      </p>
+      <a href="/" class="btn btn-primary btn-sm" style="width:fit-content;margin:0 auto;">
+        <i class="bi bi-plus-lg me-1"></i>Create first stack
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

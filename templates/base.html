@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  {% block title_block %}<title>{% block title %}{{ seo.home_title }}{% endblock %}</title>{% endblock %}
+
+  <meta name="description" content="{% block meta_description %}{{ seo.home_description }}{% endblock %}">
+  {% if seo.keywords %}<meta name="keywords" content="{{ seo.keywords }}">{% endif %}
+  <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+  {% block meta_canonical %}<link rel="canonical" href="{{ site_url }}{% block canonical_path %}/{% endblock %}">{% endblock %}
+  {% if seo.google_site_verification %}<meta name="google-site-verification" content="{{ seo.google_site_verification }}">{% endif %}
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ seo.site_name }}">
+  <meta property="og:title" content="{% block og_title %}{{ seo.home_title }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ seo.home_description }}{% endblock %}">
+  <meta property="og:url" content="{{ site_url }}{% block og_path %}/{% endblock %}">
+  {% if seo.og_image_url %}<meta property="og:image" content="{{ seo.og_image_url }}">{% endif %}
+
+  <meta name="twitter:card" content="{% if seo.og_image_url %}summary_large_image{% else %}summary{% endif %}">
+  <meta name="twitter:title" content="{% block twitter_title %}{{ seo.home_title }}{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}{{ seo.home_description }}{% endblock %}">
+  {% if seo.og_image_url %}<meta name="twitter:image" content="{{ seo.og_image_url }}">{% endif %}
+
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebSite","name":"{{ seo.site_name }}","url":"{{ site_url }}/"}
+  </script>
+
+  {% block structured_data %}{% endblock %}
+
+  {% load static %}
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons.min.css' %}">
+  <style>
+    /* ── Design Tokens — podman.io inspired ───────────────────── */
+    :root {
+      --bg:           #111827;
+      --surface:      #1f2937;
+      --surface-2:    #283041;
+      --surface-3:    #2d3748;
+      --border:       #374151;
+      --border-mid:   #4b5563;
+      --accent:       #14b8a6;
+      --accent-soft:  rgba(20,184,166,.12);
+      --accent-glow:  rgba(20,184,166,.2);
+      --accent-2:     #22d3ee;
+      --accent-2-soft:rgba(34,211,238,.1);
+      --nav-from:     #0c1a2e;
+      --nav-to:       #0d9488;
+      --text:         #f9fafb;
+      --text-dim:     #9ca3af;
+      --text-muted:   #6b7280;
+      --green:        #22c55e;
+      --green-soft:   rgba(34,197,94,.1);
+      --red-soft:     rgba(239,68,68,.08);
+      --code:         #a5f3fc;
+      --r:            6px;
+      --r-lg:         10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    /* ── Navbar — podman.io Gradient ────────────────────────────── */
+    .navbar {
+      background: linear-gradient(to right, var(--nav-from), var(--nav-to)) !important;
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+      padding: .8rem 0;
+      box-shadow: 0 2px 12px rgba(0,0,0,.4);
+    }
+    .navbar-brand {
+      color: #fff !important;
+      font-weight: 700;
+      font-size: .95rem;
+      letter-spacing: -.01em;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      text-decoration: none;
+    }
+    .brand-icon {
+      background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+    .brand-text { line-height: 1.2; }
+    .brand-text em {
+      font-style: normal;
+      color: rgba(255,255,255,.85);
+      font-weight: 400;
+    }
+    .brand-sub {
+      font-size: .67rem;
+      color: rgba(255,255,255,.55);
+      font-weight: 400;
+      font-family: ui-monospace, monospace;
+      display: block;
+    }
+
+    /* ── Navbar Icon Links ──────────────────────────────────────── */
+    .nav-icon-links { display: flex; align-items: center; gap: .15rem; margin-right: .6rem; }
+    .nav-icon-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      color: rgba(255,255,255,.55);
+      font-size: 1rem;
+      text-decoration: none;
+      transition: background .15s, color .15s;
+    }
+    .nav-icon-link:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+    /* ── Cards ─────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .card-header {
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      border-radius: var(--r-lg) var(--r-lg) 0 0 !important;
+      padding: .65rem 1rem;
+      color: var(--text);
+    }
+    .card-header .fw-semibold { font-size: .825rem; color: var(--text); }
+
+    /* ── Form Controls ─────────────────────────────────────────── */
+    .form-control, .form-select {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--r);
+      font-size: .875rem;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-control:focus, .form-select:focus {
+      background: var(--surface-2);
+      border-color: var(--accent);
+      color: var(--text);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+      outline: none;
+    }
+    .form-control::placeholder { color: var(--text-muted); }
+    .form-select option { background: #1f2937; }
+    textarea.form-control { resize: vertical; min-height: 70px; }
+
+    /* ── Buttons ────────────────────────────────────────────────── */
+    .btn {
+      border-radius: var(--r);
+      font-size: .875rem;
+      font-weight: 500;
+      transition: all .15s ease-in-out;
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover, .btn-primary:focus {
+      background: #0f766e;
+      border-color: #0f766e;
+      box-shadow: 0 4px 12px rgba(20,184,166,.3);
+    }
+    .btn-outline-secondary {
+      border-color: var(--border-mid);
+      color: var(--text-dim);
+      background: transparent;
+    }
+    .btn-outline-secondary:hover {
+      background: var(--surface-3);
+      border-color: var(--border-mid);
+      color: var(--text);
+    }
+    .btn-success { background: var(--green); border-color: var(--green); color: #000; }
+    .btn-sm { font-size: .8125rem; }
+
+    /* ── Labels ─────────────────────────────────────────────────── */
+    label {
+      color: var(--text-dim);
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: .3rem;
+      display: block;
+    }
+    .form-check-label {
+      color: var(--text-dim);
+      font-size: .875rem;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .form-text { color: var(--text-muted); font-size: .78rem; }
+
+    /* ── Code / Pre — Terminal-Style ────────────────────────────── */
+    .pre-wrap {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      background: #0d1117;
+    }
+    .pre-wrap::before {
+      content: '';
+      display: block;
+      height: 28px;
+      background: #161b22;
+      border-bottom: 1px solid var(--border);
+      background-image: radial-gradient(circle, #ff5f57 0 5px, transparent 5px),
+                        radial-gradient(circle, #ffbd2e 0 5px, transparent 5px),
+                        radial-gradient(circle, #28ca41 0 5px, transparent 5px);
+      background-size: 14px 14px, 14px 14px, 14px 14px;
+      background-position: 12px center, 28px center, 44px center;
+      background-repeat: no-repeat;
+      pointer-events: none;
+    }
+    .pre-wrap-plain::before {
+      background-image: none;
+    }
+    .pre-wrap pre {
+      border: none;
+      border-radius: 0;
+      margin: 0;
+      background: transparent;
+    }
+    pre {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1rem 1.25rem;
+      color: var(--code);
+      font-size: .82rem;
+      line-height: 1.8;
+      white-space: pre;
+      overflow-x: auto;
+      font-family: 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    }
+    code {
+      color: #5eead4;
+      background: rgba(94,234,212,.1);
+      padding: .15rem .4rem;
+      border-radius: 4px;
+      font-size: .85em;
+      font-family: ui-monospace, monospace;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .copy-btn { position: absolute; top: 2.1rem; right: .5rem; z-index: 2; }
+
+    /* ── Container Blocks ───────────────────────────────────────── */
+    .container-block {
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--r-lg) var(--r-lg) 0;
+      padding: 1.25rem;
+      background: var(--surface);
+      margin-bottom: 1rem;
+      transition: border-color .15s;
+    }
+    .container-block:focus-within {
+      border-left-color: #5eead4;
+      box-shadow: 0 0 0 1px rgba(20,184,166,.1);
+    }
+
+    /* ── Badges ─────────────────────────────────────────────────── */
+    .badge-container {
+      background: var(--accent-soft);
+      color: #5eead4;
+      border: 1px solid rgba(20,184,166,.25);
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      padding: .25rem .55rem;
+    }
+
+    /* ── Step Blocks ────────────────────────────────────────────── */
+    .step-badge {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: .75rem;
+      flex-shrink: 0;
+    }
+    .step-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--r-lg) var(--r-lg) 0;
+      padding: 1rem 1.25rem;
+      margin-bottom: .75rem;
+    }
+
+    /* ── Tabs ───────────────────────────────────────────────────── */
+    .nav-tabs { border-bottom: 1px solid var(--border); gap: .25rem; }
+    .nav-tabs .nav-link {
+      color: var(--text-muted);
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      padding: .6rem 1rem;
+      font-size: .875rem;
+      font-weight: 500;
+      margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+    }
+    .nav-tabs .nav-link:hover { color: var(--text-dim); border-bottom-color: var(--border-mid); }
+    .nav-tabs .nav-link.active {
+      color: #5eead4;
+      background: transparent;
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Alerts ─────────────────────────────────────────────────── */
+    .alert-danger {
+      background: var(--red-soft);
+      border-color: rgba(239,68,68,.2);
+      color: #fca5a5;
+      border-radius: var(--r);
+    }
+    .alert { border-radius: var(--r); }
+    .alert-secondary {
+      background: var(--surface-2);
+      border-color: var(--border-mid);
+      color: var(--text-dim);
+    }
+
+    /* ── Dropdowns ──────────────────────────────────────────────── */
+    .dropdown-menu {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    }
+    .dropdown-item { color: var(--text-dim); }
+    .dropdown-item:hover { background: var(--surface-3); color: var(--text); }
+
+    /* ── Section Labels ─────────────────────────────────────────── */
+    .section-label {
+      color: var(--text-muted);
+      font-size: .66rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    /* ── Misc ───────────────────────────────────────────────────── */
+    hr.border-secondary { border-color: var(--border) !important; }
+    .text-secondary { color: var(--text-dim) !important; }
+    .text-muted { color: var(--text-muted) !important; }
+    .font-monospace { font-family: ui-monospace, monospace; }
+    .border-secondary { border-color: var(--border) !important; }
+    .badge.bg-success { background: var(--green) !important; color: #000 !important; }
+    .badge.bg-warning { background: #f59e0b !important; color: #000 !important; }
+
+    /* ── Scrollbar ──────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border) !important;
+      background: #0f172a;
+    }
+    footer a { color: var(--text-muted); text-decoration: none; transition: color .15s; }
+    footer a:hover { color: var(--text-dim); }
+
+    /* ── Hiro the Seal ──────────────────────────────────────────── */
+    #hiro-area  { position:relative; height:5rem; overflow:hidden; }
+    #hiro-track { position:absolute; bottom:.3rem; left:5%;
+                  animation: hiroLR 70s ease-in-out infinite; }
+    #hiro-dir   { display:inline-block;
+                  animation: hiroFlip 70s ease-in-out infinite; }
+    #hiro-seal  { font-size:2rem; display:inline-block; cursor:pointer;
+                  animation: hiroSwim 3.5s ease-in-out infinite;
+                  transform-origin: center bottom; }
+
+    /* Sprechblase */
+    #hiro-bubble {
+      position: absolute;
+      bottom: 2.4rem;
+      left: -12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-mid);
+      border-radius: 8px;
+      padding: .4rem .85rem;
+      color: var(--text-dim);
+      font-size: .78rem;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .45s;
+      box-shadow: 0 4px 16px rgba(0,0,0,.5);
+    }
+    #hiro-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -7px; left: 20px;
+      border: 7px solid transparent;
+      border-top-color: var(--surface-2);
+      border-bottom: 0;
+    }
+    #hiro-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -8px; left: 19px;
+      border: 8px solid transparent;
+      border-top-color: var(--border-mid);
+      border-bottom: 0;
+    }
+
+    @keyframes hiroLR {
+      0%   { left:4%;  }
+      45%  { left:78%; }
+      50%  { left:80%; }
+      55%  { left:78%; }
+      95%  { left:4%;  }
+      100% { left:4%;  }
+    }
+    @keyframes hiroFlip {
+      0%,47%  { transform:scaleX(1);  }
+      50%,100%{ transform:scaleX(-1); }
+    }
+
+    /* Kriechbewegung — Seehund robbt am Boden entlang */
+    @keyframes hiroSwim {
+      0%   { transform: rotate(-8deg) scaleY(0.88) translateY(2px); }
+      20%  { transform: rotate(4deg)  scaleY(1.04) translateY(-1px); }
+      40%  { transform: rotate(-6deg) scaleY(0.90) translateY(2px); }
+      60%  { transform: rotate(5deg)  scaleY(1.05) translateY(-1px); }
+      80%  { transform: rotate(-7deg) scaleY(0.89) translateY(2px); }
+      100% { transform: rotate(-8deg) scaleY(0.88) translateY(2px); }
+    }
+    @keyframes tBounce {
+      0%,100%{ transform:translateY(0)    scale(1); }
+      30%    { transform:translateY(-48px) scale(1.3); }
+      55%    { transform:translateY(-12px) scale(1.05);}
+      70%    { transform:translateY(-32px) scale(1.15);}
+    }
+    @keyframes tSpin    { to { transform:rotate(360deg) scale(1.2); } }
+    @keyframes tWobble  {
+      0%,100%{ transform:rotate(0); }
+      20%    { transform:rotate(-22deg); }
+      40%    { transform:rotate(22deg);  }
+      60%    { transform:rotate(-16deg); }
+      80%    { transform:rotate(16deg);  }
+    }
+    @keyframes tFlop    {
+      0%,100%{ transform:rotate(0)    scaleY(1);   }
+      30%    { transform:rotate(85deg) scaleY(.85); }
+      65%    { transform:rotate(80deg) scaleY(.9);  }
+      85%    { transform:rotate(20deg) scaleY(1);   }
+    }
+    @keyframes tShrink  {
+      0%,100%{ transform:scale(1);    }
+      40%    { transform:scale(0.3);  }
+      60%    { transform:scale(0.35); }
+    }
+    @keyframes tDizzy   {
+      0%,100%{ transform:rotate(0)     translateY(0);    }
+      25%    { transform:rotate(-28deg) translateY(-8px); }
+      50%    { transform:rotate(28deg)  translateY(0);    }
+      75%    { transform:rotate(-18deg) translateY(-5px); }
+    }
+  </style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <span class="brand-icon">{{ site.brand_icon }}</span>
+      <span class="brand-text">
+        {{ site.brand_name }}
+        <span class="brand-sub">{{ site.brand_tagline }}</span>
+      </span>
+    </a>
+    <div class="ms-auto d-flex align-items-center">
+      <a href="/community/" class="btn btn-sm me-1" style="background:transparent;border:none;color:var(--text-dim);font-size:.8rem;" title="Community Rangliste">
+        <i class="bi bi-trophy me-1"></i><span class="d-none d-md-inline">Community</span>
+      </a>
+      {% if site.donation_url %}
+      <button onclick="new bootstrap.Modal(document.getElementById('donate-modal')).show()"
+         class="btn btn-sm me-2 d-none d-md-inline-flex align-items-center gap-1"
+         style="background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);color:#5eead4;font-size:.78rem;padding:3px 10px;"
+         onmouseover="this.style.background='rgba(20,184,166,.15)';this.style.borderColor='rgba(20,184,166,.4)'"
+         onmouseout="this.style.background='rgba(20,184,166,.08)';this.style.borderColor='rgba(20,184,166,.2)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 0 1-.794.679H7.72a.483.483 0 0 1-.477-.558L7.418 21h1.518l.95-6.02h1.385c4.678 0 7.432-2.394 8.297-7.147a5.9 5.9 0 0 0 .499.645zM4.187 6.482C4.678 4.2 6.437 2.7 8.977 2.7h6.384c.83 0 1.572.2 2.196.57a4.87 4.87 0 0 0-4.198-2.2H6.976C4.437.07 2.677 1.57 2.187 3.852L.02 16.33a.696.696 0 0 0 .686.82h2.8L4.187 6.482z"/></svg>
+        Support
+      </button>
+      {% endif %}
+      {% if footer_links %}
+      <div class="nav-icon-links">
+        {% for link in footer_links %}
+        <a href="{{ link.url }}"
+           class="nav-icon-link"
+           title="{{ link.label }}"
+           {% if link.open_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}>
+          <i class="bi {{ link.icon }}"></i>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if request.user.is_authenticated %}
+      <div class="dropdown ms-2">
+        <button class="btn btn-sm dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown"
+          style="background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);color:#5eead4;font-size:.8rem;padding:4px 10px 4px 6px;">
+          {% if nav_avatar_url %}
+          <img src="{{ nav_avatar_url }}" alt="" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(20,184,166,.4);">
+          {% else %}
+          <span style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:#fff;border:1px solid rgba(20,184,166,.4);flex-shrink:0;">{{ nav_username_initial }}</span>
+          {% endif %}
+          {{ request.user.username }}
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" style="min-width:170px;">
+          <li>
+            <a class="dropdown-item small d-flex align-items-center gap-2" href="/u/{{ request.user.username }}/" style="padding:8px 12px;">
+              {% if nav_avatar_url %}
+              <img src="{{ nav_avatar_url }}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
+              {% else %}
+              <span style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0;">{{ nav_username_initial }}</span>
+              {% endif %}
+              <div>
+                <div style="font-weight:600;color:var(--text);">{{ request.user.username }}</div>
+                <div style="font-size:.7rem;color:var(--text-dim);">View profile</div>
+              </div>
+            </a>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item small" href="/my-stacks/"><i class="bi bi-collection me-2"></i>My Stacks</a></li>
+          <li><a class="dropdown-item small" href="/profile/"><i class="bi bi-person-gear me-2"></i>Edit profile</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form method="post" action="/logout/" class="px-2">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm w-100 text-start dropdown-item small" style="color:inherit;">
+                <i class="bi bi-box-arrow-right me-2"></i>Logout
+              </button>
+            </form>
+          </li>
+        </ul>
+      </div>
+      {% else %}
+      <div class="d-flex gap-2 ms-2">
+        <a href="/login/" class="btn btn-sm" style="background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);color:#5eead4;font-size:.8rem;">Login</a>
+        <a href="/register/" class="btn btn-sm btn-primary" style="font-size:.8rem;">Register</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<div id="main-wrap" class="{% block main_class %}container py-4{% endblock %}">
+  {% block content %}{% endblock %}
+</div>
+
+{% block footer %}<footer class="mt-5 py-4">
+  <div class="container text-center">
+    <div id="hiro-area">
+      <div id="hiro-track">
+        <div id="hiro-bubble"><span id="hiro-msg"></span></div>
+        <div id="hiro-dir">
+          <span id="hiro-seal" onclick="hiroTrick()" title="Click me!">🦭</span>
+        </div>
+      </div>
+    </div>
+    {% if site.donation_url %}
+    <!-- Donate Modal -->
+    <div id="donate-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+          <div class="modal-header" style="border-color:var(--border);">
+            <h5 class="modal-title" style="font-size:.9rem;color:#e8edf4;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#5eead4" class="me-2"><path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 0 1-.794.679H7.72a.483.483 0 0 1-.477-.558L7.418 21h1.518l.95-6.02h1.385c4.678 0 7.432-2.394 8.297-7.147a5.9 5.9 0 0 0 .499.645zM4.187 6.482C4.678 4.2 6.437 2.7 8.977 2.7h6.384c.83 0 1.572.2 2.196.57a4.87 4.87 0 0 0-4.198-2.2H6.976C4.437.07 2.677 1.57 2.187 3.852L.02 16.33a.696.696 0 0 0 .686.82h2.8L4.187 6.482z"/></svg>
+              Support this project
+            </h5>
+            <button type="button" onclick="bootstrap.Modal.getInstance(document.getElementById('donate-modal'))?.hide()" class="btn-close btn-close-white"></button>
+          </div>
+          <div class="modal-body" style="padding:1.25rem;">
+            <p style="font-size:.82rem;color:#8897ae;margin-bottom:1rem;">Choose an amount and you'll be redirected to PayPal.</p>
+            <div style="display:flex;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap;justify-content:center;">
+              <button onclick="setAmount(3)" class="donate-preset" style="background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);color:#5eead4;border-radius:6px;padding:.3rem .75rem;font-size:.82rem;font-weight:500;cursor:pointer;">€3</button>
+              <button onclick="setAmount(5)" class="donate-preset" style="background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);color:#5eead4;border-radius:6px;padding:.3rem .75rem;font-size:.82rem;font-weight:500;cursor:pointer;">€5</button>
+              <button onclick="setAmount(10)" class="donate-preset" style="background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);color:#5eead4;border-radius:6px;padding:.3rem .75rem;font-size:.82rem;font-weight:500;cursor:pointer;">€10</button>
+              <button onclick="setAmount(20)" class="donate-preset" style="background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);color:#5eead4;border-radius:6px;padding:.3rem .75rem;font-size:.82rem;font-weight:500;cursor:pointer;">€20</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem;">
+              <span style="color:#8897ae;font-size:.9rem;">€</span>
+              <input id="donate-amount" type="number" min="1" step="1" value="5"
+                     style="flex:1;background:var(--surface-1);border:1px solid var(--border);color:#e8edf4;border-radius:6px;padding:.4rem .6rem;font-size:.9rem;width:100%;"
+                     onkeydown="if(event.key==='Enter')donateTo()">
+            </div>
+          </div>
+          <div class="modal-footer" style="border-color:var(--border);padding:.75rem 1.25rem;">
+            <button onclick="bootstrap.Modal.getInstance(document.getElementById('donate-modal'))?.hide()" class="btn btn-sm" style="background:rgba(255,255,255,.05);color:#8897ae;border:1px solid var(--border);">Cancel</button>
+            <button onclick="donateTo()" class="btn btn-sm" style="background:var(--accent);color:#0a0f1a;font-weight:600;border:none;">
+              Donate via PayPal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    const _donateBase = "{{ site.donation_url }}";
+    function setAmount(n) {
+      document.getElementById('donate-amount').value = n;
+      document.querySelectorAll('.donate-preset').forEach(b => b.style.borderColor = 'rgba(20,184,166,.2)');
+      event.target.style.borderColor = '#5eead4';
+    }
+    function donateTo() {
+      const amt = parseInt(document.getElementById('donate-amount').value) || 5;
+      bootstrap.Modal.getInstance(document.getElementById('donate-modal'))?.hide();
+      window.open(_donateBase + '/' + amt, '_blank', 'noopener,noreferrer');
+    }
+    </script>
+    {% endif %}
+    <div class="mt-3" style="font-size:.72rem;color:var(--text-dim);opacity:.6;">
+      This tool is provided as-is, free of charge, with no warranty. Generated configurations may require adjustments for your environment and are not guaranteed to be production-ready.
+    </div>
+    <div class="mt-2" style="font-size:.78rem; color: var(--text-muted);">
+      <span>Made by <a href="{{ site.footer_author_url }}" target="_blank" rel="noopener" style="color:var(--text-muted);">{{ site.footer_author }}</a></span>
+      <span style="margin:0 .5rem;opacity:.3;">·</span>
+      <a href="{% url 'impressum' %}" style="color:var(--text-muted);">Impressum</a>
+      <span style="margin:0 .5rem;opacity:.3;">·</span>
+      <a href="{% url 'datenschutz' %}" style="color:var(--text-muted);">Privacy Policy</a>
+    </div>
+  </div>
+</footer>{% endblock footer %}
+
+{% include "generator/partials/cookie_banner.html" %}
+
+<script src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'vendor/htmx.min.js' %}"></script>
+<script>
+function copyToClipboard(btn, targetId) {
+  const text = document.getElementById(targetId).textContent;
+  function flash() {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check-lg"></i>';
+    btn.classList.replace('btn-outline-secondary', 'btn-success');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.replace('btn-success', 'btn-outline-secondary'); }, 1500);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flash);
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    flash();
+  }
+}
+
+const _searchTimers = {};
+
+function triggerImageSearch(input, idx) {
+  clearTimeout(_searchTimers[idx]);
+  const q = input.value.trim();
+  if (q.length < 2) { closeDropdown(idx); return; }
+  _searchTimers[idx] = setTimeout(() => {
+    fetch(`/image-search/?q=${encodeURIComponent(q)}`)
+      .then(r => r.text())
+      .then(html => {
+        const inner = document.getElementById(`img-results-inner-${idx}`);
+        const wrap = document.getElementById(`img-results-${idx}`);
+        inner.innerHTML = html;
+        wrap.style.display = html.trim() ? 'block' : 'none';
+      });
+  }, 300);
+}
+
+function selectImage(full, namespace, name, btn) {
+  const block = btn.closest('.container-block');
+  const idx = block.id.replace('init-container-', 'i').replace('container-', '');
+  document.getElementById(`img-search-${idx}`).value = full;
+  const hiddenInputs = block.querySelectorAll('input[name$="-image"]');
+  if (hiddenInputs.length) hiddenInputs[0].value = full;
+  closeDropdown(idx);
+  loadTags(idx, namespace, name);
+  applyPreset(full, block);
+}
+
+function loadTags(idx, namespace, name) {
+  const wrap = document.getElementById(`tag-wrap-${idx}`);
+  const resultsEl = document.getElementById(`tag-results-${idx}`);
+  wrap.style.display = 'block';
+  const _loadingTags = "Loading tags\u2026";
+  resultsEl.innerHTML = '<div class="p-2" style="color:var(--text-muted);font-size:.8rem;">' + _loadingTags + '</div>';
+  fetch(`/image-tags/?namespace=${encodeURIComponent(namespace)}&name=${encodeURIComponent(name)}`)
+    .then(r => r.text())
+    .then(html => { resultsEl.innerHTML = html; });
+}
+
+function filterTags(input, idx) {
+  const q = input.value.toLowerCase();
+  const btns = document.querySelectorAll(`#tag-results-${idx} button`);
+  btns.forEach(btn => {
+    btn.parentElement.style.display = btn.textContent.trim().toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function selectTag(namespace, name, tag, btn) {
+  const block = btn.closest('.container-block');
+  const idx = block.id.replace('init-container-', 'i').replace('container-', '');
+  const full = namespace === 'library'
+    ? `docker.io/${name}:${tag}`
+    : `docker.io/${namespace}/${name}:${tag}`;
+  document.getElementById(`img-search-${idx}`).value = full;
+  const hiddenInputs = block.querySelectorAll('input[name$="-image"]');
+  if (hiddenInputs.length) hiddenInputs[0].value = full;
+  document.getElementById(`tag-results-${idx}`).innerHTML = '';
+}
+
+function closeDropdown(idx) {
+  const wrap = document.getElementById(`img-results-${idx}`);
+  if (wrap) wrap.style.display = 'none';
+}
+
+function applyPreset(imageFullWithoutTag, block) {
+  fetch(`/image-preset/?image=${encodeURIComponent(imageFullWithoutTag)}`)
+    .then(r => r.json())
+    .then(p => {
+      if (!p || Object.keys(p).length === 0) return;
+      function setField(selector, value) {
+        const el = block.querySelector(selector);
+        if (el && value !== undefined && value !== null) el.value = value;
+      }
+      function setCheck(selector, value) {
+        const el = block.querySelector(selector);
+        if (el) el.checked = !!value;
+      }
+      if (p.ports !== undefined)        setField('textarea[name$="-ports"]', p.ports);
+      if (p.env !== undefined)          setField('textarea[name$="-env"]', p.env);
+      if (p.volumes !== undefined)      setField('textarea[name$="-volumes"]', p.volumes);
+      if (p.command !== undefined)      setField('input[name$="-command"]', p.command);
+      if (p.working_dir !== undefined)  setField('input[name$="-working_dir"]', p.working_dir);
+      if (p.memory_limit !== undefined) setField('input[name$="-memory_limit"]', p.memory_limit);
+      if (p.cpu_limit !== undefined)    setField('input[name$="-cpu_limit"]', p.cpu_limit);
+      if (p.run_as_user !== undefined)  setField('input[name$="-run_as_user"]', p.run_as_user ?? '');
+      if (p.run_as_group !== undefined) setField('input[name$="-run_as_group"]', p.run_as_group ?? '');
+      if (p.privileged !== undefined)   setCheck('input[name$="-privileged"]', p.privileged);
+      if (p.read_only_root !== undefined) setCheck('input[name$="-read_only_root"]', p.read_only_root);
+      if (p.mode_hint) {
+        const modeSelect = document.getElementById('id_mode');
+        if (modeSelect) modeSelect.value = p.mode_hint;
+      }
+      if (p.host_network) {
+        const hn = document.getElementById('id_host_network');
+        if (hn) hn.checked = true;
+      }
+      if (p.note) showPresetNote(block, p.note);
+      if (p.run_as_user || p.privileged || p.memory_limit) {
+        const advId = block.querySelector('[data-bs-target]')?.getAttribute('data-bs-target');
+        if (advId) {
+          const el = document.querySelector(advId);
+          if (el) el.classList.add('show');
+        }
+      }
+    });
+}
+
+function showPresetNote(block, note) {
+  let hint = block.querySelector('.preset-hint');
+  if (!hint) {
+    hint = document.createElement('div');
+    hint.className = 'preset-hint mt-2 py-2 px-3 small';
+    hint.style.cssText = 'background:var(--surface-3);border:1px solid var(--border-mid);border-radius:var(--r);color:var(--text-dim);';
+    block.appendChild(hint);
+  }
+  hint.innerHTML = `<i class="bi bi-lightbulb me-1" style="color:#f59e0b;"></i>${note}`;
+}
+</script>
+{% block extra_js %}{% endblock %}
+<script>
+// ── Hiro the Seal ────────────────────────────────────────────────
+const _hiroMsgs = {{ hiro_msgs_json|safe }};
+
+const _hiroTricks = [
+  () => _hiroAnim('tBounce', 1600),
+  () => _hiroAnim('tWobble', 1800),
+  () => _hiroAnim('tSpin',   1400),
+  () => _hiroAnim('tFlop',   2000),
+  () => _hiroAnim('tDizzy',  1600),
+  () => _hiroAnim('tShrink', 1400),
+  () => {
+    const t = document.getElementById('hiro-track');
+    const d = document.getElementById('hiro-dir');
+    const s = document.getElementById('hiro-seal');
+    t.style.animationDuration = '8s';
+    d.style.animationDuration = '8s';
+    s.style.animationDuration = '.6s';
+    setTimeout(() => {
+      t.style.animationDuration = '';
+      d.style.animationDuration = '';
+      s.style.animationDuration = '';
+    }, 4000);
+  },
+  () => {
+    const s = document.getElementById('hiro-seal');
+    s.style.transition = 'font-size .5s';
+    s.style.fontSize = '5.5rem';
+    setTimeout(() => { s.style.fontSize = '3rem'; setTimeout(()=>s.style.transition='',600); }, 1400);
+  },
+  () => {
+    const s = document.getElementById('hiro-seal');
+    s.style.transition = 'filter .4s';
+    s.style.filter = 'hue-rotate(180deg) saturate(3)';
+    setTimeout(() => { s.style.filter = 'none'; }, 2200);
+  },
+];
+
+function _hiroAnim(name, ms) {
+  const s = document.getElementById('hiro-seal');
+  s.style.animation = `${name} ${ms}ms ease-in-out`;
+  setTimeout(() => { s.style.animation = 'hiroSwim 3.5s ease-in-out infinite'; }, ms + 60);
+}
+
+let _hiroLastMsg = -1;
+let _hiroBubbleTimer = null;
+function _hiroNewMsg() {
+  const msgs = _hiroMsgs;
+  let idx;
+  do { idx = Math.floor(Math.random() * msgs.length); } while (idx === _hiroLastMsg);
+  _hiroLastMsg = idx;
+  const bubble = document.getElementById('hiro-bubble');
+  const el = document.getElementById('hiro-msg');
+  // ausblenden
+  bubble.style.opacity = '0';
+  clearTimeout(_hiroBubbleTimer);
+  setTimeout(() => {
+    el.textContent = msgs[idx];
+    bubble.style.opacity = '1';
+    // nach 7s wieder ausblenden
+    _hiroBubbleTimer = setTimeout(() => { bubble.style.opacity = '0'; }, 7000);
+  }, 350);
+}
+
+function hiroTrick() {
+  _hiroNewMsg();
+  _hiroTricks[Math.floor(Math.random() * _hiroTricks.length)]();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  _hiroNewMsg();
+  setInterval(_hiroNewMsg, 9000);
+  setInterval(() => {
+    if (Math.random() < 0.4) _hiroTricks[Math.floor(Math.random() * _hiroTricks.length)]();
+  }, 9000);
+});
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>

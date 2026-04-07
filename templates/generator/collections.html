@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}My Collections — Podman Kube Generator{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div class="flex-grow-1">
+        <h1 class="h4 mb-0">My Collections</h1>
+        <p class="text-secondary small mb-0">Group saved configs into named collections.</p>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#newCollectionModal">
+        <i class="bi bi-plus-circle me-1"></i> New collection
+      </button>
+    </div>
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert alert-{{ msg.tags }} alert-dismissible py-2 mb-3">{{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+    {% endfor %}
+    {% endif %}
+
+    {% if collections %}
+    <div class="row g-3 mb-5">
+      {% for col in collections %}
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <a href="{% url 'collection_detail' col.pk %}" class="fw-semibold text-decoration-none">
+                <i class="bi bi-collection me-2"></i>{{ col.name }}
+              </a>
+              {% if col.is_public %}<span class="badge bg-success-subtle text-success">Public</span>{% endif %}
+            </div>
+            {% if col.description %}<p class="text-secondary small mb-1">{{ col.description }}</p>{% endif %}
+            <p class="text-secondary small mb-2">{{ col.items.count }} item{{ col.items.count|pluralize }}</p>
+            <div class="d-flex gap-2">
+              <a href="{% url 'collection_detail' col.pk %}" class="btn btn-sm btn-outline-secondary">Open</a>
+              <form method="post" action="{% url 'collection_delete' col.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger"
+                  onclick="return confirm('Delete collection?')">Delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-secondary mb-5">No collections yet. Create one to group your saved configs.</div>
+    {% endif %}
+
+    {% if public_collections %}
+    <h2 class="h5 mb-3">Public collections</h2>
+    <div class="row g-3">
+      {% for col in public_collections %}
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <a href="{% url 'collection_detail' col.pk %}" class="fw-semibold text-decoration-none">
+              <i class="bi bi-collection me-2"></i>{{ col.name }}
+            </a>
+            <p class="text-secondary small mb-1">by {{ col.user.username }} &middot; {{ col.items.count }} item{{ col.items.count|pluralize }}</p>
+            {% if col.description %}<p class="text-secondary small mb-2">{{ col.description }}</p>{% endif %}
+            <a href="{% url 'collection_detail' col.pk %}" class="btn btn-sm btn-outline-secondary">Open</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- New Collection Modal -->
+<div class="modal fade" id="newCollectionModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title mb-0">New collection</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'collection_create' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control form-control-sm mb-2" placeholder="Name" required maxlength="100">
+          <input type="text" name="description" class="form-control form-control-sm mb-2" placeholder="Description (optional)" maxlength="300">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="is_public" id="isPublicCheck">
+            <label class="form-check-label small" for="isPublicCheck">Public</label>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="submit" class="btn btn-primary btn-sm">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

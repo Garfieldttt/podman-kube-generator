@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ stack.name }} — Community — Podman Kube Generator{% endblock %}
+{% block meta_description %}{{ stack.description|default:"Community Podman pod configuration" }} — Load this stack directly in the Podman Kube Generator.{% endblock %}
+{% block canonical_path %}/community/{{ stack.id }}/{% endblock %}
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "{{ stack.name|escapejs }}",
+  "description": "{{ stack.description|default:''|escapejs }}",
+  "url": "{{ site_url }}/community/{{ stack.id }}/",
+  "author": { "@type": "Person", "name": "{{ stack.user.username|escapejs }}" },
+  "publisher": { "@type": "Organization", "name": "Podman Kube Generator" }
+}
+</script>
+{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <!-- ── Header ───────────────────────────────────────────────── -->
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <a href="{% url 'community' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <h1 class="h5 mb-0 flex-grow-1" style="color:var(--text);">
+        <i class="bi {{ stack.icon|default:'bi-box' }} me-2" style="color:#5eead4;"></i>{{ stack.name }}
+      </h1>
+    </div>
+
+    <!-- ── Stack-Info-Card ──────────────────────────────────────── -->
+    <div class="card p-4 mb-4">
+      <div class="d-flex align-items-start gap-3 flex-wrap">
+
+        <!-- Autor -->
+        <a href="{% url 'profile_public' stack.user.username %}" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
+          {% with stack.user.profile as p %}
+          {% with p.get_avatar_url as av %}
+          {% if av %}
+          <img src="{{ av }}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid rgba(20,184,166,.3);">
+          {% else %}
+          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);border:1px solid rgba(20,184,166,.3);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;">{{ stack.user.username|first|upper }}</div>
+          {% endif %}
+          {% endwith %}
+          {% endwith %}
+          <div>
+            <div class="small fw-semibold" style="color:var(--text);">{{ stack.user.username }}</div>
+            <div style="font-size:.7rem;color:var(--text-dim);">{{ stack.created_at|date:"d.m.Y" }}</div>
+          </div>
+        </a>
+
+        <div class="flex-grow-1">
+          {% if stack.category %}
+          <span class="badge mb-1" style="background:rgba(20,184,166,.12);color:#5eead4;border:1px solid rgba(20,184,166,.25);font-size:.65rem;text-transform:uppercase;">{{ stack.category }}</span>
+          {% endif %}
+          {% if stack.description %}
+          <p class="mb-0 small" style="color:var(--text-dim);">{{ stack.description }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Stats: Views + Likes -->
+        <div class="d-flex align-items-center gap-3 flex-shrink-0">
+          <span class="small" style="color:var(--text-dim);" title="{% trans 'Views' %}">
+            <i class="bi bi-eye me-1"></i>{{ stack.view_count }}
+          </span>
+          <button id="like-btn"
+            class="btn btn-sm {% if user_liked %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+            {% if not request.user.is_authenticated %}disabled title="{% trans 'Login to like' %}"{% endif %}
+            onclick="toggleLike()">
+            <i class="bi bi-heart{% if user_liked %}-fill{% endif %} me-1"></i>
+            <span id="like-count">{{ like_count }}</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Buttons -->
+      <div class="d-flex gap-2 mt-3 flex-wrap">
+        <a href="/?cs={{ stack.pk }}" class="btn btn-sm btn-primary">
+          <i class="bi bi-sliders me-1"></i>{% trans "Open in Generator" %}
+        </a>
+      </div>
+    </div>
+
+    <!-- ── YAML-Vorschau ────────────────────────────────────────── -->
+    <div class="card mb-4">
+      <div class="card-body p-0">
+        <div class="d-flex align-items-center justify-content-between px-3 py-2"
+          style="border-bottom:1px solid var(--border);">
+          <span class="small fw-semibold" style="color:var(--text-dim);">
+            <i class="bi bi-file-code me-1"></i>YAML
+          </span>
+          <button class="btn btn-sm btn-outline-secondary" onclick="copyYamlDetail(this)" style="font-size:.75rem;">
+            <i class="bi bi-clipboard me-1"></i>{% trans "Copy" %}
+          </button>
+        </div>
+        <pre id="yaml-detail" class="mb-0 p-3" style="font-family:ui-monospace,monospace;font-size:.8rem;color:#e2e8f0;background:transparent;max-height:400px;overflow-y:auto;white-space:pre;">{{ yaml_content }}</pre>
+      </div>
+    </div>
+
+    <!-- ── Kommentare ───────────────────────────────────────────── -->
+    <div class="mb-2 d-flex align-items-center gap-2">
+      <h2 class="h6 mb-0" style="color:var(--text-dim);">
+        <i class="bi bi-chat-dots me-1" style="color:#14b8a6;"></i>{% trans "Comments" %}
+        <span id="comment-count" class="badge ms-1" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);font-size:.65rem;">{{ comments|length }}</span>
+      </h2>
+    </div>
+
+    <!-- Kommentar-Liste -->
+    <div id="comment-list" class="d-flex flex-column gap-3 mb-4">
+      {% for c in comments %}
+      <div class="card p-3">
+        <div class="d-flex gap-3">
+          <a href="{% url 'profile_public' c.user.username %}" class="flex-shrink-0 text-decoration-none">
+            {% with c.user.profile as p %}{% with p.get_avatar_url as av %}
+            {% if av %}
+            <img src="{{ av }}" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+            {% else %}
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff;">{{ c.user.username|first|upper }}</div>
+            {% endif %}
+            {% endwith %}{% endwith %}
+          </a>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <a href="{% url 'profile_public' c.user.username %}" class="fw-semibold small text-decoration-none" style="color:var(--text);">{{ c.user.username }}</a>
+              <span style="font-size:.7rem;color:var(--text-muted);">{{ c.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            <p class="mb-0 small" style="color:var(--text-dim);word-break:break-word;">{{ c.body }}</p>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p id="no-comments" class="small" style="color:var(--text-muted);">{% trans "No comments yet. Be the first!" %}</p>
+      {% endfor %}
+    </div>
+
+    <!-- Kommentar-Formular -->
+    {% if request.user.is_authenticated %}
+    <div class="card p-3">
+      <h3 class="h6 mb-3" style="color:var(--text-dim);">{% trans "Write a comment" %}</h3>
+      <textarea id="comment-body" class="form-control font-monospace mb-2"
+        rows="3" maxlength="1000"
+        placeholder="{% trans 'Your comment (max. 1000 characters)' %}"
+        style="font-size:.85rem;resize:vertical;"></textarea>
+      <div class="d-flex align-items-center justify-content-between">
+        <span id="char-count" class="small" style="color:var(--text-muted);">0 / 1000</span>
+        <button class="btn btn-sm btn-primary" onclick="submitComment()">
+          <i class="bi bi-send me-1"></i>{% trans "Post comment" %}
+        </button>
+      </div>
+    </div>
+    {% else %}
+    <div class="card p-3 text-center">
+      <p class="small mb-2" style="color:var(--text-dim);">{% trans "Log in to leave a comment." %}</p>
+      <a href="/login/?next=/community/{{ stack.pk }}/" class="btn btn-sm btn-primary">{% trans "Login" %}</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+const STACK_ID = {{ stack.pk }};
+const CSRF_TOKEN = '{{ csrf_token }}';
+
+function copyYamlDetail(btn) {
+  const text = document.getElementById('yaml-detail').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check me-1"></i>{% trans "Copied" %}';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
+}
+
+async function toggleLike() {
+  const btn = document.getElementById('like-btn');
+  btn.disabled = true;
+  try {
+    const r = await fetch(`/community/${STACK_ID}/like/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF_TOKEN},
+    });
+    const data = await r.json();
+    if (r.ok) {
+      document.getElementById('like-count').textContent = data.count;
+      const icon = btn.querySelector('i');
+      if (data.liked) {
+        btn.classList.replace('btn-outline-secondary', 'btn-primary');
+        icon.className = 'bi bi-heart-fill me-1';
+      } else {
+        btn.classList.replace('btn-primary', 'btn-outline-secondary');
+        icon.className = 'bi bi-heart me-1';
+      }
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+const commentBody = document.getElementById('comment-body');
+if (commentBody) {
+  commentBody.addEventListener('input', () => {
+    document.getElementById('char-count').textContent = commentBody.value.length + ' / 1000';
+  });
+}
+
+async function submitComment() {
+  const body = (commentBody.value || '').trim();
+  if (!body) return;
+  const btn = document.querySelector('[onclick="submitComment()"]');
+  btn.disabled = true;
+  try {
+    const fd = new FormData();
+    fd.append('body', body);
+    const r = await fetch(`/community/${STACK_ID}/comment/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF_TOKEN},
+      body: fd,
+    });
+    const data = await r.json();
+    if (r.ok && data.ok) {
+      const c = data.comment;
+      const noComments = document.getElementById('no-comments');
+      if (noComments) noComments.remove();
+      const avatarHtml = c.avatar
+        ? `<img src="${c.avatar}" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">`
+        : `<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#fff;">${c.username[0].toUpperCase()}</div>`;
+      const html = `<div class="card p-3">
+        <div class="d-flex gap-3">
+          <a href="/u/${c.username}/" class="flex-shrink-0 text-decoration-none">${avatarHtml}</a>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <a href="/u/${c.username}/" class="fw-semibold small text-decoration-none" style="color:var(--text);">${c.username}</a>
+              <span style="font-size:.7rem;color:var(--text-muted);">${c.created_at}</span>
+            </div>
+            <p class="mb-0 small" style="color:var(--text-dim);word-break:break-word;">${c.body.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>
+          </div>
+        </div>
+      </div>`;
+      document.getElementById('comment-list').insertAdjacentHTML('beforeend', html);
+      const cnt = document.getElementById('comment-count');
+      cnt.textContent = parseInt(cnt.textContent) + 1;
+      commentBody.value = '';
+      document.getElementById('char-count').textContent = '0 / 1000';
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}My Profile — Podman Kube Generator{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div>
+        <h1 class="h4 mb-0">My Profile</h1>
+        <p class="small mb-0" style="color:var(--text-dim);">Logged in as <strong>{{ request.user.username }}</strong></p>
+      </div>
+      <a href="/u/{{ request.user.username }}/" class="btn btn-sm btn-outline-secondary ms-auto">
+        <i class="bi bi-eye me-1"></i>Public Profile
+      </a>
+    </div>
+
+    {% if messages %}
+    {% for m in messages %}
+    <div class="alert mb-4 border-0" style="{% if m.tags == 'error' %}background:rgba(239,68,68,.1);color:#f87171;border-left:3px solid #ef4444 !important;{% else %}background:rgba(74,222,128,.1);color:#4ade80;border-left:3px solid #4ade80 !important;{% endif %}">
+      <i class="bi {% if m.tags == 'error' %}bi-exclamation-circle{% else %}bi-check-circle{% endif %} me-2"></i>{{ m }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <!-- Avatar + Bio -->
+      <div class="card mb-4 p-4">
+        <div class="d-flex align-items-center gap-4 mb-4 flex-wrap">
+          <!-- Avatar Vorschau -->
+          <div style="position:relative;flex-shrink:0;">
+            <div id="avatar-preview-wrap">
+              {% if profile.get_avatar_url %}
+              <img src="{{ profile.get_avatar_url }}" alt="Avatar"
+                style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(20,184,166,.3);"
+                id="avatar-img">
+              {% else %}
+              <div id="avatar-initials" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);border:2px solid rgba(20,184,166,.3);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#fff;text-transform:uppercase;">{{ request.user.username|first }}</div>
+              {% endif %}
+            </div>
+            <!-- Upload-Overlay -->
+            <label for="avatar-file-input" title="Upload image"
+              style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:#0d9488;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid var(--bg);">
+              <i class="bi bi-camera-fill" style="font-size:.7rem;color:#fff;"></i>
+            </label>
+            <input type="file" id="avatar-file-input" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
+          </div>
+
+          <div class="flex-grow-1">
+            <div class="small fw-600 mb-1" style="color:var(--text-dim);">Avatar</div>
+            <div id="avatar-upload-status" class="form-text mb-2" style="color:var(--text-muted);">JPG / PNG / WebP · cropped to 256×256 px</div>
+            {% if profile.avatar %}
+            <button type="button" class="btn btn-sm btn-outline-danger" style="font-size:.7rem;" onclick="removeAvatar()">
+              <i class="bi bi-x-lg me-1"></i>Remove avatar
+            </button>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mb-0">
+          <label class="form-label small" style="color:var(--text-dim);">About me <span style="color:var(--text-muted);">(max. 300 characters)</span></label>
+          <textarea name="bio" class="form-control" rows="3" maxlength="300"
+            placeholder="Short description about yourself...">{{ profile.bio }}</textarea>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="card mb-4 p-4">
+        <h2 class="h6 mb-3" style="color:var(--text-dim);"><i class="bi bi-link-45deg me-2"></i>Links & Social Media</h2>
+
+        <div class="mb-3">
+          <label class="form-label small" style="color:var(--text-dim);"><i class="bi bi-globe2 me-2"></i>Website</label>
+          <input type="url" name="website" class="form-control" value="{{ profile.website }}"
+            placeholder="https://example.com">
+        </div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label small" style="color:var(--text-dim);"><i class="bi bi-github me-2"></i>GitHub</label>
+            <div class="input-group">
+              <span class="input-group-text" style="background:var(--surface-2);border-color:var(--border);color:var(--text-muted);font-size:.8rem;">github.com/</span>
+              <input type="text" name="github" class="form-control" value="{{ profile.github }}"
+                placeholder="username" maxlength="100">
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small" style="color:var(--text-dim);"><i class="bi bi-twitter-x me-2"></i>X / Twitter</label>
+            <div class="input-group">
+              <span class="input-group-text" style="background:var(--surface-2);border-color:var(--border);color:var(--text-muted);font-size:.8rem;">@</span>
+              <input type="text" name="twitter" class="form-control" value="{{ profile.twitter }}"
+                placeholder="username" maxlength="100">
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small" style="color:var(--text-dim);"><i class="bi bi-mastodon me-2"></i>Mastodon</label>
+            <input type="text" name="mastodon" class="form-control" value="{{ profile.mastodon }}"
+              placeholder="@user@mastodon.social" maxlength="200">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label small" style="color:var(--text-dim);"><i class="bi bi-linkedin me-2"></i>LinkedIn</label>
+            <div class="input-group">
+              <span class="input-group-text" style="background:var(--surface-2);border-color:var(--border);color:var(--text-muted);font-size:.8rem;">linkedin.com/in/</span>
+              <input type="text" name="linkedin" class="form-control" value="{{ profile.linkedin }}"
+                placeholder="username" maxlength="100">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mb-5">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg me-1"></i>Save
+        </button>
+        <a href="{% url 'my_stacks' %}" class="btn btn-outline-secondary">Back</a>
+      </div>
+    </form>
+
+    <!-- DSGVO: Konto löschen -->
+    <div class="card p-4" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.03);">
+      <h2 class="h6 mb-1" style="color:#f87171;"><i class="bi bi-exclamation-triangle me-2"></i>Delete account</h2>
+      <p class="small mb-3" style="color:var(--text-dim);">
+        Deletes your account and all your Community Stacks permanently (GDPR Art. 17).
+      </p>
+      <button type="button" class="btn btn-sm btn-outline-danger"
+        onclick="document.getElementById('delete-account-modal').style.display='flex'">
+        <i class="bi bi-trash me-1"></i>Delete account
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Konto löschen Modal -->
+<div id="delete-account-modal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+  <div class="card p-4" style="max-width:420px;width:90%;background:var(--surface);border-color:rgba(239,68,68,.4);">
+    <h5 class="mb-1" style="color:#f87171;"><i class="bi bi-exclamation-triangle me-2"></i>Really delete account?</h5>
+    <p class="small mb-3" style="color:var(--text-dim);">
+      This action cannot be undone. All your stacks will also be deleted. Confirm with your current password.
+    </p>
+    <form method="post" action="{% url 'delete_account' %}">
+      {% csrf_token %}
+      <input type="password" name="password" class="form-control mb-3" placeholder="Your password" required autofocus>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger btn-sm">
+          <i class="bi bi-trash me-1"></i>Yes, delete account
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm"
+          onclick="document.getElementById('delete-account-modal').style.display='none'">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const _INITIAL = '{{ request.user.username|first|upper }}';
+const _INITIALS_HTML = '<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);border:2px solid rgba(20,184,166,.3);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#fff;">' + _INITIAL + '</div>';
+
+const _T = {
+  uploading: "Uploading\u2026",
+  saved: "Saved \u2713",
+  uploadError: "Upload error.",
+  networkError: "Network error.",
+  avatarRemoved: "Avatar removed.",
+};
+
+function setAvatarPreview(url) {
+  const wrap = document.getElementById('avatar-preview-wrap');
+  wrap.innerHTML = url
+    ? '<img src="' + url + '" alt="Avatar" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(20,184,166,.3);">'
+    : _INITIALS_HTML;
+}
+
+async function uploadAvatar(input) {
+  const status = document.getElementById('avatar-upload-status');
+  if (!input.files.length) return;
+  const fd = new FormData();
+  fd.append('avatar', input.files[0]);
+  fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+  status.style.color = '#94a3b8';
+  status.textContent = _T.uploading;
+  try {
+    const r = await fetch('/avatar-upload/', {method: 'POST', body: fd});
+    const data = await r.json();
+    if (r.ok) {
+      setAvatarPreview(data.url);
+      status.style.color = '#4ade80';
+      status.textContent = _T.saved;
+    } else {
+      status.style.color = '#f87171';
+      status.textContent = data.error || _T.uploadError;
+    }
+  } catch {
+    status.style.color = '#f87171';
+    status.textContent = _T.networkError;
+  }
+  input.value = '';
+}
+
+async function removeAvatar() {
+  const status = document.getElementById('avatar-upload-status');
+  const fd = new FormData();
+  fd.append('remove', '1');
+  fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+  try {
+    const r = await fetch('/avatar-upload/', {method: 'POST', body: fd});
+    if (r.ok) {
+      setAvatarPreview('');
+      status.style.color = '#94a3b8';
+      status.textContent = _T.avatarRemoved;
+      // Remove-Button ausblenden
+      const btn = document.querySelector('[onclick="removeAvatar()"]');
+      if (btn) btn.remove();
+    }
+  } catch {}
+}
+</script>
+{% endblock %}

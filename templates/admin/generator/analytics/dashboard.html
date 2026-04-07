@@ -1,0 +1,507 @@
+{% extends "admin/base_site.html" %}
+{% load analytics_tags %}
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<style>
+  .stat-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+  .stat-card { background:#0d1017; border:1px solid #1a2133; border-radius:10px; padding:1rem 1.25rem; text-decoration:none; display:block; transition:border-color .15s; }
+  .stat-card:hover { border-color:rgba(20,184,166,.4); }
+  .stat-card .num { font-size:1.75rem; font-weight:700; color:#5eead4; line-height:1.1; }
+  .stat-card .lbl { font-size:.72rem; color:#8897ae; text-transform:uppercase; letter-spacing:.07em; margin-top:.25rem; }
+  .stat-card .sub { font-size:.68rem; color:#8897ae; margin-top:.3rem; }
+  .stat-card.realtime .num { color:#f59e0b; }
+  .stat-card.realtime { border-color:rgba(245,158,11,.2); }
+  .stat-card.gen { border-color:rgba(139,92,246,.2); }
+  .stat-card.gen .num { color:#a78bfa; }
+  .analytics-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+  @media(max-width:900px){ .analytics-grid{ grid-template-columns:1fr; } }
+  .analytics-box { background:#0d1017; border:1px solid #1a2133; border-radius:10px; overflow:hidden; }
+  .analytics-box h3 { background:#121620; color:#5eead4; font-size:.72rem; font-weight:700; text-transform:uppercase;
+                       letter-spacing:.07em; padding:.55rem 1rem; margin:0; border-bottom:1px solid #1a2133; }
+  .bar-row { display:flex; align-items:center; gap:.6rem; padding:.35rem 1rem; border-bottom:1px solid rgba(26,33,51,.4); text-decoration:none; transition:background .1s; }
+  .bar-row:last-child { border-bottom:none; }
+  .bar-row:hover { background:rgba(20,184,166,.06); }
+  .bar-label { font-size:.8rem; color:#dde3f0; min-width:100px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-label.flag { min-width:130px; }
+  .bar-label.ref { min-width:160px; max-width:160px; }
+  .bar-track { flex:1; background:#1a2133; border-radius:4px; height:8px; }
+  .bar-fill { height:8px; border-radius:4px; background:linear-gradient(90deg,#14b8a6,#22d3ee); }
+  .bar-fill.purple { background:linear-gradient(90deg,#8b5cf6,#a78bfa); }
+  .bar-count { font-size:.75rem; color:#8897ae; min-width:40px; text-align:right; }
+  .visit-table { width:100%; border-collapse:collapse; font-size:.78rem; }
+  .visit-table th { background:#121620; color:#8897ae; text-transform:uppercase; letter-spacing:.06em;
+                    font-size:.68rem; padding:.5rem .75rem; text-align:left; border-bottom:1px solid #1a2133; }
+  .visit-table td { padding:.45rem .75rem; border-bottom:1px solid rgba(26,33,51,.4); color:#dde3f0; vertical-align:top; }
+  .visit-table tr:last-child td { border-bottom:none; }
+  .visit-table tr:hover td { background:rgba(20,184,166,.04); }
+  .flag-emoji { margin-right:.3rem; }
+  .mobile-badge { background:rgba(20,184,166,.12); color:#5eead4; border:1px solid rgba(20,184,166,.2);
+                  font-size:.65rem; padding:.1rem .35rem; border-radius:3px; }
+  .range-tabs { display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
+  .range-tab { padding:.3rem .75rem; border-radius:6px; font-size:.8rem; font-weight:500; text-decoration:none;
+               border:1px solid #1a2133; color:#8897ae; }
+  .range-tab.active { background:rgba(20,184,166,.12); border-color:rgba(20,184,166,.3); color:#5eead4; }
+  .csv-btn { margin-left:auto; padding:.3rem .75rem; border-radius:6px; font-size:.8rem; font-weight:500;
+             text-decoration:none; background:rgba(20,184,166,.1); border:1px solid rgba(20,184,166,.25);
+             color:#5eead4; transition:background .15s; }
+  .csv-btn:hover { background:rgba(20,184,166,.2); color:#5eead4; }
+  a.filter-link { color:inherit; text-decoration:none; border-bottom:1px dashed rgba(94,234,212,.3); }
+  a.filter-link:hover { color:#5eead4; border-bottom-color:#5eead4; }
+  .filter-badge { display:inline-flex; align-items:center; gap:.4rem; background:rgba(20,184,166,.12);
+                  border:1px solid rgba(20,184,166,.3); color:#5eead4; border-radius:6px;
+                  padding:.25rem .65rem; font-size:.78rem; margin-bottom:.75rem; }
+  .filter-badge a { color:#8897ae; text-decoration:none; font-size:.85rem; }
+  .filter-badge a:hover { color:#f87171; }
+  .chart-box { background:#0d1017; border:1px solid #1a2133; border-radius:10px; overflow:hidden; margin-bottom:1rem; }
+  .chart-box h3 { background:#121620; color:#5eead4; font-size:.72rem; font-weight:700; text-transform:uppercase;
+                  letter-spacing:.07em; padding:.55rem 1rem; margin:0; border-bottom:1px solid #1a2133; }
+  .chart-inner { padding:1rem; }
+  .chart-legend { display:flex; gap:1rem; padding:.4rem 1rem .1rem; }
+  .chart-legend-item { display:flex; align-items:center; gap:.35rem; font-size:.72rem; color:#8897ae; }
+  .chart-legend-dot { width:10px; height:3px; border-radius:2px; }
+  .block-btn { background:none; border:1px solid rgba(248,113,113,.3); color:#f87171; border-radius:4px;
+               font-size:.65rem; padding:.1rem .35rem; cursor:pointer; line-height:1.4; }
+  .block-btn:hover { background:rgba(248,113,113,.12); }
+  .unblock-btn { background:none; border:1px solid rgba(20,184,166,.3); color:#5eead4; border-radius:4px;
+                 font-size:.65rem; padding:.1rem .35rem; cursor:pointer; line-height:1.4; }
+  .unblock-btn:hover { background:rgba(20,184,166,.1); }
+  .blocked-ip-row { display:flex; align-items:center; gap:.6rem; padding:.3rem 1rem; border-bottom:1px solid rgba(26,33,51,.4); }
+  .blocked-ip-row:last-child { border-bottom:none; }
+</style>
+
+<div class="range-tabs">
+  <a href="?range=realtime" class="range-tab {% if range == 'realtime' %}active{% endif %}" style="{% if range == 'realtime' %}color:#f59e0b;border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1);{% endif %}">Live</a>
+  <a href="?range=today" class="range-tab {% if range == 'today' %}active{% endif %}">Today</a>
+  <a href="?range=7"     class="range-tab {% if range == '7' %}active{% endif %}">7 days</a>
+  <a href="?range=30"    class="range-tab {% if range == '30' %}active{% endif %}">30 days</a>
+  <a href="?range=all"   class="range-tab {% if range == 'all' %}active{% endif %}">All time</a>
+  {% if range == 'realtime' %}
+  <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:#8897ae;cursor:pointer;margin-left:.5rem;">
+    <input type="checkbox" id="auto-refresh" style="accent-color:#f59e0b;">
+    Auto-refresh (30s)
+  </label>
+  {% endif %}
+  <a href="{% url 'admin:generator_visit_export_csv' %}?range={{ range }}" class="csv-btn">⬇ CSV Export</a>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card">
+    <div class="num">{{ stats.total }}</div>
+    <div class="lbl">Page views</div>
+  </div>
+  <a href="?range={{ range }}&show=unique_ips" class="stat-card">
+    <div class="num">{{ stats.unique_ips }}</div>
+    <div class="lbl">Unique IPs</div>
+  </a>
+  <div class="stat-card">
+    <div class="num">{{ stats.unique_sessions }}</div>
+    <div class="lbl">Sessions</div>
+    <div class="sub">{{ stats.new_sessions }} new · {{ stats.returning_sessions }} returning</div>
+  </div>
+  <a href="?range={{ range }}&is_mobile__exact=1" class="stat-card">
+    <div class="num">{{ stats.mobile_pct }}%</div>
+    <div class="lbl">Mobile</div>
+  </a>
+  <a href="?range=today" class="stat-card">
+    <div class="num">{{ stats.today }}</div>
+    <div class="lbl">Today</div>
+  </a>
+  <div class="stat-card">
+    <div class="num">{{ stats.bounce_rate }}%</div>
+    <div class="lbl">Bounce Rate</div>
+  </div>
+  <a href="?range=realtime" class="stat-card realtime {% if range == 'realtime' %}active{% endif %}">
+    <div class="num">{{ stats.realtime }}</div>
+    <div class="lbl">Last 5 min</div>
+  </a>
+  <a href="?range={{ range }}&show=pods" class="stat-card gen">
+    <div class="num">{{ gen_total }}</div>
+    <div class="lbl">Pods generated</div>
+    {% if gen_avg_containers %}<div class="sub">Ø {{ gen_avg_containers }} containers</div>{% endif %}
+  </a>
+</div>
+
+{% if active_filter %}
+<div class="filter-badge">
+  <span>Filter active</span>
+  <a href="?range={{ range }}" title="Remove filter">✕</a>
+</div>
+{% endif %}
+
+<!-- Main chart: visitors over time + comparison -->
+<div class="chart-box">
+  <h3>Visitors over time <span style="color:#8897ae;font-weight:400;text-transform:none;">— {{ chart_label }}</span></h3>
+  {% if chart_values_prev != 'null' %}
+  <div class="chart-legend">
+    <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#14b8a6;"></div> Current period</div>
+    <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#f59e0b;opacity:.6;"></div> Previous period</div>
+  </div>
+  {% endif %}
+  <div class="chart-inner" style="height:180px;">
+    <canvas id="visitChart"></canvas>
+  </div>
+</div>
+<script>
+(function(){
+  const labels = {{ chart_labels|safe }};
+  const values = {{ chart_values|safe }};
+  const prevValues = {{ chart_values_prev|safe }};
+  const ctx = document.getElementById('visitChart').getContext('2d');
+  const datasets = [{
+    label: '{{ chart_label }}',
+    data: values,
+    borderColor: '#14b8a6',
+    backgroundColor: 'rgba(20,184,166,.08)',
+    borderWidth: 2,
+    pointRadius: labels.length > 30 ? 0 : 3,
+    pointBackgroundColor: '#14b8a6',
+    fill: true,
+    tension: .3,
+  }];
+  if (prevValues) {
+    datasets.push({
+      label: 'Previous period',
+      data: prevValues,
+      borderColor: 'rgba(245,158,11,.5)',
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderDash: [4, 3],
+      pointRadius: 0,
+      fill: false,
+      tension: .3,
+    });
+  }
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8897ae', font: { size: 11 } }, grid: { color: 'rgba(26,33,51,.6)' } },
+        y: { ticks: { color: '#8897ae', font: { size: 11 }, precision: 0 }, grid: { color: 'rgba(26,33,51,.6)' }, beginAtZero: true },
+      }
+    }
+  });
+})();
+</script>
+
+<!-- Hour-of-day distribution -->
+<div class="chart-box">
+  <h3>Traffic by hour of day</h3>
+  <div class="chart-inner" style="height:130px;">
+    <canvas id="hourChart"></canvas>
+  </div>
+</div>
+<script>
+(function(){
+  const labels = {{ hour_labels|safe }};
+  const values = {{ hour_dist|safe }};
+  const ctx = document.getElementById('hourChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: 'rgba(20,184,166,.35)',
+        borderColor: '#14b8a6',
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8897ae', font: { size: 9 }, maxRotation: 0 }, grid: { display: false } },
+        y: { ticks: { color: '#8897ae', font: { size: 10 }, precision: 0 }, grid: { color: 'rgba(26,33,51,.6)' }, beginAtZero: true },
+      }
+    }
+  });
+})();
+</script>
+
+{% if range == 'realtime' %}
+<script>
+(function(){
+  const cb = document.getElementById('auto-refresh');
+  if (!cb) return;
+  let timer = null;
+  const start = () => { timer = setInterval(() => location.reload(), 30000); };
+  const stop  = () => { clearInterval(timer); timer = null; };
+  if (localStorage.getItem('analytics_autorefresh') === '1') { cb.checked = true; start(); }
+  cb.addEventListener('change', () => {
+    if (cb.checked) { localStorage.setItem('analytics_autorefresh', '1'); start(); }
+    else { localStorage.setItem('analytics_autorefresh', '0'); stop(); }
+  });
+})();
+</script>
+{% endif %}
+
+<script>
+(function(){
+  function getCsrf() {
+    const m = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+  window.blockIp = function(ip, action) {
+    fetch("{% url 'admin:generator_visit_block_ip' %}", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCsrf()},
+      body: new URLSearchParams({ip, action})
+    }).then(() => location.reload());
+  };
+})();
+</script>
+
+<div class="analytics-grid">
+
+  <!-- Countries -->
+  <div class="analytics-box">
+    <h3>Top Countries</h3>
+    {% for row in top_countries %}
+    <a href="?range={{ range }}&country_code={{ row.country_code }}" class="bar-row">
+      <div class="bar-label flag">
+        {% if row.country_code %}<span class="flag-emoji">{{ row.country_code|country_flag }}</span>{% endif %}
+        {{ row.country_name|default:row.country_code|default:"Unknown" }}
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:{{ row.pct }}%"></div></div>
+      <div class="bar-count">{{ row.cnt }}</div>
+    </a>
+    {% empty %}<div class="bar-row"><div class="bar-label" style="color:#8897ae">No data</div></div>
+    {% endfor %}
+  </div>
+
+  <!-- Top Pages -->
+  <div class="analytics-box">
+    <h3>Top Pages</h3>
+    {% for row in top_pages %}
+    <a href="?range={{ range }}&path={{ row.path|urlencode }}" class="bar-row">
+      <div class="bar-label" title="{{ row.path }}">{{ row.path }}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:{{ row.pct }}%"></div></div>
+      <div class="bar-count">{{ row.cnt }}</div>
+    </a>
+    {% empty %}<div class="bar-row"><div class="bar-label" style="color:#8897ae">No data</div></div>
+    {% endfor %}
+  </div>
+
+  <!-- Browser -->
+  <div class="analytics-box">
+    <h3>Browser</h3>
+    {% for row in top_browsers %}
+    <a href="?range={{ range }}&browser_family={{ row.browser_family|urlencode }}" class="bar-row">
+      <div class="bar-label">{{ row.browser_family|default:"Unknown" }}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:{{ row.pct }}%"></div></div>
+      <div class="bar-count">{{ row.cnt }}</div>
+    </a>
+    {% empty %}<div class="bar-row"><div class="bar-label" style="color:#8897ae">No data</div></div>
+    {% endfor %}
+  </div>
+
+  <!-- Operating Systems -->
+  <div class="analytics-box">
+    <h3>Operating System</h3>
+    {% for row in top_os %}
+    <a href="?range={{ range }}&os_family={{ row.os_family|urlencode }}" class="bar-row">
+      <div class="bar-label">{{ row.os_family|default:"Unknown" }}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:{{ row.pct }}%"></div></div>
+      <div class="bar-count">{{ row.cnt }}</div>
+    </a>
+    {% empty %}<div class="bar-row"><div class="bar-label" style="color:#8897ae">No data</div></div>
+    {% endfor %}
+  </div>
+
+  <!-- Referrers -->
+  <div class="analytics-box">
+    <h3>Top Referrers</h3>
+    {% for row in top_referrers %}
+    <div class="bar-row">
+      <div class="bar-label ref" title="{{ row.referrer }}">{{ row.domain }}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:{{ row.pct }}%"></div></div>
+      <div class="bar-count">{{ row.cnt }}</div>
+    </div>
+    {% empty %}<div class="bar-row"><div class="bar-label" style="color:#8897ae">No data</div></div>
+    {% endfor %}
+  </div>
+
+  <!-- Top Stacks -->
+  <div class="analytics-box">
+    <h3>Top Stacks</h3>
+    {% for row in top_stacks %}
+    <a href="?range={{ range }}&path=/stack/{{ row.key }}/" class="bar-row">
+      <div class="bar-label">{{ row.key }}</div>
+      <div class="bar-count" style="color:#a78bfa;">{{ row.cnt }}</div>
+    </a>
+    {% empty %}<div class="bar-row"><div class="bar-label" style="color:#8897ae">No data</div></div>
+    {% endfor %}
+  </div>
+
+  <!-- Generator Stats -->
+  {% if gen_total or filter_gen_ip or filter_gen_mode %}
+  <div class="analytics-box">
+    <h3>Generator Usage
+      {% if filter_gen_ip or filter_gen_mode %}
+      <a href="?range={{ range }}" style="float:right;color:#8897ae;font-size:.75rem;font-weight:400;text-decoration:none;">✕ reset</a>
+      {% endif %}
+    </h3>
+    {% for row in gen_by_mode %}
+    <a href="?range={{ range }}&gen_mode={{ row.mode }}{% if filter_gen_ip %}&gen_ip={{ filter_gen_ip|urlencode }}{% endif %}" class="bar-row" style="{% if filter_gen_mode == row.mode %}background:rgba(139,92,246,.08);{% endif %}">
+      <div class="bar-label" style="color:#8897ae;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;">{{ row.mode }}</div>
+      <div class="bar-count" style="color:#a78bfa;">{{ row.cnt }}</div>
+    </a>
+    {% endfor %}
+    {% if gen_top_ips %}
+    <div style="border-top:1px solid #1a2133;margin-top:.25rem;padding-top:.25rem;">
+    {% for r in gen_top_ips %}
+    <div class="bar-row" style="{% if filter_gen_ip == r.ip %}background:rgba(139,92,246,.08);{% endif %}">
+      <a href="?range={{ range }}&gen_ip={{ r.ip|urlencode }}{% if filter_gen_mode %}&gen_mode={{ filter_gen_mode }}{% endif %}" class="filter-link" style="font-family:monospace;font-size:.72rem;flex:1;">{{ r.ip }}</a>
+      <a href="?range={{ range }}&ip={{ r.ip|urlencode }}" class="bar-count" style="color:#5eead4;text-decoration:none;font-size:.68rem;" title="Show visits from this IP">{{ r.cnt }} visits →</a>
+    </div>
+    {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
+{% if gen_rows is not None %}
+<!-- Generated Pods Table -->
+<div class="analytics-box" style="margin-bottom:1rem;">
+  <h3>Generated Pods <span style="color:#8897ae;font-weight:400;">({{ gen_rows|length }})</span>
+    <a href="?range={{ range }}" style="float:right;color:#8897ae;font-size:.75rem;font-weight:400;text-decoration:none;">✕ back</a>
+  </h3>
+  <div style="overflow-x:auto;">
+    <table class="visit-table">
+      <thead>
+        <tr><th>Time</th><th>Pod</th><th>Images</th><th>Mode</th><th>C</th><th>IP</th></tr>
+      </thead>
+      <tbody>
+        {% for r in gen_rows %}
+        <tr>
+          <td style="white-space:nowrap;color:#8897ae;">{{ r.timestamp|date:"d.m. H:i" }}</td>
+          <td style="font-family:monospace;font-size:.78rem;color:#a78bfa;">{{ r.pod_name|default:"–" }}</td>
+          <td style="font-size:.75rem;color:#dde3f0;">{{ r.images|default:"–" }}</td>
+          <td style="font-size:.72rem;color:#8897ae;text-transform:uppercase;">{{ r.mode }}</td>
+          <td style="color:#8897ae;">{{ r.container_count }}</td>
+          <td style="font-family:monospace;font-size:.72rem;">
+            {% if r.ip %}<a href="?range={{ range }}&ip={{ r.ip|urlencode }}" class="filter-link">{{ r.ip }}</a>{% else %}–{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="color:#8897ae;text-align:center;padding:1rem;">No entries.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% elif ip_rows is not None %}
+<!-- Unique IPs Table -->
+<div class="analytics-box" style="margin-bottom:1rem;">
+  <h3>Unique IPs <span style="color:#8897ae;font-weight:400;">({{ ip_rows|length }})</span>
+    <a href="?range={{ range }}" style="float:right;color:#8897ae;font-size:.75rem;font-weight:400;text-decoration:none;">✕ back</a>
+  </h3>
+  <div style="overflow-x:auto;">
+    <table class="visit-table">
+      <thead>
+        <tr><th>IP</th><th>Country</th><th>Visits</th><th>Last seen</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for r in ip_rows %}
+        <tr>
+          <td style="font-family:monospace;font-size:.72rem;">
+            <a href="?range={{ range }}&ip={{ r.ip|urlencode }}" class="filter-link">{{ r.ip }}</a>
+          </td>
+          <td>
+            {% if r.country_code %}
+            <a href="?range={{ range }}&country_code={{ r.country_code }}" class="filter-link">
+              <span class="flag-emoji">{{ r.country_code|country_flag }}</span>{{ r.country_name|default:r.country_code }}
+            </a>
+            {% else %}–{% endif %}
+          </td>
+          <td style="color:#5eead4;">{{ r.cnt }}</td>
+          <td style="color:#8897ae;white-space:nowrap;">{{ r.last_seen|date:"d.m.Y H:i" }}</td>
+          <td>{% if r.ip in blocked_ips_set %}<button class="unblock-btn" onclick="blockIp('{{ r.ip }}','unblock')">Re-include</button>{% else %}<button class="block-btn" onclick="blockIp('{{ r.ip }}','block')">Exclude</button>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="color:#8897ae;text-align:center;padding:1rem;">No entries.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<!-- Recent Visits -->
+<div class="analytics-box" style="margin-bottom:1rem;">
+  <h3>Recent Visits{% if active_filter %} <span style="color:#8897ae;font-weight:400;">(filtered)</span>{% endif %}</h3>
+  <div style="overflow-x:auto;">
+    <table class="visit-table">
+      <thead>
+        <tr>
+          <th>Time</th><th>IP</th><th>Country</th><th>Browser</th><th>OS</th><th>Page</th><th>Referrer</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in recent %}
+        <tr>
+          <td style="white-space:nowrap;color:#8897ae;">{{ v.timestamp|date:"d.m. H:i" }}</td>
+          <td style="font-family:monospace;font-size:.72rem;">
+            {% if v.ip %}<a href="?range={{ range }}&ip={{ v.ip|urlencode }}" class="filter-link">{{ v.ip }}</a>{% else %}–{% endif %}
+          </td>
+          <td>
+            {% if v.country_code %}
+            <a href="?range={{ range }}&country_code={{ v.country_code }}" class="filter-link">
+              <span class="flag-emoji">{{ v.country_code|country_flag }}</span>{{ v.country_code }}
+            </a>
+            {% else %}–{% endif %}
+          </td>
+          <td>
+            {% if v.browser_family %}
+            <a href="?range={{ range }}&browser_family={{ v.browser_family|urlencode }}" class="filter-link">{{ v.browser_family }}</a>
+            {% else %}–{% endif %}
+            {% if v.is_mobile %} <span class="mobile-badge">mob</span>{% endif %}
+          </td>
+          <td>
+            {% if v.os_family %}<a href="?range={{ range }}&os_family={{ v.os_family|urlencode }}" class="filter-link">{{ v.os_family }}</a>{% else %}–{% endif %}
+          </td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ v.path }}">
+            <a href="?range={{ range }}&path={{ v.path|urlencode }}" class="filter-link">{{ v.path }}</a>
+          </td>
+          <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8897ae;font-size:.72rem;" title="{{ v.referrer }}">
+            {{ v.referrer|default:"–" }}
+          </td>
+          <td>{% if v.ip %}{% if v.ip in blocked_ips_set %}<button class="unblock-btn" onclick="blockIp('{{ v.ip }}','unblock')">Re-include</button>{% else %}<button class="block-btn" onclick="blockIp('{{ v.ip }}','block')">Exclude</button>{% endif %}{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" style="color:#8897ae;text-align:center;padding:1rem;">No entries.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Excluded IPs -->
+<div class="analytics-box" style="margin-bottom:1rem;">
+  <h3>Excluded from Analytics <span style="color:#8897ae;font-weight:400;">({{ blocked_ips|length }})</span></h3>
+  {% if blocked_ips %}
+    {% for ip in blocked_ips %}
+    <div class="blocked-ip-row">
+      <span style="font-family:monospace;font-size:.78rem;color:#dde3f0;flex:1;">{{ ip }}</span>
+      <button class="unblock-btn" onclick="blockIp('{{ ip }}','unblock')">Re-include</button>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="blocked-ip-row"><span style="color:#8897ae;font-size:.8rem;">No IPs excluded — click "Exclude" next to an IP to remove it from analytics.</span></div>
+  {% endif %}
+</div>
+{% endblock %}
