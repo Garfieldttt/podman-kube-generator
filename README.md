@@ -4,8 +4,6 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 
 **Hosted Instance:** https://podman-generator.rzen.at/
 
-![Screenshot](screenshot.png)
-
 ## Features
 
 - Generate Kubernetes YAML for `podman play kube`

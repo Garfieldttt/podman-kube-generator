@@ -57,8 +57,13 @@ MANAGE="${VENV_DIR}/bin/python ${INSTALL_DIR}/manage.py"
 
 info "Installing dependencies..."
 "$PIP" install -q --upgrade pip
-"$PIP" install -q -r "${INSTALL_DIR}/requirements.txt"
-ok "Dependencies installed"
+if [[ -f "${INSTALL_DIR}/requirements.lock.txt" ]]; then
+    "$PIP" install -q -r "${INSTALL_DIR}/requirements.lock.txt"
+    ok "Dependencies installed (from requirements.lock.txt)"
+else
+    "$PIP" install -q -r "${INSTALL_DIR}/requirements.txt"
+    ok "Dependencies installed (from requirements.txt)"
+fi
 
 # ── .env setup ───────────────────────────────────────────────────
 ENV_FILE="${INSTALL_DIR}/.env"

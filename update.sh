@@ -79,6 +79,23 @@ rollback() {
     exit 1
 }
 
+# ── Git pull ───────────────────────────────────────────────────
+git_pull() {
+    step "── Pulling latest code ─────────────────────────────────"
+
+    if ! git -C "$SCRIPT_DIR" rev-parse --is-inside-work-tree &>/dev/null; then
+        warn "Not a git repository — skipping git pull."
+        return
+    fi
+
+    info "Fetching updates..."
+    if ! git -C "$SCRIPT_DIR" pull --ff-only >> "$LOG" 2>&1; then
+        err "git pull failed. Resolve conflicts manually and try again."
+        exit 1
+    fi
+    ok "Code up to date."
+}
+
 # ── Preflight ──────────────────────────────────────────────────
 preflight() {
     step "── Preflight check ─────────────────────────────────────"
@@ -175,7 +192,9 @@ update_packages() {
     step "── Updating packages ───────────────────────────────────"
 
     info "Installing updates..."
-    if ! "$PIP" install -q -r "$SCRIPT_DIR/requirements.txt" >> "$LOG" 2>&1; then
+    REQ_FILE="$SCRIPT_DIR/requirements.lock.txt"
+    [[ -f "$REQ_FILE" ]] || REQ_FILE="$SCRIPT_DIR/requirements.txt"
+    if ! "$PIP" install -q -r "$REQ_FILE" >> "$LOG" 2>&1; then
         err "pip install failed."
         rollback "pip install failed"
     fi
@@ -267,6 +286,7 @@ echo -e "${CYAN}${BOLD}║    Podman Kube Generator — Update Script     ║${N
 echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════════╝${NC}"
 
 preflight
+git_pull
 backup
 show_outdated
 dryrun

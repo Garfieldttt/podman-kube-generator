@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install -r requirements.lock.txt
+
+      - name: Create .env
+        run: |
+          cp .env.example .env
+          sed -i "s/change-me-to-a-long-random-string/$(python -c 'import secrets; print(secrets.token_urlsafe(50))')/" .env
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Check for pending migrations
+        run: python manage.py migrate --check --run-syncdb
