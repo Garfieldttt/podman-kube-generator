@@ -36,6 +36,8 @@ bash install.sh
 - Stack import
 - systemd user service setup (optional)
 
+> **Warning:** A default admin account (`admin` / `admin`) is created automatically. Log in at `/admin/` and change the password immediately after installation.
+
 ## Configuration
 
 Copy `.env.example` to `.env` and adjust:
