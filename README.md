@@ -53,7 +53,10 @@ DJANGO_DEBUG=False
 DJANGO_ALLOWED_HOSTS=localhost,your-domain.com
 SITE_URL=https://your-domain.com
 CSRF_TRUSTED_ORIGINS=https://your-domain.com
+ADMIN_URL=admin                # change to obscure the admin URL (default: /admin/)
 ```
+
+> **Admin URL:** By default the admin is at `/admin/`. Set `ADMIN_URL` in `.env` to any path (e.g. `secret-panel`) to move it.
 
 ## Update
 

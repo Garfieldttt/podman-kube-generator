@@ -28,6 +28,7 @@ INSTALLED_APPS = [
 ]
 
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
+ADMIN_URL = os.getenv('ADMIN_URL', 'admin')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

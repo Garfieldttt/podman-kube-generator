@@ -14,10 +14,12 @@ sitemaps = {
     'community': CommunityStackSitemap,
 }
 
+ADMIN_URL = getattr(settings, 'ADMIN_URL', 'admin').strip('/')
+
 urlpatterns = [
-    path('admin/totp/setup/', totp_setup, name='totp_setup'),
-    path('admin/totp/verify/', totp_verify, name='totp_verify'),
-    path('admin/', admin.site.urls),
+    path(f'{ADMIN_URL}/totp/setup/', totp_setup, name='totp_setup'),
+    path(f'{ADMIN_URL}/totp/verify/', totp_verify, name='totp_verify'),
+    path(f'{ADMIN_URL}/', admin.site.urls),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
