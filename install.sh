@@ -183,7 +183,11 @@ EOF
     fi
 
     if command -v loginctl &>/dev/null; then
-        loginctl enable-linger "$(whoami)" 2>/dev/null && ok "loginctl enable-linger enabled (autostart without login)"
+        if loginctl enable-linger "$(whoami)" 2>/dev/null; then
+            ok "loginctl enable-linger enabled (autostart without login)"
+        else
+            warn "loginctl enable-linger requires root — run manually: sudo loginctl enable-linger $(whoami)"
+        fi
     fi
 fi
 

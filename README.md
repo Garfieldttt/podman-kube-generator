@@ -41,7 +41,7 @@ bash install.sh
 - Admin account creation (username + password prompted)
 - systemd user service setup (optional)
 
-> **Note:** For the systemd user service to survive logout, `loginctl enable-linger <user>` must be enabled. `install.sh` does this automatically.
+> **Note:** For the systemd user service to survive logout, `loginctl enable-linger <user>` must be enabled as **root**. `install.sh` prompts for this automatically.
 
 ## Configuration
 
@@ -81,7 +81,7 @@ systemctl --user restart podman-kube-gen.service
 journalctl --user -u podman-kube-gen.service -f
 ```
 
-> For these commands to work after logout, `loginctl enable-linger` must be active (set automatically by `install.sh`).
+> For these commands to work after logout, `loginctl enable-linger <user>` must be active (requires root — set automatically by `install.sh`).
 
 ## Nginx Reverse Proxy (optional)
 
