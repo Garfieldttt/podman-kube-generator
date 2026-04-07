@@ -1868,6 +1868,15 @@ def compose_import(request):
     if len(compose_text) > 100_000:
         return JsonResponse({'error': 'Input too large (max 100 KB)'}, status=400)
 
+    # Auto-detect: docker run / podman run command
+    from .compose_parser import is_docker_run_command, parse_docker_run
+    if is_docker_run_command(compose_text):
+        try:
+            result, _ = parse_docker_run(compose_text.strip())
+            return JsonResponse(result)
+        except ValueError as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
     import yaml as _yaml
     try:
         data = _yaml.safe_load(compose_text)
