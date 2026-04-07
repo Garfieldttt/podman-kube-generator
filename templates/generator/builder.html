@@ -3216,6 +3216,10 @@ function scanForTips() {
   }
 
   // Tip 3: FileOrCreate volumes — parent directory must exist on host
+  // Skip well-known system dirs that always exist on any Linux host
+  const _SYSTEM_PARENTS = new Set([
+    '/var/run', '/run', '/dev', '/etc', '/proc', '/sys', '/tmp', '/usr', '/lib', '/lib64',
+  ]);
   const fileCreateParents = new Set();
   const allContainers = [...state.containers, ...(state.init_containers || [])];
   for (const c of allContainers) {
@@ -3227,7 +3231,10 @@ function scanForTips() {
       const isFile = lastSeg.includes('.') && !src.endsWith('/');
       if (isFile) {
         const parent = src.replace(/\/$/, '').split('/').slice(0, -1).join('/') || '.';
-        fileCreateParents.add(parent);
+        // Skip if parent is a well-known system directory or a direct child of /run /var/run /dev
+        const isSystemPath = _SYSTEM_PARENTS.has(parent)
+          || /^\/(run|var\/run|dev)\/[^/]+$/.test(parent);
+        if (!isSystemPath) fileCreateParents.add(parent);
       }
     }
   }

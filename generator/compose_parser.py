@@ -122,10 +122,16 @@ def parse_compose(content: str, filename: str = 'compose') -> dict:
         containers = init_containers
         init_containers = []
 
+    # Rootful erforderlich wenn Docker/Podman-Socket gemountet wird
+    all_vols = ' '.join(
+        c.get('volumes', '') for c in containers + init_containers
+    )
+    needs_rootful = '/var/run/docker.sock' in all_vols or '/run/podman/podman.sock' in all_vols
+
     stack_data = {
         'pod_name':       pod_name,
         'restart_policy': 'Always',
-        'mode':           'rootless',
+        'mode':           'rootful' if needs_rootful else 'rootless',
         'containers':     containers,
     }
     if init_containers:
