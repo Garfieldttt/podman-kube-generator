@@ -2,6 +2,8 @@
 
 Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quadlet** configs.
 
+**Live Demo:** https://podman-generator.rzen.at/
+
 ## Features
 
 - Generate Kubernetes YAML for `podman play kube`
@@ -68,3 +70,32 @@ systemctl --user status podman-kube-gen.service
 systemctl --user restart podman-kube-gen.service
 journalctl --user -u podman-kube-gen.service -f
 ```
+
+## Nginx Reverse Proxy
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name your-domain.com;
+
+    # ssl_certificate / ssl_certificate_key here
+
+    location / {
+        proxy_pass http://127.0.0.1:9500;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
