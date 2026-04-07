@@ -29,5 +29,8 @@ jobs:
       - name: Django system check
         run: python manage.py check
 
-      - name: Check for pending migrations
-        run: python manage.py migrate --check --run-syncdb
+      - name: Apply migrations
+        run: python manage.py migrate
+
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
