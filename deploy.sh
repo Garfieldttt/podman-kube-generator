@@ -1,12 +1,12 @@
 #!/bin/bash
 # =============================================================================
 # Podman Kube Generator — Deploy Script
-# Richtet die App auf einem frischen Debian 13 Server ein
-# Ausführen als root: bash deploy.sh /pfad/zu/podman-kube-gen_*.tar.gz
+# Sets up the app on a fresh Debian 13 server
+# Run as root: bash deploy.sh /path/to/podman-kube-gen_*.tar.gz
 # =============================================================================
 set -euo pipefail
 
-# ── Konfiguration ──────────────────────────────────────────────
+# ── Configuration ──────────────────────────────────────────────
 APP_USER="generator"
 APP_DIR="/home/$APP_USER/podman-kube-gen"
 SERVICE_NAME="podman-kube-gen.service"
@@ -25,47 +25,46 @@ echo -e "${CYAN}${BOLD}║    Podman Kube Generator — Deploy Script     ║${N
 echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 
-# ── Voraussetzungen ────────────────────────────────────────────
-step "── Voraussetzungen prüfen ──────────────────────────────"
+# ── Preflight ──────────────────────────────────────────────────
+step "── Preflight check ─────────────────────────────────────"
 
-[[ $EUID -eq 0 ]] || err "Bitte als root ausführen: sudo bash deploy.sh ..."
-[[ -n "$PACKAGE" ]] || err "Kein Paket angegeben. Verwendung: bash deploy.sh /pfad/zu/paket.tar.gz"
-[[ -f "$PACKAGE" ]] || err "Paket nicht gefunden: $PACKAGE"
+[[ $EUID -eq 0 ]] || err "Please run as root: sudo bash deploy.sh ..."
+[[ -n "$PACKAGE" ]] || err "No package specified. Usage: bash deploy.sh /path/to/package.tar.gz"
+[[ -f "$PACKAGE" ]] || err "Package not found: $PACKAGE"
 
-ok "Root-Rechte vorhanden"
-ok "Paket gefunden: $PACKAGE ($(du -h "$PACKAGE" | cut -f1))"
+ok "Running as root"
+ok "Package found: $PACKAGE ($(du -h "$PACKAGE" | cut -f1))"
 
-# ── Konfigurationsabfrage ──────────────────────────────────────
-step "── Konfiguration ───────────────────────────────────────"
+# ── Configuration input ────────────────────────────────────────
+step "── Configuration ───────────────────────────────────────"
 
 echo ""
-read -rp "  Domain/URL der App (z.B. https://podman.example.com): " SITE_URL
+read -rp "  App domain/URL (e.g. https://podman.example.com): " SITE_URL
 SITE_URL="${SITE_URL%/}"
-[[ -n "$SITE_URL" ]] || err "Keine URL angegeben."
+[[ -n "$SITE_URL" ]] || err "No URL specified."
 
-read -rp "  Gunicorn Port [9500]: " APP_PORT
+read -rp "  Gunicorn port [9500]: " APP_PORT
 APP_PORT="${APP_PORT:-9500}"
 
-read -rp "  Nginx konfigurieren? [J/n]: " SETUP_NGINX
-SETUP_NGINX="${SETUP_NGINX:-J}"
+read -rp "  Configure Nginx? [Y/n]: " SETUP_NGINX
+SETUP_NGINX="${SETUP_NGINX:-Y}"
 
-read -rp "  Gunicorn Worker [2]: " WORKERS
+read -rp "  Gunicorn workers [2]: " WORKERS
 WORKERS="${WORKERS:-2}"
 
-# Domain aus URL ableiten
 DOMAIN=$(echo "$SITE_URL" | sed 's|https\?://||' | sed 's|/.*||')
 
 echo ""
-info "Domain:    $DOMAIN"
-info "App-Port:  $APP_PORT"
-info "Workers:   $WORKERS"
-info "Nginx:     $([[ "${SETUP_NGINX,,}" =~ ^[jy] ]] && echo ja || echo nein)"
+info "Domain:   $DOMAIN"
+info "Port:     $APP_PORT"
+info "Workers:  $WORKERS"
+info "Nginx:    $([[ "${SETUP_NGINX,,}" =~ ^[jy] ]] && echo yes || echo no)"
 echo ""
-read -rp "$(echo -e "${YELLOW}  Korrekt? Fortfahren? [j/N]:${NC} ")" confirm
-[[ "${confirm,,}" =~ ^[jy] ]] || { warn "Abgebrochen."; exit 0; }
+read -rp "$(echo -e "${YELLOW}  Correct? Proceed? [y/N]:${NC} ")" confirm
+[[ "${confirm,,}" =~ ^[jy] ]] || { warn "Cancelled."; exit 0; }
 
-# ── System-Pakete ──────────────────────────────────────────────
-step "── System-Pakete installieren ──────────────────────────"
+# ── System packages ────────────────────────────────────────────
+step "── Installing system packages ──────────────────────────"
 
 info "apt update..."
 apt-get update -qq
@@ -75,12 +74,12 @@ PACKAGES=(
     python3-venv
     python3-pip
     python3-dev
-    # Pillow-Abhängigkeiten
+    # Pillow dependencies
     libjpeg-dev
     libpng-dev
     zlib1g-dev
     libwebp-dev
-    # Sonstiges
+    # Other
     curl
     tar
     sqlite3
@@ -88,58 +87,54 @@ PACKAGES=(
 
 [[ "${SETUP_NGINX,,}" =~ ^[jy] ]] && PACKAGES+=(nginx certbot python3-certbot-nginx)
 
-info "Installiere: ${PACKAGES[*]}"
+info "Installing: ${PACKAGES[*]}"
 apt-get install -y -qq "${PACKAGES[@]}"
-ok "System-Pakete installiert."
+ok "System packages installed."
 
-# ── User anlegen ───────────────────────────────────────────────
-step "── Benutzer einrichten ─────────────────────────────────"
+# ── Create user ────────────────────────────────────────────────
+step "── Setting up user ─────────────────────────────────────"
 
 if id "$APP_USER" &>/dev/null; then
-    warn "Benutzer '$APP_USER' existiert bereits."
+    warn "User '$APP_USER' already exists."
 else
     useradd -m -s /bin/bash "$APP_USER"
-    ok "Benutzer '$APP_USER' angelegt."
+    ok "User '$APP_USER' created."
 fi
 
-# Linger aktivieren (Service überlebt Logout)
 loginctl enable-linger "$APP_USER"
-ok "loginctl enable-linger aktiviert."
+ok "loginctl enable-linger enabled."
 
-# ── App entpacken ──────────────────────────────────────────────
-step "── Anwendung entpacken ─────────────────────────────────"
+# ── Extract app ────────────────────────────────────────────────
+step "── Extracting application ──────────────────────────────"
 
 if [[ -d "$APP_DIR" ]]; then
-    warn "Zielverzeichnis existiert bereits: $APP_DIR"
-    read -rp "  Überschreiben? Bestehende Daten gehen verloren! [j/N]: " overwrite
-    [[ "${overwrite,,}" =~ ^[jy] ]] || err "Abgebrochen."
+    warn "Target directory already exists: $APP_DIR"
+    read -rp "  Overwrite? Existing data will be lost! [y/N]: " overwrite
+    [[ "${overwrite,,}" =~ ^[jy] ]] || err "Cancelled."
     rm -rf "$APP_DIR"
 fi
 
 mkdir -p "/home/$APP_USER"
-info "Entpacke nach /home/$APP_USER/..."
+info "Extracting to /home/$APP_USER/..."
 tar -xzf "$PACKAGE" -C "/home/$APP_USER/"
 
-# Verzeichnisname aus Tarball ermitteln
 EXTRACTED_DIR=$(tar -tzf "$PACKAGE" | head -1 | cut -d/ -f1)
 if [[ "$EXTRACTED_DIR" != "podman-kube-gen" ]]; then
     mv "/home/$APP_USER/$EXTRACTED_DIR" "$APP_DIR"
 fi
 
 chown -R "$APP_USER:$APP_USER" "/home/$APP_USER"
-ok "Anwendung entpackt nach: $APP_DIR"
+ok "Application extracted to: $APP_DIR"
 
-# ── .env anpassen ──────────────────────────────────────────────
-step "── Konfiguration anpassen ──────────────────────────────"
+# ── Configure .env ─────────────────────────────────────────────
+step "── Configuring environment ─────────────────────────────"
 
 ENV_FILE="$APP_DIR/.env"
-[[ -f "$ENV_FILE" ]] || err ".env nicht im Paket enthalten."
+[[ -f "$ENV_FILE" ]] || err ".env not found in package."
 
-# Werte aktualisieren
 SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
 ALLOWED_HOSTS="localhost,127.0.0.1,$DOMAIN"
 
-# Bestehende Werte ersetzen oder ergänzen
 update_env() {
     local key="$1" val="$2"
     if grep -q "^${key}=" "$ENV_FILE"; then
@@ -157,38 +152,38 @@ update_env "CSRF_TRUSTED_ORIGINS" "$SITE_URL"
 
 chown "$APP_USER:$APP_USER" "$ENV_FILE"
 chmod 600 "$ENV_FILE"
-ok ".env aktualisiert (neuer SECRET_KEY generiert)."
+ok ".env updated (new SECRET_KEY generated)."
 
 # ── Python venv ────────────────────────────────────────────────
-step "── Python venv einrichten ──────────────────────────────"
+step "── Setting up Python venv ──────────────────────────────"
 
-info "Erstelle venv..."
+info "Creating venv..."
 sudo -u "$APP_USER" python3 -m venv "$APP_DIR/venv"
 
-info "Installiere Abhängigkeiten..."
+info "Installing dependencies..."
 sudo -u "$APP_USER" "$APP_DIR/venv/bin/pip" install -q --upgrade pip
 sudo -u "$APP_USER" "$APP_DIR/venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
-ok "Python-Abhängigkeiten installiert."
+ok "Python dependencies installed."
 
-# ── Django einrichten ──────────────────────────────────────────
-step "── Django einrichten ───────────────────────────────────"
+# ── Django setup ───────────────────────────────────────────────
+step "── Setting up Django ───────────────────────────────────"
 
 MANAGE="sudo -u $APP_USER $APP_DIR/venv/bin/python $APP_DIR/manage.py"
 
-info "Migrationen..."
+info "Running migrations..."
 $MANAGE migrate --run-syncdb -v 0
-ok "Datenbank migriert."
+ok "Database migrated."
 
-info "Stacks importieren..."
+info "Importing stacks..."
 $MANAGE load_stacks
-ok "Stacks importiert."
+ok "Stacks imported."
 
-info "Statische Dateien sammeln..."
+info "Collecting static files..."
 $MANAGE collectstatic --noinput -v 0
-ok "Statische Dateien gesammelt."
+ok "Static files collected."
 
-# ── Systemd User Service ───────────────────────────────────────
-step "── Systemd Service einrichten ──────────────────────────"
+# ── Systemd user service ───────────────────────────────────────
+step "── Setting up systemd service ──────────────────────────"
 
 SYSTEMD_DIR="/home/$APP_USER/.config/systemd/user"
 mkdir -p "$SYSTEMD_DIR"
@@ -216,7 +211,6 @@ EOF
 
 chown -R "$APP_USER:$APP_USER" "/home/$APP_USER/.config"
 
-# Service starten
 sudo -u "$APP_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $APP_USER)" \
     systemctl --user daemon-reload
 sudo -u "$APP_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $APP_USER)" \
@@ -227,14 +221,14 @@ sudo -u "$APP_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $APP_USER)" \
 sleep 2
 if sudo -u "$APP_USER" XDG_RUNTIME_DIR="/run/user/$(id -u $APP_USER)" \
     systemctl --user is-active --quiet "$SERVICE_NAME"; then
-    ok "Service läuft auf 127.0.0.1:$APP_PORT"
+    ok "Service running on 127.0.0.1:$APP_PORT"
 else
-    err "Service konnte nicht gestartet werden. Prüfen mit: journalctl --user -u $SERVICE_NAME -n 50"
+    err "Service failed to start. Check with: journalctl --user -u $SERVICE_NAME -n 50"
 fi
 
 # ── Nginx ──────────────────────────────────────────────────────
 if [[ "${SETUP_NGINX,,}" =~ ^[jy] ]]; then
-    step "── Nginx konfigurieren ──────────────────────────────────"
+    step "── Configuring Nginx ───────────────────────────────────"
 
     NGINX_CONF="/etc/nginx/sites-available/podman-kube-gen"
 
@@ -270,30 +264,30 @@ EOF
     ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/podman-kube-gen
     rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
     nginx -t && systemctl reload nginx
-    ok "Nginx konfiguriert für $DOMAIN"
+    ok "Nginx configured for $DOMAIN"
 
     echo ""
-    read -rp "  Let's Encrypt SSL-Zertifikat einrichten? [J/n]: " SETUP_SSL
-    SETUP_SSL="${SETUP_SSL:-J}"
+    read -rp "  Set up Let's Encrypt SSL certificate? [Y/n]: " SETUP_SSL
+    SETUP_SSL="${SETUP_SSL:-Y}"
     if [[ "${SETUP_SSL,,}" =~ ^[jy] ]]; then
-        read -rp "  E-Mail für Let's Encrypt: " LE_EMAIL
+        read -rp "  Email for Let's Encrypt: " LE_EMAIL
         certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$LE_EMAIL"
-        ok "SSL-Zertifikat eingerichtet."
+        ok "SSL certificate installed."
     fi
 fi
 
-# ── Zusammenfassung ────────────────────────────────────────────
+# ── Summary ────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║         Deployment abgeschlossen! ✓          ║${NC}"
+echo -e "${GREEN}${BOLD}║          Deployment complete! ✓              ║${NC}"
 echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "  App-Verzeichnis:  ${CYAN}$APP_DIR${NC}"
-echo -e "  Service:          ${CYAN}journalctl --user -u $SERVICE_NAME -f${NC}"
-echo -e "                    ${CYAN}(als User '$APP_USER' ausführen)${NC}"
-echo -e "  URL:              ${CYAN}$SITE_URL${NC}"
-echo -e "  Admin:            ${CYAN}$SITE_URL/admin/${NC}"
+echo -e "  App directory:  ${CYAN}$APP_DIR${NC}"
+echo -e "  Service:        ${CYAN}journalctl --user -u $SERVICE_NAME -f${NC}"
+echo -e "                  ${CYAN}(run as user '$APP_USER')${NC}"
+echo -e "  URL:            ${CYAN}$SITE_URL${NC}"
+echo -e "  Admin:          ${CYAN}$SITE_URL/admin/${NC}"
 echo ""
-warn "Admin-Passwort aus dem alten Server übernommen (DB wurde migriert)."
-warn "Firewall prüfen: Port 80/443 freigeben."
+warn "Admin password carried over from old server (DB was migrated)."
+warn "Check firewall: open ports 80/443."
 echo ""

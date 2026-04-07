@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # Podman Kube Generator — Pack Script
-# Erstellt ein vollständiges Migrations-Paket für den Umzug auf einen neuen Server
+# Creates a complete migration package for moving to a new server
 # =============================================================================
 set -euo pipefail
 
@@ -24,13 +24,13 @@ echo -e "${CYAN}${BOLD}║    Podman Kube Generator — Pack Script       ║${N
 echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 
-# ── Prüfen ─────────────────────────────────────────────────────
-[[ -f "$SCRIPT_DIR/.env" ]]       || err ".env nicht gefunden"
-[[ -f "$SCRIPT_DIR/db.sqlite3" ]] || err "db.sqlite3 nicht gefunden"
-[[ -f "$SCRIPT_DIR/manage.py" ]]  || err "manage.py nicht gefunden"
+# ── Checks ─────────────────────────────────────────────────────
+[[ -f "$SCRIPT_DIR/.env" ]]       || err ".env not found"
+[[ -f "$SCRIPT_DIR/db.sqlite3" ]] || err "db.sqlite3 not found"
+[[ -f "$SCRIPT_DIR/manage.py" ]]  || err "manage.py not found"
 
-# ── Paket erstellen ────────────────────────────────────────────
-info "Erstelle Paket: $PACKAGE_NAME"
+# ── Create package ─────────────────────────────────────────────
+info "Creating package: $PACKAGE_NAME"
 
 tar -czf "$PACKAGE_PATH" \
     --exclude="./.git" \
@@ -43,29 +43,30 @@ tar -czf "$PACKAGE_PATH" \
     --exclude="./**/__pycache__" \
     --exclude="*.pyc" \
     --exclude="*.pyo" \
+    --exclude="./~" \
     -C "$(dirname "$SCRIPT_DIR")" \
     "$(basename "$SCRIPT_DIR")"
 
 SIZE=$(du -h "$PACKAGE_PATH" | cut -f1)
-ok "Paket erstellt: $PACKAGE_PATH ($SIZE)"
+ok "Package created: $PACKAGE_PATH ($SIZE)"
 
 echo ""
-echo -e "${BOLD}  Enthält:${NC}"
-echo -e "    • Anwendungscode"
-echo -e "    • Datenbank (db.sqlite3)"
-echo -e "    • Konfiguration (.env)"
-[[ -d "$SCRIPT_DIR/media" ]] && echo -e "    • Media-Dateien (Avatare)"
-echo -e "    • Migrations, Templates, Static-Quellen"
+echo -e "${BOLD}  Contains:${NC}"
+echo -e "    • Application code"
+echo -e "    • Database (db.sqlite3)"
+echo -e "    • Configuration (.env)"
+[[ -d "$SCRIPT_DIR/media" ]] && echo -e "    • Media files (avatars)"
+echo -e "    • Migrations, templates, static sources"
 echo ""
 
-# ── Hinweis ────────────────────────────────────────────────────
-echo -e "${YELLOW}${BOLD}  Nächste Schritte:${NC}"
-echo -e "  1. Paket auf neuen Server übertragen:"
-echo -e "     ${CYAN}scp $PACKAGE_PATH root@NEUER-SERVER:/root/${NC}"
+# ── Next steps ─────────────────────────────────────────────────
+echo -e "${YELLOW}${BOLD}  Next steps:${NC}"
+echo -e "  1. Transfer package to new server:"
+echo -e "     ${CYAN}scp $PACKAGE_PATH root@NEW-SERVER:/root/${NC}"
 echo ""
-echo -e "  2. deploy.sh auf neuen Server übertragen:"
-echo -e "     ${CYAN}scp $SCRIPT_DIR/deploy.sh root@NEUER-SERVER:/root/${NC}"
+echo -e "  2. Transfer deploy.sh to new server:"
+echo -e "     ${CYAN}scp $SCRIPT_DIR/deploy.sh root@NEW-SERVER:/root/${NC}"
 echo ""
-echo -e "  3. Auf neuem Server als root ausführen:"
+echo -e "  3. Run on new server as root:"
 echo -e "     ${CYAN}bash /root/deploy.sh /root/$PACKAGE_NAME${NC}"
 echo ""

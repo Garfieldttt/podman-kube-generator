@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # Podman Kube Generator — Update Script
-# Prüft Kompatibilität, updated Pakete + DB, rollback bei Fehler
+# Checks compatibility, updates packages + DB, rolls back on failure
 # =============================================================================
 set -euo pipefail
 
@@ -17,11 +17,10 @@ DB="$SCRIPT_DIR/db.sqlite3"
 BACKUP_DIR="$SCRIPT_DIR/.update-backup"
 LOG="$BACKUP_DIR/update.log"
 
-# Was wurde bereits geändert (für Rollback)
 _PKGS_UPDATED=0
 _DB_MIGRATED=0
 
-# ── Farben ─────────────────────────────────────────────────────
+# ── Colors ─────────────────────────────────────────────────────
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'
 BOLD='\033[1m'; NC='\033[0m'
 ok()   { echo -e "${GREEN}  ✓${NC} $*" | tee -a "$LOG"; }
@@ -38,100 +37,98 @@ rollback() {
     echo -e "${RED}  ROLLBACK: $reason${NC}" | tee -a "$LOG"
     echo -e "${RED}${BOLD}══════════════════════════════════════════════${NC}" | tee -a "$LOG"
 
-    # Kein set -e im Rollback — jeder Schritt wird versucht
     set +e
 
     if [[ $_DB_MIGRATED -eq 1 ]]; then
-        warn "Stelle Datenbank wieder her..."
+        warn "Restoring database..."
         if [[ -f "$BACKUP_DIR/db.sqlite3.bak" ]]; then
             cp "$BACKUP_DIR/db.sqlite3.bak" "$DB"
-            ok "Datenbank wiederhergestellt."
+            ok "Database restored."
         else
-            err "Kein DB-Backup gefunden — Datenbank NICHT wiederhergestellt!"
+            err "No DB backup found — database NOT restored!"
         fi
     fi
 
     if [[ $_PKGS_UPDATED -eq 1 ]]; then
-        warn "Stelle Pakete wieder her..."
+        warn "Restoring packages..."
         if [[ -f "$BACKUP_DIR/requirements.lock.bak" ]]; then
             "$PIP" install -q --force-reinstall -r "$BACKUP_DIR/requirements.lock.bak" >> "$LOG" 2>&1
             if [[ $? -eq 0 ]]; then
-                ok "Pakete wiederhergestellt."
+                ok "Packages restored."
             else
-                err "Fehler beim Wiederherstellen der Pakete — bitte manuell prüfen!"
+                err "Failed to restore packages — please check manually!"
                 err "Backup: $BACKUP_DIR/requirements.lock.bak"
             fi
         else
-            err "Kein Paket-Backup gefunden — Pakete NICHT wiederhergestellt!"
+            err "No package backup found — packages NOT restored!"
         fi
     fi
 
-    warn "Starte Service neu..."
+    warn "Restarting service..."
     systemctl --user restart "$SERVICE" >> "$LOG" 2>&1 || true
     sleep 2
     if systemctl --user is-active --quiet "$SERVICE"; then
-        ok "Service läuft wieder."
+        ok "Service is running again."
     else
-        err "Service konnte nicht gestartet werden!"
-        err "Bitte manuell prüfen: journalctl --user -u $SERVICE -n 50"
+        err "Service failed to start!"
+        err "Check manually: journalctl --user -u $SERVICE -n 50"
     fi
 
     echo "" | tee -a "$LOG"
-    err "Update fehlgeschlagen. Log: $LOG"
+    err "Update failed. Log: $LOG"
     exit 1
 }
 
-# ── Voraussetzungen ────────────────────────────────────────────
+# ── Preflight ──────────────────────────────────────────────────
 preflight() {
-    step "── Voraussetzungen prüfen ──────────────────────────────"
+    step "── Preflight check ─────────────────────────────────────"
 
-    [[ -d "$VENV" ]] || { err "venv nicht gefunden. Bitte erst install.sh ausführen."; exit 1; }
-    [[ -f "$SCRIPT_DIR/requirements.txt" ]] || { err "requirements.txt nicht gefunden."; exit 1; }
-    [[ -f "$DB" ]] || { err "Datenbank nicht gefunden: $DB"; exit 1; }
+    [[ -d "$VENV" ]] || { err "venv not found. Please run install.sh first."; exit 1; }
+    [[ -f "$SCRIPT_DIR/requirements.txt" ]] || { err "requirements.txt not found."; exit 1; }
+    [[ -f "$DB" ]] || { err "Database not found: $DB"; exit 1; }
 
-    ok "venv vorhanden"
-    ok "requirements.txt vorhanden"
-    ok "Datenbank vorhanden"
+    ok "venv found"
+    ok "requirements.txt found"
+    ok "Database found"
 
-    # Freier Speicher (mind. 200 MB)
     local free_mb
     free_mb=$(df -m "$SCRIPT_DIR" | awk 'NR==2 {print $4}')
     if [[ $free_mb -lt 200 ]]; then
-        err "Zu wenig freier Speicher: ${free_mb} MB (mind. 200 MB benötigt)"
+        err "Not enough disk space: ${free_mb} MB (need at least 200 MB)"
         exit 1
     fi
-    ok "Freier Speicher: ${free_mb} MB"
+    ok "Free disk space: ${free_mb} MB"
 }
 
 # ── Backup ─────────────────────────────────────────────────────
 backup() {
-    step "── Backup erstellen ────────────────────────────────────"
+    step "── Creating backup ─────────────────────────────────────"
 
-    info "Friere aktuelle Paketversionen ein..."
+    info "Freezing current package versions..."
     "$PIP" freeze > "$BACKUP_DIR/requirements.lock.bak"
-    ok "Paket-Backup: $BACKUP_DIR/requirements.lock.bak"
+    ok "Package backup: $BACKUP_DIR/requirements.lock.bak"
 
-    info "Sichere Datenbank..."
+    info "Backing up database..."
     cp "$DB" "$BACKUP_DIR/db.sqlite3.bak"
-    ok "DB-Backup: $BACKUP_DIR/db.sqlite3.bak ($(du -h "$BACKUP_DIR/db.sqlite3.bak" | cut -f1))"
+    ok "DB backup: $BACKUP_DIR/db.sqlite3.bak ($(du -h "$BACKUP_DIR/db.sqlite3.bak" | cut -f1))"
 }
 
-# ── Verfügbare Updates anzeigen ────────────────────────────────
+# ── Show available updates ─────────────────────────────────────
 show_outdated() {
-    step "── Verfügbare Updates ──────────────────────────────────"
+    step "── Available updates ───────────────────────────────────"
 
     local outdated
     outdated=$("$PIP" list --outdated --format=columns 2>/dev/null | tail -n +3 || true)
 
     if [[ -z "$outdated" ]]; then
-        ok "Alle Pakete sind aktuell."
+        ok "All packages are up to date."
         echo ""
-        echo -e "${GREEN}Nichts zu tun.${NC}"
+        echo -e "${GREEN}Nothing to do.${NC}"
         exit 0
     fi
 
     echo ""
-    echo -e "${CYAN}  Paket                    Aktuell       Verfügbar${NC}"
+    echo -e "${CYAN}  Package                   Current       Available${NC}"
     echo -e "  ──────────────────────────────────────────────────"
     echo "$outdated" | while IFS= read -r line; do
         echo "  $line" | tee -a "$LOG"
@@ -139,133 +136,128 @@ show_outdated() {
     echo ""
 }
 
-# ── Kompatibilitätsprüfung (dry-run) ──────────────────────────
+# ── Compatibility check (dry-run) ──────────────────────────────
 dryrun() {
-    step "── Kompatibilität prüfen (dry-run) ─────────────────────"
+    step "── Compatibility check (dry-run) ───────────────────────"
 
-    info "Simuliere Update..."
+    info "Simulating update..."
     local dry_output
     if ! dry_output=$("$PIP" install --dry-run -r "$SCRIPT_DIR/requirements.txt" 2>&1); then
-        err "Dry-run fehlgeschlagen:"
+        err "Dry-run failed:"
         echo "$dry_output" | tee -a "$LOG"
-        err "Update wird abgebrochen — keine Änderungen vorgenommen."
+        err "Update aborted — no changes made."
         exit 1
     fi
 
-    # Auf Konflikte prüfen
     if echo "$dry_output" | grep -qi "conflict\|incompatible\|error"; then
-        err "Konflikte erkannt:"
+        err "Conflicts detected:"
         echo "$dry_output" | grep -i "conflict\|incompatible\|error" | tee -a "$LOG"
-        err "Update wird abgebrochen."
+        err "Update aborted."
         exit 1
     fi
 
-    ok "Dry-run erfolgreich — keine Konflikte erkannt."
+    ok "Dry-run successful — no conflicts detected."
 }
 
-# ── Bestätigung ────────────────────────────────────────────────
+# ── Confirm ────────────────────────────────────────────────────
 confirm() {
     echo ""
-    read -rp "$(echo -e "${YELLOW}  Update jetzt durchführen? [j/N]:${NC} ")" yn
+    read -rp "$(echo -e "${YELLOW}  Proceed with update? [y/N]:${NC} ")" yn
     yn="${yn:-N}"
-    if [[ "${yn,,}" != "j" && "${yn,,}" != "y" ]]; then
-        warn "Update abgebrochen."
+    if [[ "${yn,,}" != "y" && "${yn,,}" != "j" ]]; then
+        warn "Update cancelled."
         exit 0
     fi
 }
 
-# ── Pakete updaten ─────────────────────────────────────────────
+# ── Update packages ────────────────────────────────────────────
 update_packages() {
-    step "── Pakete aktualisieren ────────────────────────────────"
+    step "── Updating packages ───────────────────────────────────"
 
-    info "Installiere Updates..."
+    info "Installing updates..."
     if ! "$PIP" install -q -r "$SCRIPT_DIR/requirements.txt" >> "$LOG" 2>&1; then
-        err "pip install fehlgeschlagen."
-        rollback "pip install fehlgeschlagen"
+        err "pip install failed."
+        rollback "pip install failed"
     fi
     _PKGS_UPDATED=1
 
-    info "Prüfe Abhängigkeiten (pip check)..."
+    info "Checking dependencies (pip check)..."
     if ! "$PIP" check >> "$LOG" 2>&1; then
-        err "pip check: Abhängigkeitskonflikte nach Update!"
-        rollback "pip check fehlgeschlagen"
+        err "pip check: dependency conflicts after update!"
+        rollback "pip check failed"
     fi
-    ok "Pakete aktualisiert und Abhängigkeiten konsistent."
+    ok "Packages updated and dependencies consistent."
 }
 
-# ── Django-Systemcheck ─────────────────────────────────────────
+# ── Django system check ────────────────────────────────────────
 django_check() {
-    step "── Django Systemcheck ──────────────────────────────────"
+    step "── Django system check ─────────────────────────────────"
 
     if ! $MANAGE check --deploy >> "$LOG" 2>&1; then
-        err "manage.py check fehlgeschlagen."
-        rollback "Django check fehlgeschlagen"
+        err "manage.py check failed."
+        rollback "Django check failed"
     fi
-    ok "Django check erfolgreich."
+    ok "Django check passed."
 }
 
-# ── Migrationen ────────────────────────────────────────────────
+# ── Migrations ─────────────────────────────────────────────────
 migrate() {
-    step "── Datenbank migrieren ─────────────────────────────────"
+    step "── Migrating database ──────────────────────────────────"
 
-    # Erst prüfen ob überhaupt Migrationen ausstehen
     if $MANAGE migrate --check >> "$LOG" 2>&1; then
-        ok "Keine ausstehenden Migrationen."
+        ok "No pending migrations."
         return
     fi
 
-    info "Führe Migrationen durch..."
+    info "Running migrations..."
     if ! $MANAGE migrate --run-syncdb -v 0 >> "$LOG" 2>&1; then
-        err "Migrationen fehlgeschlagen."
-        rollback "migrate fehlgeschlagen"
+        err "Migration failed."
+        rollback "migrate failed"
     fi
     _DB_MIGRATED=1
-    ok "Migrationen erfolgreich."
+    ok "Migrations successful."
 }
 
-# ── Statische Dateien ──────────────────────────────────────────
+# ── Static files ───────────────────────────────────────────────
 collectstatic() {
-    step "── Statische Dateien sammeln ───────────────────────────"
+    step "── Collecting static files ─────────────────────────────"
 
     if ! $MANAGE collectstatic --noinput -v 0 >> "$LOG" 2>&1; then
-        err "collectstatic fehlgeschlagen."
-        rollback "collectstatic fehlgeschlagen"
+        err "collectstatic failed."
+        rollback "collectstatic failed"
     fi
-    ok "Statische Dateien aktualisiert."
+    ok "Static files updated."
 }
 
-# ── Service neustarten ─────────────────────────────────────────
+# ── Restart service ────────────────────────────────────────────
 restart_service() {
-    step "── Service neustarten ──────────────────────────────────"
+    step "── Restarting service ──────────────────────────────────"
 
-    info "Starte $SERVICE neu..."
+    info "Restarting $SERVICE..."
     systemctl --user restart "$SERVICE"
     sleep 2
 
     if systemctl --user is-active --quiet "$SERVICE"; then
-        ok "Service läuft."
+        ok "Service is running."
     else
-        err "Service hat sich nicht gestartet!"
-        rollback "Service-Start fehlgeschlagen"
+        err "Service failed to start!"
+        rollback "Service start failed"
     fi
 }
 
-# ── Zusammenfassung ────────────────────────────────────────────
+# ── Summary ────────────────────────────────────────────────────
 summary() {
-    local new_versions
-    new_versions=$("$PIP" freeze 2>/dev/null | head -20 || true)
-
     echo ""
     echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}${BOLD}║           Update erfolgreich! ✓              ║${NC}"
+    echo -e "${GREEN}${BOLD}║           Update successful! ✓               ║${NC}"
     echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "  Log:      ${CYAN}$LOG${NC}"
-    echo -e "  DB-Backup: ${CYAN}$BACKUP_DIR/db.sqlite3.bak${NC}"
+    echo -e "  Log:       ${CYAN}$LOG${NC}"
+    echo -e "  DB backup: ${CYAN}$BACKUP_DIR/db.sqlite3.bak${NC}"
     echo ""
 }
 
-# ── Hauptprogramm ──────────────────────────────────────────────
+# ── Main ───────────────────────────────────────────────────────
 mkdir -p "$BACKUP_DIR"
 echo "=== Update $(date) ===" >> "$LOG"
 

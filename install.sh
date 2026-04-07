@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Podman Kube Generator — Installations-Script
+# Podman Kube Generator — Installation Script
 # =============================================================================
 set -e
 
@@ -9,7 +9,7 @@ APP_NAME="podman-kube-gen"
 SERVICE_NAME="${APP_NAME}.service"
 MIN_PYTHON="3.10"
 
-# ── Farben ────────────────────────────────────────────────────────
+# ── Colors ────────────────────────────────────────────────────────
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 ok()   { echo -e "${GREEN}  ✓${NC} $*"; }
 info() { echo -e "${CYAN}  →${NC} $*"; }
@@ -22,8 +22,8 @@ echo -e "${CYAN}║     Podman Kube Generator — Installation     ║${NC}"
 echo -e "${CYAN}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 
-# ── Python-Version prüfen ─────────────────────────────────────────
-info "Prüfe Python-Version..."
+# ── Python version check ──────────────────────────────────────────
+info "Checking Python version..."
 PYTHON_BIN=""
 for candidate in python3.13 python3.12 python3.11 python3.10 python3; do
     if command -v "$candidate" &>/dev/null; then
@@ -36,17 +36,17 @@ for candidate in python3.13 python3.12 python3.11 python3.10 python3; do
     fi
 done
 if [[ -z "$PYTHON_BIN" ]]; then
-    err "Python ${MIN_PYTHON}+ nicht gefunden. Bitte installieren und erneut ausführen."
+    err "Python ${MIN_PYTHON}+ not found. Please install it and try again."
     exit 1
 fi
-ok "Python $($PYTHON_BIN --version) gefunden ($PYTHON_BIN)"
+ok "Python $($PYTHON_BIN --version) found ($PYTHON_BIN)"
 
-# ── venv erstellen / aktualisieren ────────────────────────────────
+# ── Create / update venv ──────────────────────────────────────────
 VENV_DIR="${INSTALL_DIR}/venv"
 if [[ -d "$VENV_DIR" ]]; then
-    info "Vorhandenes venv wird aktualisiert..."
+    info "Updating existing venv..."
 else
-    info "Erstelle Python venv..."
+    info "Creating Python venv..."
     "$PYTHON_BIN" -m venv "$VENV_DIR"
 fi
 ok "venv: ${VENV_DIR}"
@@ -55,24 +55,23 @@ PIP="${VENV_DIR}/bin/pip"
 PYTHON="${VENV_DIR}/bin/python"
 MANAGE="${VENV_DIR}/bin/python ${INSTALL_DIR}/manage.py"
 
-info "Installiere Abhängigkeiten..."
+info "Installing dependencies..."
 "$PIP" install -q --upgrade pip
 "$PIP" install -q -r "${INSTALL_DIR}/requirements.txt"
-ok "Abhängigkeiten installiert"
+ok "Dependencies installed"
 
-# ── .env einrichten ───────────────────────────────────────────────
+# ── .env setup ───────────────────────────────────────────────────
 ENV_FILE="${INSTALL_DIR}/.env"
 if [[ ! -f "$ENV_FILE" ]]; then
-    info "Erstelle .env..."
+    info "Creating .env..."
     SECRET_KEY=$("$PYTHON" -c "import secrets; print(secrets.token_urlsafe(50))")
 
     echo ""
-    echo -e "${YELLOW}Konfiguration:${NC}"
-    read -rp "  Domain/URL der App (z.B. https://podman.example.com): " SITE_URL_INPUT
+    echo -e "${YELLOW}Configuration:${NC}"
+    read -rp "  App domain/URL (e.g. https://podman.example.com): " SITE_URL_INPUT
     SITE_URL_INPUT="${SITE_URL_INPUT:-http://localhost:8000}"
-    SITE_URL_INPUT="${SITE_URL_INPUT%/}"  # trailing slash entfernen
+    SITE_URL_INPUT="${SITE_URL_INPUT%/}"
 
-    # ALLOWED_HOSTS aus URL ableiten
     HOST=$(echo "$SITE_URL_INPUT" | sed 's|https\?://||' | sed 's|/.*||' | sed 's|:.*||')
     ALLOWED_HOSTS="localhost,127.0.0.1,${HOST}"
 
@@ -81,47 +80,48 @@ DJANGO_SECRET_KEY=${SECRET_KEY}
 DJANGO_DEBUG=False
 DJANGO_ALLOWED_HOSTS=${ALLOWED_HOSTS}
 SITE_URL=${SITE_URL_INPUT}
+CSRF_TRUSTED_ORIGINS=${SITE_URL_INPUT}
 EOF
-    ok ".env erstellt (SECRET_KEY generiert)"
+    ok ".env created (SECRET_KEY generated)"
 else
-    warn ".env bereits vorhanden — wird nicht überschrieben"
+    warn ".env already exists — skipping"
 fi
 
-# ── Datenbank & statische Dateien ─────────────────────────────────
+# ── Database & static files ───────────────────────────────────────
 cd "$INSTALL_DIR"
 
-info "Führe Migrationen durch..."
+info "Running migrations..."
 $MANAGE migrate --run-syncdb -v 0
-ok "Datenbank migriert"
+ok "Database migrated"
 
-info "Importiere Stacks..."
+info "Importing stacks..."
 $MANAGE load_stacks
-ok "Stacks importiert"
+ok "Stacks imported"
 
-info "Sammle statische Dateien..."
+info "Collecting static files..."
 $MANAGE collectstatic --noinput -v 0
-ok "Statische Dateien gesammelt"
+ok "Static files collected"
 
-# ── Standard-Admin anlegen (admin/admin) ──────────────────────────
+# ── Create default admin (admin/admin) ───────────────────────────
 $MANAGE shell -c "
 from django.contrib.auth.models import User
 if not User.objects.filter(username='admin').exists():
     User.objects.create_superuser('admin', 'admin@localhost', 'admin')
-    print('  Superuser admin/admin angelegt')
+    print('  Superuser admin/admin created')
 else:
-    print('  admin existiert bereits')
+    print('  admin already exists')
 "
-warn "Standard-Login: admin / admin — bitte im Admin-Bereich ändern!"
+warn "Default login: admin / admin — please change this in the admin panel!"
 
-# ── Systemd User-Service einrichten ──────────────────────────────
+# ── Systemd user service ──────────────────────────────────────────
 echo ""
-read -rp "Systemd User-Service einrichten? (autostart beim Login) [J/n]: " SETUP_SYSTEMD
-SETUP_SYSTEMD="${SETUP_SYSTEMD:-J}"
+read -rp "Set up systemd user service (autostart on login)? [Y/n]: " SETUP_SYSTEMD
+SETUP_SYSTEMD="${SETUP_SYSTEMD:-Y}"
 
-if [[ "${SETUP_SYSTEMD,,}" == "j" || "${SETUP_SYSTEMD,,}" == "y" ]]; then
-    read -rp "  Port für Gunicorn [8000]: " GUNICORN_PORT
+if [[ "${SETUP_SYSTEMD,,}" == "y" || "${SETUP_SYSTEMD,,}" == "j" ]]; then
+    read -rp "  Gunicorn port [8000]: " GUNICORN_PORT
     GUNICORN_PORT="${GUNICORN_PORT:-8000}"
-    read -rp "  Anzahl Gunicorn Worker [2]: " GUNICORN_WORKERS
+    read -rp "  Gunicorn workers [2]: " GUNICORN_WORKERS
     GUNICORN_WORKERS="${GUNICORN_WORKERS:-2}"
 
     SYSTEMD_DIR="${HOME}/.config/systemd/user"
@@ -154,36 +154,35 @@ EOF
 
     sleep 1
     if systemctl --user is-active --quiet "${SERVICE_NAME}"; then
-        ok "Service läuft auf 127.0.0.1:${GUNICORN_PORT}"
+        ok "Service running on 127.0.0.1:${GUNICORN_PORT}"
     else
-        warn "Service gestartet — Status prüfen mit: systemctl --user status ${SERVICE_NAME}"
+        warn "Service started — check status with: systemctl --user status ${SERVICE_NAME}"
     fi
 
-    # Linger aktivieren (Service überlebt Logout)
     if command -v loginctl &>/dev/null; then
-        loginctl enable-linger "$(whoami)" 2>/dev/null && ok "loginctl enable-linger aktiviert (autostart ohne Login)"
+        loginctl enable-linger "$(whoami)" 2>/dev/null && ok "loginctl enable-linger enabled (autostart without login)"
     fi
 fi
 
-# ── Zusammenfassung ───────────────────────────────────────────────
+# ── Summary ───────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║           Installation abgeschlossen!        ║${NC}"
+echo -e "${GREEN}║          Installation complete!              ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "  App-Verzeichnis:  ${CYAN}${INSTALL_DIR}${NC}"
-if [[ "${SETUP_SYSTEMD,,}" == "j" || "${SETUP_SYSTEMD,,}" == "y" ]]; then
-echo -e "  Service:          ${CYAN}systemctl --user status ${SERVICE_NAME}${NC}"
-echo -e "  Logs:             ${CYAN}journalctl --user -u ${SERVICE_NAME} -f${NC}"
-echo -e "  Neustart:         ${CYAN}systemctl --user restart ${SERVICE_NAME}${NC}"
+echo -e "  App directory:  ${CYAN}${INSTALL_DIR}${NC}"
+if [[ "${SETUP_SYSTEMD,,}" == "y" || "${SETUP_SYSTEMD,,}" == "j" ]]; then
+echo -e "  Service:        ${CYAN}systemctl --user status ${SERVICE_NAME}${NC}"
+echo -e "  Logs:           ${CYAN}journalctl --user -u ${SERVICE_NAME} -f${NC}"
+echo -e "  Restart:        ${CYAN}systemctl --user restart ${SERVICE_NAME}${NC}"
 else
-echo -e "  Starten:          ${CYAN}cd ${INSTALL_DIR} && ./start.sh${NC}"
+echo -e "  Start:          ${CYAN}cd ${INSTALL_DIR} && ./start.sh${NC}"
 fi
 echo ""
-echo -e "  Admin:            ${CYAN}http://localhost:${GUNICORN_PORT:-8000}/admin/${NC}"
+echo -e "  Admin:          ${CYAN}http://localhost:${GUNICORN_PORT:-8000}/admin/${NC}"
 echo ""
-if [[ "${SETUP_SYSTEMD,,}" == "j" || "${SETUP_SYSTEMD,,}" == "y" ]]; then
-echo -e "${YELLOW}  Nginx Reverse-Proxy Beispiel:${NC}"
+if [[ "${SETUP_SYSTEMD,,}" == "y" || "${SETUP_SYSTEMD,,}" == "j" ]]; then
+echo -e "${YELLOW}  Nginx reverse proxy example:${NC}"
 echo -e "  location / {"
 echo -e "      proxy_pass http://127.0.0.1:${GUNICORN_PORT};"
 echo -e "      proxy_set_header Host \$host;"
