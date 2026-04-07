@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
+VERSION = (BASE_DIR / 'VERSION').read_text().strip()
+
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-change-me-in-production')
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
@@ -62,6 +64,7 @@ TEMPLATES = [
                 'generator.context_processors.site',
                 'generator.context_processors.hiro_messages',
                 'generator.context_processors.legal',
+                'generator.context_processors.app_version',
                 'generator.context_processors.footer_links',
                 'generator.context_processors.nav_user',
             ],

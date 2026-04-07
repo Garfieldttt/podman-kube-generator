@@ -20,6 +20,10 @@ def site_url(request):
     return {'site_url': getattr(settings, 'SITE_URL', 'http://localhost:8000')}
 
 
+def app_version(request):
+    return {'app_version': getattr(settings, 'VERSION', '')}
+
+
 def seo(request):
     return {'seo': SeoSettings.get_solo()}
 
