@@ -42,7 +42,7 @@
       </div>
     </div>
     <div class="col-md-2">
-      <label>{{ form.pull_policy.label }}</label>
+      <label>{{ form.pull_policy.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Always: pull on every start. IfNotPresent: only if not cached locally. Never: never pull from registry."></i></label>
       {{ form.pull_policy }}
     </div>
 
@@ -62,11 +62,11 @@
 
     <!-- Command + Args + Working Dir -->
     <div class="col-md-4">
-      <label>{{ form.command.label }}</label>
+      <label>{{ form.command.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Overrides the image ENTRYPOINT. Leave empty for most images — use Args instead."></i></label>
       {{ form.command }}
     </div>
     <div class="col-md-4">
-      <label>{{ form.args.label }}</label>
+      <label>{{ form.args.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Overrides the image CMD. Use this to pass arguments to the container (e.g. --config=/etc/app.yml)."></i></label>
       {{ form.args }}
     </div>
     <div class="col-md-4">
@@ -115,25 +115,25 @@
         <div class="col-md-3 d-flex align-items-end gap-3 pb-1">
           <div class="form-check">
             {{ form.read_only_root }}
-            <label class="form-check-label small">{{ form.read_only_root.label }}</label>
+            <label class="form-check-label small">{{ form.read_only_root.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Prevents writes to the container filesystem — more secure. Requires writable volumes for any persistent data."></i></label>
           </div>
           <div class="form-check">
             {{ form.privileged }}
-            <label class="form-check-label small">{{ form.privileged.label }}</label>
+            <label class="form-check-label small">{{ form.privileged.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Grants full host access — major security risk. Avoid unless absolutely necessary. Use cap_add for fine-grained permissions instead."></i></label>
           </div>
         </div>
         <div class="col-md-3"></div>
         <div class="col-md-6">
-          <label>{{ form.cap_add.label }}</label>
+          <label>{{ form.cap_add.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Add specific Linux capabilities (e.g. NET_ADMIN, SYS_TIME). Prefer this over privileged for fine-grained access control."></i></label>
           {{ form.cap_add }}
         </div>
         <div class="col-md-6">
-          <label>{{ form.cap_drop.label }}</label>
+          <label>{{ form.cap_drop.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Drop Linux capabilities to harden the container (e.g. NET_RAW, MKNOD). Drop ALL and add back only what you need."></i></label>
           {{ form.cap_drop }}
         </div>
 
         <!-- Liveness Probe -->
-        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">LIVENESS PROBE (exec)</span></div>
+        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">LIVENESS PROBE (exec) <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Podman periodically runs this command inside the container. If it fails, the container is restarted. Leave empty to disable."></i></span></div>
         <div class="col-md-6">
           <label>{{ form.liveness_probe_cmd.label }}</label>
           {{ form.liveness_probe_cmd }}

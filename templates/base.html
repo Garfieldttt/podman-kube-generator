@@ -669,6 +669,15 @@
 <script src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'vendor/htmx.min.js' %}"></script>
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const initTooltips = (root) => {
+    root.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+      new bootstrap.Tooltip(el, {trigger: 'hover focus', html: false});
+    });
+  };
+  initTooltips(document);
+  document.body.addEventListener('htmx:afterSettle', e => initTooltips(e.detail.elt));
+});
 function copyToClipboard(btn, targetId) {
   const text = document.getElementById(targetId).textContent;
   function flash() {

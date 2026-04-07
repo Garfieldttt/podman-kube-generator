@@ -207,11 +207,11 @@
               {{ pod_form.pod_name }}
             </div>
             <div class="col-md-4">
-              <label>{{ pod_form.restart_policy.label }}</label>
+              <label>{{ pod_form.restart_policy.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Always: restart on any exit. OnFailure: restart only on non-zero exit. Never: do not restart automatically."></i></label>
               {{ pod_form.restart_policy }}
             </div>
             <div class="col-md-4">
-              <label>{{ pod_form.mode.label }}</label>
+              <label>{{ pod_form.mode.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="kube: generates YAML for 'podman play kube' (run as systemd service). quadlet: generates .container/.pod files managed directly by systemd."></i></label>
               {{ pod_form.mode }}
               <div class="form-text text-secondary small">Affects the deployment guide</div>
             </div>
@@ -228,7 +228,7 @@
                   {{ pod_form.hostname }}
                 </div>
                 <div class="col-md-4">
-                  <label>{{ pod_form.userns.label }}</label>
+                  <label>{{ pod_form.userns.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="keep-id: maps your host UID into the container — useful for volume permissions in rootless Podman."></i></label>
                   {{ pod_form.userns }}
                 </div>
                 <div class="col-md-4">
@@ -246,15 +246,15 @@
                 <div class="col-md-6 d-flex flex-column justify-content-end gap-2 pb-1">
                   <div class="form-check">
                     {{ pod_form.host_network }}
-                    <label class="form-check-label">{{ pod_form.host_network.label }}</label>
+                    <label class="form-check-label">{{ pod_form.host_network.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container shares the host network stack — no port mapping needed, but less isolated."></i></label>
                   </div>
                   <div class="form-check">
                     {{ pod_form.host_pid }}
-                    <label class="form-check-label">{{ pod_form.host_pid.label }}</label>
+                    <label class="form-check-label">{{ pod_form.host_pid.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container can see all host processes — use with caution, reduces isolation."></i></label>
                   </div>
                   <div class="form-check">
                     {{ pod_form.host_ipc }}
-                    <label class="form-check-label">{{ pod_form.host_ipc.label }}</label>
+                    <label class="form-check-label">{{ pod_form.host_ipc.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container shares the host IPC namespace (shared memory) — use with caution."></i></label>
                   </div>
                 </div>
               </div>
