@@ -71,7 +71,9 @@ systemctl --user restart podman-kube-gen.service
 journalctl --user -u podman-kube-gen.service -f
 ```
 
-## Nginx Reverse Proxy
+## Nginx Reverse Proxy (optional)
+
+Only needed if you want HTTPS or a custom domain. The app runs directly on port 9500 without it.
 
 ```nginx
 server {
