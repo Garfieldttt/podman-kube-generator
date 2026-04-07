@@ -3,11 +3,11 @@
 Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quadlet** configs.
 
 **Hosted Instance:** https://podman-generator.rzen.at/
+<img width="2883" height="1393" alt="podman-kube-builder" src="https://github.com/user-attachments/assets/c1b6556b-4f7d-4a9b-bde5-224f584164d6" />
+<img width="2883" height="1393" alt="podman-kube-builder-env" src="https://github.com/user-attachments/assets/c99d598a-d089-46de-aaa1-6ff30809e64b" />
+<img width="2883" height="1393" alt="podman-kube-generator" src="https://github.com/user-attachments/assets/a276e55e-3b9f-4d4a-979c-b47d4224f1c5" />
+<img width="2883" height="1393" alt="podman-kube-generator2" src="https://github.com/user-attachments/assets/4575e00a-5237-45d6-8ca0-af4067b003ef" />
 
-![Builder](screenshots/podman-kube-builder.png)
-![Generator](screenshots/podman-kube-generator2.png)
-![Builder ENV](screenshots/podman-kube-builder-env.png)
-![Generator](screenshots/podman-kube-generator.png)
 
 ## Features
 
