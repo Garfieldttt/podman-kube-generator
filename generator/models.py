@@ -164,8 +164,6 @@ class SiteSettings(models.Model):
     home_intro = models.TextField(default='Configure your pod — get ready-to-use Kubernetes YAML for podman play kube.', verbose_name='Homepage intro text')
 
     # Footer
-    footer_author = models.CharField(max_length=100, default='Thomas Rzen', blank=True, verbose_name='Footer: Author name')
-    footer_author_url = models.URLField(default='https://github.com/Garfieldttt', blank=True, verbose_name='Footer: Author URL')
     donation_url = models.URLField(blank=True, default='', verbose_name='Donation URL (empty = hide)')
 
     # Features
