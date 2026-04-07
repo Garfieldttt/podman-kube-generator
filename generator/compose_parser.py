@@ -259,9 +259,7 @@ def parse_docker_run(command: str) -> tuple:
         if tok in ('--detach', '-d', '--rm', '--tty', '-t', '--interactive', '-i',
                    '--sig-proxy', '--no-healthcheck', '--init',
                    '--oom-kill-disable', '--disable-content-trust'):
-            # value form --sig-proxy=false counts as boolean too
-            if val is None:
-                i += 1
+            i += 1
             continue
 
         # Flags that require a value
