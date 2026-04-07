@@ -8,7 +8,7 @@
 
   <meta name="description" content="{% block meta_description %}{{ seo.home_description }}{% endblock %}">
   {% if seo.keywords %}<meta name="keywords" content="{{ seo.keywords }}">{% endif %}
-  <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+  <meta name="robots" content="{% block meta_robots %}noindex, nofollow{% endblock %}">
   {% block meta_canonical %}<link rel="canonical" href="{{ site_url }}{% block canonical_path %}/{% endblock %}">{% endblock %}
   {% if seo.google_site_verification %}<meta name="google-site-verification" content="{{ seo.google_site_verification }}">{% endif %}
 

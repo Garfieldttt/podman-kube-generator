@@ -56,7 +56,7 @@ class SeoSettings(models.Model):
     google_site_verification = models.CharField(max_length=200, blank=True, verbose_name='Google Site Verification', help_text='Content of the content attribute in the meta tag')
     robots_txt = models.TextField(
         verbose_name='robots.txt content',
-        default='User-agent: *\nAllow: /\nDisallow: /admin/\n\nSitemap: /sitemap.xml',
+        default='User-agent: *\nDisallow: /\n',
         help_text='Served directly as /robots.txt. {site_url} is replaced with the site URL.',
     )
 
