@@ -21,6 +21,8 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 - Analytics dashboard
 - Multi-language (DE / EN)
 
+> **Note:** This tool generates configuration files only. Pulling container images from Docker Hub may be subject to [Docker's subscription requirements](https://www.docker.com/pricing/) for commercial use.
+
 ## Requirements
 
 - Python 3.10+
