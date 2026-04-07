@@ -203,7 +203,7 @@ class CookieBannerSettings(models.Model):
         ('modal', 'Center (Modal)'),
     ]
 
-    enabled = models.BooleanField(default=True, verbose_name='Banner enabled')
+    enabled = models.BooleanField(default=False, verbose_name='Banner enabled')
     position = models.CharField(max_length=10, choices=POSITION_CHOICES, default='bottom', verbose_name='Position')
     title = models.CharField(max_length=200, default='Cookies & Privacy', verbose_name='Title')
     text = models.TextField(
