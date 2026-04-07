@@ -102,16 +102,34 @@ info "Collecting static files..."
 $MANAGE collectstatic --noinput -v 0
 ok "Static files collected"
 
-# ── Create default admin (admin/admin) ───────────────────────────
+# ── Create admin account ──────────────────────────────────────────
+echo ""
+echo -e "${YELLOW}Admin account:${NC}"
+read -rp "  Admin username [admin]: " ADMIN_USER
+ADMIN_USER="${ADMIN_USER:-admin}"
+read -rp "  Admin email [admin@localhost]: " ADMIN_EMAIL
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@localhost}"
+read -rsp "  Admin password: " ADMIN_PASS
+echo ""
+read -rsp "  Confirm password: " ADMIN_PASS2
+echo ""
+if [[ "$ADMIN_PASS" != "$ADMIN_PASS2" ]]; then
+    err "Passwords do not match."
+    exit 1
+fi
+if [[ ${#ADMIN_PASS} -lt 8 ]]; then
+    warn "Password is shorter than 8 characters — consider using a stronger password."
+fi
+
 $MANAGE shell -c "
 from django.contrib.auth.models import User
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@localhost', 'admin')
-    print('  Superuser admin/admin created')
+if not User.objects.filter(username='${ADMIN_USER}').exists():
+    User.objects.create_superuser('${ADMIN_USER}', '${ADMIN_EMAIL}', '${ADMIN_PASS}')
+    print('  Superuser ${ADMIN_USER} created')
 else:
-    print('  admin already exists')
+    print('  User ${ADMIN_USER} already exists')
 "
-warn "Default login: admin / admin — please change this in the admin panel!"
+ok "Admin account created: ${ADMIN_USER}"
 
 # ── Systemd user service ──────────────────────────────────────────
 echo ""

@@ -4,6 +4,8 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 
 **Hosted Instance:** https://podman-generator.rzen.at/
 
+![Screenshot](screenshot.png)
+
 ## Features
 
 - Generate Kubernetes YAML for `podman play kube`
@@ -34,9 +36,10 @@ bash install.sh
 - `.env` setup with generated secret key
 - Database migration
 - Stack import
+- Admin account creation (username + password prompted)
 - systemd user service setup (optional)
 
-> **Warning:** A default admin account (`admin` / `admin`) is created automatically. Log in at `/admin/` and change the password immediately after installation.
+> **Note:** For the systemd user service to survive logout, `loginctl enable-linger <user>` must be enabled. `install.sh` does this automatically.
 
 ## Configuration
 
@@ -72,6 +75,8 @@ systemctl --user status podman-kube-gen.service
 systemctl --user restart podman-kube-gen.service
 journalctl --user -u podman-kube-gen.service -f
 ```
+
+> For these commands to work after logout, `loginctl enable-linger` must be active (set automatically by `install.sh`).
 
 ## Nginx Reverse Proxy (optional)
 
