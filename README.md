@@ -19,7 +19,6 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 - Docker Hub image & tag search with vulnerability info
 - User accounts with TOTP 2FA
 - Analytics dashboard
-- Multi-language (DE / EN)
 
 > **Note:** This tool generates configuration files only. Pulling container images from Docker Hub may be subject to [Docker's subscription requirements](https://www.docker.com/pricing/) for commercial use.
 
