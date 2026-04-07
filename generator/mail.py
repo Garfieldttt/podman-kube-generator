@@ -1,6 +1,7 @@
 """Zentrales E-Mail-Modul: liest SMTP-Config aus EmailSettings (DB)."""
 import threading
 from django.core.mail import get_connection, EmailMultiAlternatives
+from django.conf import settings as django_settings
 
 
 def _get_cfg():
@@ -60,7 +61,7 @@ def _wrap_html(title, content_html, action_url=None, action_label=None):
                     <div style="color:#f9fafb;font-size:16px;font-weight:700;letter-spacing:.02em;">
                       Podman Kube Generator
                     </div>
-                    <div style="color:#5eead4;font-size:12px;margin-top:2px;">${django_settings.SITE_URL.replace("https://", "").replace("http://", "")}</div>
+                    <div style="color:#5eead4;font-size:12px;margin-top:2px;">{django_settings.SITE_URL.replace("https://", "").replace("http://", "")}</div>
                   </td>
                 </tr>
               </table>
@@ -84,7 +85,7 @@ def _wrap_html(title, content_html, action_url=None, action_label=None):
                         border-radius:0 0 10px 10px;padding:20px 36px;text-align:center;">
               <p style="margin:0;color:#475569;font-size:12px;line-height:1.6;">
                 This email was sent automatically by
-                <a href="https://${django_settings.SITE_URL.replace("https://", "").replace("http://", "")}" style="color:#14b8a6;text-decoration:none;">
+                <a href="{django_settings.SITE_URL}" style="color:#14b8a6;text-decoration:none;">
                   Podman Kube Generator
                 </a>.<br>
                 If you did not expect this email, you can ignore it.
