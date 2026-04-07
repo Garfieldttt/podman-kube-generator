@@ -2,7 +2,7 @@
 
 Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quadlet** configs.
 
-**Live Demo:** https://podman-generator.rzen.at/
+**Hosted Instance:** https://podman-generator.rzen.at/
 
 ## Features
 
