@@ -793,6 +793,9 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         <button class="btn btn-sm btn-outline-info" onclick="openComposeImport()" title="Import docker-compose.yml">
           <i class="bi bi-file-code me-1"></i>Import Docker Compose
         </button>
+        <button class="btn btn-sm btn-outline-info" onclick="openDockerRunImport()" title="Import docker run command">
+          <i class="bi bi-terminal me-1"></i>Import docker run
+        </button>
         <button class="btn btn-sm btn-outline-danger" onclick="clearCanvas()" title="Clear pod builder">
           <i class="bi bi-trash"></i>
         </button>
@@ -1033,6 +1036,35 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
     </div>
   </div>
 </div>
+
+{# ══ docker run Import Modal ═════════════════════════════════════ #}
+<div class="modal fade" id="dockerrun-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title"><i class="bi bi-terminal me-2"></i>Import docker run command</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-2">Paste a <code>docker run</code> or <code>podman run</code> command. Backslash line continuations and <code>sudo</code> prefix are handled automatically.</p>
+        <textarea id="dockerrun-import-ta" class="cv-ctrl" rows="10"
+          style="font-family:monospace;font-size:.78rem;resize:vertical;width:100%;"
+          placeholder="sudo docker run \&#10;  --name myapp \&#10;  --publish 8080:80 \&#10;  --volume mydata:/data \&#10;  --env KEY=value \&#10;  nginx:alpine"></textarea>
+        <div id="dockerrun-import-err" style="display:none;margin-top:.5rem;" class="text-danger small"></div>
+        <p class="text-muted" style="font-size:.68rem;margin-top:.4rem;margin-bottom:0;">
+          <i class="bi bi-clock me-1"></i>Rate-limited: 1 import per 2 minutes.
+        </p>
+      </div>
+      <div class="modal-footer" style="border-color:var(--border);">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="doDockerRunImport()">
+          <i class="bi bi-box-arrow-in-down me-1"></i>Import
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {# ══ Paste .env Modal ════════════════════════════════════════════ #}
 <div class="modal fade" id="env-paste-modal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-md">
@@ -3444,6 +3476,74 @@ function showToast(msg, type) {
   el.className = 'toast align-items-center border-0 text-bg-' + (type || 'secondary');
   body.textContent = msg;
   bootstrap.Toast.getOrCreateInstance(el, { delay: 5000 }).show();
+}
+
+// ══ docker run Import ════════════════════════════════════════════
+let _dockerRunModalInst = null;
+
+function openDockerRunImport() {
+  if (!_dockerRunModalInst)
+    _dockerRunModalInst = new bootstrap.Modal(document.getElementById('dockerrun-modal'));
+  document.getElementById('dockerrun-import-ta').value = '';
+  document.getElementById('dockerrun-import-err').style.display = 'none';
+  _dockerRunModalInst.show();
+}
+
+function doDockerRunImport() {
+  const text = document.getElementById('dockerrun-import-ta').value.trim();
+  const errEl = document.getElementById('dockerrun-import-err');
+  errEl.style.display = 'none';
+  if (!text) { errEl.textContent = 'Please paste a docker run command.'; errEl.style.display = ''; return; }
+
+  fetch('{% url "builder_compose_import" %}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf()},
+    body: JSON.stringify({compose: text}),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) { errEl.textContent = data.error; errEl.style.display = ''; return; }
+    pushUndo();
+    state.containers = data.containers.map(c => mkC({
+      ...c,
+      ports:   parsePorts(c.ports),
+      volumes: parseVols(c.volumes),
+      env:     parseEnv(c.env),
+    }));
+    state.connections = [];
+    if (data.restart_policy) {
+      state.restart_policy = data.restart_policy;
+      const rs = document.getElementById('cv-restart');
+      if (rs) rs.value = data.restart_policy;
+    }
+    if (data.host_network) {
+      state.host_network = true;
+      const hn = document.getElementById('cv-host-network');
+      if (hn) { hn.checked = true; }
+      updateNetworkState();
+    }
+    if (data.mode) {
+      const md = document.getElementById('cv-mode');
+      if (md) { md.value = data.mode; state.mode = data.mode; }
+    }
+    autoExpandNetworkIfNeeded();
+    updateNetworkState();
+    syncDbCredentials();
+    renderAll();
+    scanForTips();
+    _dockerRunModalInst.hide();
+    if (data.warnings && data.warnings.length) {
+      _pendingImportFixes = data.warnings;
+      const body = document.getElementById('warnings-modal-body');
+      body.innerHTML = data.warnings.map(w => `
+        <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded" style="background:rgba(245,158,11,.08)">
+          <i class="bi bi-exclamation-triangle-fill text-warning mt-1 flex-shrink-0"></i>
+          <span style="font-size:.85rem;flex:1">${esc(w.msg)}</span>
+        </div>`).join('');
+      new bootstrap.Modal(document.getElementById('warnings-modal')).show();
+    }
+  })
+  .catch(() => { errEl.textContent = 'Import failed — network error.'; errEl.style.display = ''; });
 }
 
 // ══ Compose Import ═══════════════════════════════════════════════
