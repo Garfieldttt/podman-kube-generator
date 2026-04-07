@@ -31,7 +31,8 @@ class ImpressumSettings(models.Model):
     email = models.EmailField(blank=True, verbose_name='Email')
     telefon = models.CharField(max_length=50, blank=True, verbose_name='Phone')
     website = models.URLField(blank=True, verbose_name='Website')
-    zusatz = models.TextField(blank=True, verbose_name='Additional info (liability, copyright etc.)')
+    zusatz = models.TextField(blank=True, verbose_name='Additional info / Imprint (liability, copyright etc.)')
+    datenschutz_text = models.TextField(blank=True, verbose_name='Privacy Policy text')
     letzte_aenderung = models.DateTimeField(auto_now=True)
 
     class Meta:

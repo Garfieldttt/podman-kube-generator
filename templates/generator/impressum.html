@@ -10,7 +10,14 @@
       <h1 class="h3 mb-0">Imprint</h1>
     </div>
     <div class="card mb-4">
-      <div class="card-body" style="white-space:pre-line;">{{ imp.zusatz }}</div>
+      <div class="card-body">
+        {% if imp.name %}<p class="mb-1"><strong>{{ imp.name }}</strong></p>{% endif %}
+        {% if imp.adresse %}<p class="mb-1" style="white-space:pre-line;">{{ imp.adresse }}</p>{% endif %}
+        {% if imp.email %}<p class="mb-1">Email: <a href="mailto:{{ imp.email }}">{{ imp.email }}</a></p>{% endif %}
+        {% if imp.telefon %}<p class="mb-1">Phone: {{ imp.telefon }}</p>{% endif %}
+        {% if imp.website %}<p class="mb-1">Website: <a href="{{ imp.website }}" target="_blank" rel="noopener">{{ imp.website }}</a></p>{% endif %}
+        {% if imp.zusatz %}<hr><div style="white-space:pre-line;">{{ imp.zusatz }}</div>{% endif %}
+      </div>
     </div>
   </div>
 </div>
