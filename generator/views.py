@@ -3,7 +3,7 @@ import re
 import secrets
 import signal
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate, login, logout
@@ -1047,15 +1047,19 @@ def stack_detail(request, key):
 
 
 def impressum(request):
-    return render(request, 'generator/impressum.html', {
-        'imp': ImpressumSettings.get_solo(),
-    })
+    imp = ImpressumSettings.get_solo()
+    if not imp.impressum_enabled:
+        raise Http404
+    return render(request, 'generator/impressum.html', {'imp': imp})
 
 
 def datenschutz(request):
     from .models import AnalyticsSettings, CookieBannerSettings
+    imp = ImpressumSettings.get_solo()
+    if not imp.privacy_enabled:
+        raise Http404
     return render(request, 'generator/datenschutz.html', {
-        'imp': ImpressumSettings.get_solo(),
+        'imp': imp,
         'retention_days': AnalyticsSettings.get_solo().retention_days,
         'cookie_banner': CookieBannerSettings.get_solo(),
     })

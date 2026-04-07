@@ -60,6 +60,7 @@ TEMPLATES = [
                 'generator.context_processors.cookie_banner',
                 'generator.context_processors.site',
                 'generator.context_processors.hiro_messages',
+                'generator.context_processors.legal',
                 'generator.context_processors.footer_links',
                 'generator.context_processors.nav_user',
             ],

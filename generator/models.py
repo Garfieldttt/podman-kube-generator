@@ -24,6 +24,8 @@ class StackTemplate(models.Model):
 
 
 class ImpressumSettings(models.Model):
+    impressum_enabled = models.BooleanField(default=False, verbose_name='Show Imprint page')
+    privacy_enabled = models.BooleanField(default=False, verbose_name='Show Privacy Policy page')
     name = models.CharField(max_length=200, verbose_name='Name / Company', default='')
     adresse = models.TextField(blank=True, verbose_name='Address')
     email = models.EmailField(blank=True, verbose_name='Email')

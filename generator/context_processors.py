@@ -1,6 +1,6 @@
 import json
 from django.conf import settings
-from .models import SeoSettings, CookieBannerSettings, SiteSettings, HiroMessage, FooterLink
+from .models import SeoSettings, CookieBannerSettings, SiteSettings, HiroMessage, FooterLink, ImpressumSettings
 
 
 def nav_user(request):
@@ -48,6 +48,14 @@ def hiro_messages(request):
 
 def footer_links(request):
     return {'footer_links': FooterLink.objects.filter(is_active=True)}
+
+
+def legal(request):
+    imp = ImpressumSettings.get_solo()
+    return {
+        'legal_impressum_enabled': imp.impressum_enabled,
+        'legal_privacy_enabled': imp.privacy_enabled,
+    }
 
 
 def cookie_banner(request):

@@ -655,9 +655,9 @@
     <div class="mt-2" style="font-size:.78rem; color: var(--text-muted);">
       <span>Made by <a href="{{ site.footer_author_url }}" target="_blank" rel="noopener" style="color:var(--text-muted);">{{ site.footer_author }}</a></span>
       <span style="margin:0 .5rem;opacity:.3;">·</span>
-      <a href="{% url 'impressum' %}" style="color:var(--text-muted);">Impressum</a>
-      <span style="margin:0 .5rem;opacity:.3;">·</span>
-      <a href="{% url 'datenschutz' %}" style="color:var(--text-muted);">Privacy Policy</a>
+      {% if legal_impressum_enabled %}<a href="{% url 'impressum' %}" style="color:var(--text-muted);">Imprint</a>{% endif %}
+      {% if legal_impressum_enabled and legal_privacy_enabled %}<span style="margin:0 .5rem;opacity:.3;">·</span>{% endif %}
+      {% if legal_privacy_enabled %}<a href="{% url 'datenschutz' %}" style="color:var(--text-muted);">Privacy Policy</a>{% endif %}
     </div>
   </div>
 </footer>{% endblock footer %}
