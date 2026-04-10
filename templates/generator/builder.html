@@ -679,23 +679,20 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
       </details>
 
       {# Images collapsible #}
+      <div id="cv-cat-pills" class="cv-cat-pills" style="padding:.3rem .75rem .1rem;">
+        <button class="cv-cat-pill active" onclick="setCat('all',this)">All</button>
+        <button class="cv-cat-pill" onclick="setCat('web',this)">Web</button>
+        <button class="cv-cat-pill" onclick="setCat('db',this)">Database</button>
+        <button class="cv-cat-pill" onclick="setCat('monitoring',this)">Monitor</button>
+        <button class="cv-cat-pill" onclick="setCat('app',this)">Apps</button>
+        <button class="cv-cat-pill" onclick="setCat('tools',this)">Tools</button>
+        <button class="cv-cat-pill" onclick="setCat('security',this)">Security</button>
+      </div>
       <details class="cvs-collapse" id="cvs-images-pane">
         <summary class="cvs-collapse-hd">
           <i class="bi bi-box-seam"></i><span>Images</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
         </summary>
         <div class="cvs-collapse-body">
-          <div id="cv-cat-pills" class="cv-cat-pills">
-            <button class="cv-cat-pill active" onclick="setCat('all',this)">All</button>
-            <button class="cv-cat-pill" onclick="setCat('web',this)">Web</button>
-            <button class="cv-cat-pill" onclick="setCat('db',this)">Database</button>
-            <button class="cv-cat-pill" onclick="setCat('monitoring',this)">Monitor</button>
-            <button class="cv-cat-pill" onclick="setCat('app',this)">Apps</button>
-            <button class="cv-cat-pill" onclick="setCat('tools',this)">Tools</button>
-            <button class="cv-cat-pill" onclick="setCat('security',this)">Security</button>
-          </div>
-          <div class="cvs-label" style="margin:.4rem 0 .2rem;font-size:.7rem;letter-spacing:.04em;color:var(--text-muted);">
-            <i class="bi bi-boxes me-1"></i>Presets — click to add to pod
-          </div>
           <div style="font-size:.68rem;color:var(--text-muted);margin-bottom:.4rem;opacity:.8;">
             <i class="bi bi-info-circle me-1"></i>Provided by this website
           </div>
@@ -704,13 +701,15 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
       </details>
 
       {# Docker Hub collapsible #}
-      <details class="cvs-collapse">
+      <div style="padding:.3rem .75rem .1rem;">
+        <input type="text" id="cv-hub-search" class="cv-ctrl" placeholder="🔍  Search Docker Hub, ghcr.io, quay.io…"
+          oninput="onSearch(this.value)" autocomplete="off">
+      </div>
+      <details class="cvs-collapse" id="cvs-hub-pane">
         <summary class="cvs-collapse-hd">
           <i class="bi bi-cloud-download"></i><span>Image Search</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
         </summary>
         <div class="cvs-collapse-body">
-          <input type="text" id="cv-hub-search" class="cv-ctrl" placeholder="🔍  Search Docker Hub, ghcr.io, quay.io…"
-            oninput="onSearch(this.value)" autocomplete="off">
           <div id="cv-hub-section" style="margin-top:.4rem;">
             <span id="cv-hub-spinner" style="display:none;" class="spinner-border spinner-border-sm"></span>
             <div id="cv-hub-results"></div>
@@ -719,6 +718,10 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
       </details>
 
       {# Stacks collapsible #}
+      <div style="padding:.3rem .75rem .1rem;">
+        <input type="text" id="cv-stacks-search" class="cv-ctrl" placeholder="🔍  Filter stacks…"
+          oninput="filterStacks(this.value)" autocomplete="off">
+      </div>
       <details class="cvs-collapse" id="cvs-stacks-pane">
         <summary class="cvs-collapse-hd">
           <i class="bi bi-stack"></i><span>Stacks</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
@@ -1391,7 +1394,7 @@ const shortName = img => (img||'').split('/').pop().split(':')[0] || img;
 
 // ══ Catalog Rendering ════════════════════════════════════════════
 function renderCatalog() {
-  const q   = '';
+  const q   = (document.getElementById('cv-hub-search')?.value || '').trim().toLowerCase();
   const cat = activeCat;
   const items = CATALOG.filter(c =>
     (cat === 'all' || c.cat === cat) &&
@@ -1458,11 +1461,38 @@ let _hubCurrentQ = '';
 
 function onSearch(val) {
   renderCatalog();
+  const hubPane = document.getElementById('cvs-hub-pane');
+  const imagesPane = document.getElementById('cvs-images-pane');
   clearTimeout(_hubTimer);
   const q = val.trim();
   const hubSec = document.getElementById('cv-hub-section');
-  if (q.length < 2) { hubSec.style.display = 'none'; _hubCurrentQ = ''; return; }
+  if (q.length < 2) {
+    hubSec.style.display = 'none';
+    _hubCurrentQ = '';
+    return;
+  }
+  if (hubPane && !hubPane.open) hubPane.open = true;
+  if (imagesPane && !imagesPane.open) imagesPane.open = true;
   _hubTimer = setTimeout(() => searchHub(q), 500);
+}
+
+function filterStacks(val) {
+  const q = val.trim().toLowerCase();
+  const pane = document.getElementById('cvs-stacks-pane');
+  document.querySelectorAll('.cvs-stack-btn').forEach(btn => {
+    btn.style.display = (!q || btn.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+  // Hide category label if all its following buttons (until next label) are hidden
+  document.querySelectorAll('.cvs-cat-label').forEach(lbl => {
+    let el = lbl.nextElementSibling;
+    let anyVisible = false;
+    while (el && !el.classList.contains('cvs-cat-label')) {
+      if (el.classList.contains('cvs-stack-btn') && el.style.display !== 'none') anyVisible = true;
+      el = el.nextElementSibling;
+    }
+    lbl.style.display = anyVisible ? '' : 'none';
+  });
+  if (q && pane && !pane.open) pane.open = true;
 }
 
 function _hubChipHTML(it) {
