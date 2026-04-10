@@ -682,7 +682,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
       <div class="cvs-collapse" id="cvs-images-pane">
         <div class="cvs-collapse-hd" onclick="togglePane('images')">
           <i class="bi bi-box-seam"></i><span>Images</span>
-          <i class="bi bi-chevron-right cvs-collapse-chev" id="chev-images" style="transform:rotate(90deg)"></i>
+          <i class="bi bi-chevron-right cvs-collapse-chev" id="chev-images"></i>
         </div>
         <div id="cv-cat-pills" class="cv-cat-pills" style="padding:.25rem .75rem .1rem;">
           <button class="cv-cat-pill active" onclick="setCat('all',this)">All</button>
@@ -693,7 +693,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <button class="cv-cat-pill" onclick="setCat('tools',this)">Tools</button>
           <button class="cv-cat-pill" onclick="setCat('security',this)">Security</button>
         </div>
-        <div class="cvs-collapse-body" id="pane-images">
+        <div class="cvs-collapse-body" id="pane-images" style="display:none">
           <div style="font-size:.68rem;color:var(--text-muted);margin-bottom:.4rem;opacity:.8;">
             <i class="bi bi-info-circle me-1"></i>Provided by this website
           </div>
@@ -2726,13 +2726,6 @@ function loadCommunityStack(id) {
 }
 
 
-function filterStacks(q) {
-  q = (q || '').toLowerCase().trim();
-  document.querySelectorAll('#cvs-stacks-pane .cvs-stack-btn').forEach(btn => {
-    const text = (btn.querySelector('span')?.textContent || btn.textContent).toLowerCase();
-    btn.style.display = (!q || text.includes(q)) ? '' : 'none';
-  });
-}
 
 
 // ══ Parsers ══════════════════════════════════════════════════════
