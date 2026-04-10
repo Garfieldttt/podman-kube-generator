@@ -3284,7 +3284,24 @@ function scanForTips() {
     });
   }
 
-  // Tip 4: privileged ports in rootless mode
+  // Tip 4: Docker/Podman socket mounts — rootful recommended
+  const _SOCKET_RE = /docker\.sock|podman\.sock|containerd\.sock/i;
+  const socketContainers = [];
+  for (const c of allContainers) {
+    for (const v of c.volumes) {
+      if (_SOCKET_RE.test(v.src || '') || _SOCKET_RE.test(v.dst || '')) {
+        if (!socketContainers.includes(c.name)) socketContainers.push(c.name);
+      }
+    }
+  }
+  if (socketContainers.length > 0) {
+    _activeTips.push({
+      level: 'warn',
+      msg: `Socket mount detected in ${socketContainers.map(n => `<code>${esc(n)}</code>`).join(', ')} — rootless podman restricts socket access. Use <strong>Rootful</strong> mode or mount the user socket (<code>/run/user/1000/podman/podman.sock</code>) instead of <code>/var/run/docker.sock</code>.`,
+    });
+  }
+
+  // Tip 5: privileged ports in rootless mode
   if (state.mode !== 'rootful') {
     const privPorts = [];
     for (const c of allContainers) {
