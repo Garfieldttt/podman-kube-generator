@@ -1851,8 +1851,6 @@ def compose_import(request):
     """Parse a docker-compose.yml and return canvas-compatible container state."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST only'}, status=405)
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Login required to use compose import.'}, status=401)
     if getattr(request, 'limited', False):
         return JsonResponse({'error': 'Rate limit reached — max 10 imports per minute.'}, status=429)
     try:
