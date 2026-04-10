@@ -2937,14 +2937,20 @@ function generateYaml() {
     if (!ok) return;
   }
   if (_activeTips.length) {
-    const body = document.getElementById('warnings-modal-body');
-    body.innerHTML = _activeTips.map((t, i) => `
+    const warnModal = document.getElementById('warnings-modal');
+    warnModal.querySelector('.modal-title').innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Warnings before generating';
+    warnModal.querySelector('.modal-footer').innerHTML = `
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      <button class="btn btn-warning" onclick="bootstrap.Modal.getInstance(document.getElementById('warnings-modal')).hide();_showEnvReview()">
+        <i class="bi bi-code-slash me-1"></i>Generate anyway
+      </button>`;
+    warnModal.querySelector('#warnings-modal-body').innerHTML = _activeTips.map((t, i) => `
       <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded" style="background:${t.level==='error'?'rgba(239,68,68,.08)':'rgba(245,158,11,.08)'}">
         <i class="bi ${t.level==='error'?'bi-exclamation-circle-fill text-danger':'bi-lightbulb-fill text-warning'} mt-1 flex-shrink-0"></i>
         <span style="font-size:.85rem;flex:1">${t.msg}</span>
         ${t.applyLabel ? `<button class="btn btn-sm btn-outline-warning flex-shrink-0" style="font-size:.75rem" onclick="_activeTips[${i}].apply();bootstrap.Modal.getInstance(document.getElementById('warnings-modal')).hide()">${esc(t.applyLabel)}</button>` : ''}
       </div>`).join('');
-    new bootstrap.Modal(document.getElementById('warnings-modal')).show();
+    new bootstrap.Modal(warnModal).show();
     return;
   }
   _showEnvReview();
