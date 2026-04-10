@@ -678,55 +678,59 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         </div>
       </details>
 
-      {# Images collapsible #}
-      <div id="cv-cat-pills" class="cv-cat-pills" style="padding:.3rem .75rem .1rem;">
-        <button class="cv-cat-pill active" onclick="setCat('all',this)">All</button>
-        <button class="cv-cat-pill" onclick="setCat('web',this)">Web</button>
-        <button class="cv-cat-pill" onclick="setCat('db',this)">Database</button>
-        <button class="cv-cat-pill" onclick="setCat('monitoring',this)">Monitor</button>
-        <button class="cv-cat-pill" onclick="setCat('app',this)">Apps</button>
-        <button class="cv-cat-pill" onclick="setCat('tools',this)">Tools</button>
-        <button class="cv-cat-pill" onclick="setCat('security',this)">Security</button>
-      </div>
-      <details class="cvs-collapse" id="cvs-images-pane">
-        <summary class="cvs-collapse-hd">
-          <i class="bi bi-box-seam"></i><span>Images</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
-        </summary>
-        <div class="cvs-collapse-body">
+      {# Images — header + always-visible pills + collapsible body #}
+      <div class="cvs-collapse" id="cvs-images-pane">
+        <div class="cvs-collapse-hd" onclick="togglePane('images')">
+          <i class="bi bi-box-seam"></i><span>Images</span>
+          <i class="bi bi-chevron-right cvs-collapse-chev" id="chev-images" style="transform:rotate(90deg)"></i>
+        </div>
+        <div id="cv-cat-pills" class="cv-cat-pills" style="padding:.25rem .75rem .1rem;">
+          <button class="cv-cat-pill active" onclick="setCat('all',this)">All</button>
+          <button class="cv-cat-pill" onclick="setCat('web',this)">Web</button>
+          <button class="cv-cat-pill" onclick="setCat('db',this)">Database</button>
+          <button class="cv-cat-pill" onclick="setCat('monitoring',this)">Monitor</button>
+          <button class="cv-cat-pill" onclick="setCat('app',this)">Apps</button>
+          <button class="cv-cat-pill" onclick="setCat('tools',this)">Tools</button>
+          <button class="cv-cat-pill" onclick="setCat('security',this)">Security</button>
+        </div>
+        <div class="cvs-collapse-body" id="pane-images">
           <div style="font-size:.68rem;color:var(--text-muted);margin-bottom:.4rem;opacity:.8;">
             <i class="bi bi-info-circle me-1"></i>Provided by this website
           </div>
           <div id="cv-catalog" class="cv-catalog"></div>
         </div>
-      </details>
-
-      {# Docker Hub collapsible #}
-      <div style="padding:.3rem .75rem .1rem;">
-        <input type="text" id="cv-hub-search" class="cv-ctrl" placeholder="🔍  Search Docker Hub, ghcr.io, quay.io…"
-          oninput="onSearch(this.value)" autocomplete="off">
       </div>
-      <details class="cvs-collapse" id="cvs-hub-pane">
-        <summary class="cvs-collapse-hd">
-          <i class="bi bi-cloud-download"></i><span>Image Search</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
-        </summary>
-        <div class="cvs-collapse-body">
-          <div id="cv-hub-section" style="margin-top:.4rem;">
+
+      {# Image Search — header + always-visible input + collapsible results #}
+      <div class="cvs-collapse" id="cvs-hub-pane">
+        <div class="cvs-collapse-hd" onclick="togglePane('hub')">
+          <i class="bi bi-cloud-download"></i><span>Image Search</span>
+          <i class="bi bi-chevron-right cvs-collapse-chev" id="chev-hub"></i>
+        </div>
+        <div style="padding:.25rem .75rem .1rem;">
+          <input type="text" id="cv-hub-search" class="cv-ctrl"
+            placeholder="🔍  Search Docker Hub, ghcr.io, quay.io…"
+            oninput="onSearch(this.value)" autocomplete="off">
+        </div>
+        <div class="cvs-collapse-body" id="pane-hub" style="display:none">
+          <div id="cv-hub-section">
             <span id="cv-hub-spinner" style="display:none;" class="spinner-border spinner-border-sm"></span>
             <div id="cv-hub-results"></div>
           </div>
         </div>
-      </details>
-
-      {# Stacks collapsible #}
-      <div style="padding:.3rem .75rem .1rem;">
-        <input type="text" id="cv-stacks-search" class="cv-ctrl" placeholder="🔍  Filter stacks…"
-          oninput="filterStacks(this.value)" autocomplete="off">
       </div>
-      <details class="cvs-collapse" id="cvs-stacks-pane">
-        <summary class="cvs-collapse-hd">
-          <i class="bi bi-stack"></i><span>Stacks</span><i class="bi bi-chevron-right cvs-collapse-chev"></i>
-        </summary>
-        <div class="cvs-collapse-body">
+
+      {# Stacks — header + always-visible filter + collapsible list #}
+      <div class="cvs-collapse" id="cvs-stacks-pane">
+        <div class="cvs-collapse-hd" onclick="togglePane('stacks')">
+          <i class="bi bi-stack"></i><span>Stacks</span>
+          <i class="bi bi-chevron-right cvs-collapse-chev" id="chev-stacks"></i>
+        </div>
+        <div style="padding:.25rem .75rem .1rem;">
+          <input type="text" id="cv-stacks-search" class="cv-ctrl" placeholder="🔍  Filter stacks…"
+            oninput="filterStacks(this.value)" autocomplete="off">
+        </div>
+        <div class="cvs-collapse-body" id="pane-stacks" style="display:none">
           <div style="font-size:.68rem;color:var(--text-muted);margin-bottom:.4rem;opacity:.8;">
             <i class="bi bi-info-circle me-1"></i>Provided by this website
           </div>
@@ -757,7 +761,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <p style="font-size:.8rem;color:var(--text-muted);padding:.5rem 0;">No stacks available.</p>
           {% endif %}
         </div>
-      </details>
+      </div>
 
       {# Sidebar footer links #}
       <div style="padding:.5rem .75rem;border-top:1px solid var(--border);display:flex;gap:.75rem;flex-wrap:wrap;font-size:.72rem;">
@@ -1395,7 +1399,7 @@ const shortName = img => (img||'').split('/').pop().split(':')[0] || img;
 // ══ Catalog Rendering ════════════════════════════════════════════
 function renderCatalog() {
   const q   = (document.getElementById('cv-hub-search')?.value || '').trim().toLowerCase();
-  const cat = activeCat;
+  const cat = q ? 'all' : activeCat;
   const items = CATALOG.filter(c =>
     (cat === 'all' || c.cat === cat) &&
     (!q || c.label.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q))
@@ -1442,9 +1446,24 @@ function showNodeIssues(event, issues) {
   setTimeout(() => document.addEventListener('click', () => { pop.remove(); _warnPopover = null; }, { once: true }), 0);
 }
 
+function togglePane(id) {
+  const body = document.getElementById('pane-' + id);
+  const chev = document.getElementById('chev-' + id);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if (chev) chev.style.transform = open ? '' : 'rotate(90deg)';
+}
+
+function openPane(id) {
+  const body = document.getElementById('pane-' + id);
+  const chev = document.getElementById('chev-' + id);
+  if (body) { body.style.display = ''; }
+  if (chev) chev.style.transform = 'rotate(90deg)';
+}
+
 function showSideTab(name) {
-  const pane = document.getElementById(name === 'images' ? 'cvs-images-pane' : 'cvs-stacks-pane');
-  if (pane) pane.open = true;
+  openPane(name === 'images' ? 'images' : 'stacks');
 }
 
 function setCat(cat, btn) {
@@ -1461,18 +1480,17 @@ let _hubCurrentQ = '';
 
 function onSearch(val) {
   renderCatalog();
-  const hubPane = document.getElementById('cvs-hub-pane');
-  const imagesPane = document.getElementById('cvs-images-pane');
   clearTimeout(_hubTimer);
   const q = val.trim();
   const hubSec = document.getElementById('cv-hub-section');
   if (q.length < 2) {
-    hubSec.style.display = 'none';
+    if (hubSec) hubSec.style.display = 'none';
     _hubCurrentQ = '';
     return;
   }
-  if (hubPane && !hubPane.open) hubPane.open = true;
-  if (imagesPane && !imagesPane.open) imagesPane.open = true;
+  if (hubSec) hubSec.style.display = '';
+  openPane('hub');
+  openPane('images');
   _hubTimer = setTimeout(() => searchHub(q), 500);
 }
 
