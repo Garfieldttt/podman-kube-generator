@@ -3294,7 +3294,7 @@ function scanForTips() {
       }
     }
   }
-  if (socketContainers.length > 0) {
+  if (socketContainers.length > 0 && state.mode !== 'rootful') {
     _activeTips.push({
       level: 'warn',
       msg: `Socket mount detected in ${socketContainers.map(n => `<code>${esc(n)}</code>`).join(', ')} — rootless podman restricts socket access. Use <strong>Rootful</strong> mode or mount the user socket (<code>/run/user/1000/podman/podman.sock</code>) instead of <code>/var/run/docker.sock</code>.`,
