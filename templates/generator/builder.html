@@ -3746,6 +3746,21 @@ function _doFetch(envVars) {
       if (hn) { hn.checked = true; }
       updateNetworkState();
     }
+    if (data.host_pid) {
+      state.host_pid = true;
+      const hp = document.getElementById('cv-host-pid');
+      if (hp) hp.checked = true;
+    }
+    if (data.host_ipc) {
+      state.host_ipc = true;
+      const hi = document.getElementById('cv-host-ipc');
+      if (hi) hi.checked = true;
+    }
+    if (data.dns) {
+      state.dns = data.dns;
+      const dn = document.getElementById('cv-dns');
+      if (dn) dn.value = data.dns;
+    }
     if (data.host_aliases) {
       state.host_aliases = data.host_aliases;
       const ha = document.getElementById('cv-host-aliases');

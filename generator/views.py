@@ -2383,13 +2383,15 @@ def compose_import(request):
                     if isinstance(c, dict) and str(c.get('ipc') or '').lower() == 'host']
         pid_svcs = [s for s, c in all_services.items()
                     if isinstance(c, dict) and str(c.get('pid') or '').lower() == 'host']
+        has_host_ipc = bool(ipc_svcs)
+        has_host_pid = bool(pid_svcs)
         if ipc_svcs:
             warnings.append({
-                'msg': f"ipc: host ignored for {', '.join(ipc_svcs)} — not supported in podman play kube YAML",
+                'msg': f"ipc: host set for {', '.join(ipc_svcs)} — applied as pod-level hostIPC",
             })
         if pid_svcs:
             warnings.append({
-                'msg': f"pid: host ignored for {', '.join(pid_svcs)} — not supported in podman play kube YAML",
+                'msg': f"pid: host set for {', '.join(pid_svcs)} — applied as pod-level hostPID",
             })
 
         # volumes_from: (legacy)
@@ -2435,12 +2437,21 @@ def compose_import(request):
                 'msg': f"links: ignored for {', '.join(links_svcs)} — all containers in a pod share localhost, no DNS aliases needed",
             })
 
-        # dns: / dns_search: (custom DNS not portable to kube)
-        dns_svcs = [s for s, c in all_services.items()
-                    if isinstance(c, dict) and (c.get('dns') or c.get('dns_search'))]
-        if dns_svcs:
+        # dns: → pod-level dnsConfig.nameservers
+        seen_dns = []
+        for s, c in all_services.items():
+            if not isinstance(c, dict):
+                continue
+            dns_val = c.get('dns') or []
+            if isinstance(dns_val, str):
+                dns_val = [dns_val]
+            for entry in dns_val:
+                entry = str(entry).strip()
+                if entry and entry not in seen_dns:
+                    seen_dns.append(entry)
+        if seen_dns:
             warnings.append({
-                'msg': f"dns:/dns_search: ignored for {', '.join(dns_svcs)} — custom DNS not supported in podman play kube pods",
+                'msg': f"dns: applied as pod-level DNS nameservers: {', '.join(seen_dns)}",
             })
 
         # container_name: (overrides service name — lost on import)
@@ -2594,6 +2605,9 @@ def compose_import(request):
             'named_volumes': named_volumes,
             'restart_policy': pod_restart,
             'host_network': has_host_network,
+            'host_pid': has_host_pid,
+            'host_ipc': has_host_ipc,
+            'dns': '\n'.join(seen_dns),
             'host_aliases': '\n'.join(host_aliases_lines),
             'warnings': warnings,
             'env_file_svcs': env_file_svcs,
