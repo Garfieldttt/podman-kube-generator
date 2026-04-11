@@ -1426,7 +1426,7 @@ STACKS = {
             },
             {
                 'name': 'playwright-chrome',
-                'image': 'ghcr.io/dgtlmoon/sockpuppetbrowser:latest',
+                'image': 'browserless/chrome:latest',
                 'env': 'SCREEN_WIDTH=1920\nSCREEN_HEIGHT=1024\nSCREEN_DEPTH=16\nMAX_CONCURRENT_CHROME_PROCESSES=10',
             },
         ],
