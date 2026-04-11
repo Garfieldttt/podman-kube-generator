@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ profile_user.username }} — Podman Kube Generator{% endblock %}
 {% block meta_description %}{{ profile_user.username }}'s public profile and community stacks on Podman Kube Generator.{% endblock %}
+{% block canonical_path %}/u/{{ profile_user.username }}/{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-lg-7">

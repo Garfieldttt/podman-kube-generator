@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ config.name }} — Podman Kube Generator{% endblock %}
 {% block meta_description %}Saved Podman pod configuration: {{ config.name }}. Kubernetes YAML for podman play kube, shell script and systemd Quadlet guide.{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
 {% block canonical_path %}/{{ config.uuid }}/{% endblock %}
 {% block og_title %}{{ config.name }} — Podman Kube Generator{% endblock %}
 {% block og_path %}/{{ config.uuid }}/{% endblock %}
