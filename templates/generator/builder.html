@@ -1595,7 +1595,7 @@ function filterStacks(val) {
     }
     lbl.style.display = anyVisible ? '' : 'none';
   });
-  if (q && pane && !pane.open) pane.open = true;
+  if (q) openPane('stacks');
 }
 
 function _hubChipHTML(it) {
