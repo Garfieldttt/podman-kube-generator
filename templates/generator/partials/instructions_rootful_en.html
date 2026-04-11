@@ -108,10 +108,10 @@ sudo nano /etc/containers/systemd/{{ pod_name }}.kube</pre>
     <div class="d-flex gap-3">
       <div class="step-badge" style="background:#d97706;">4</div>
       <div class="flex-grow-1">
-        <p class="mb-2 fw-semibold">Enable systemd service (rootful)</p>
+        <p class="mb-2 fw-semibold">Start systemd service (rootful)</p>
         <div class="pre-wrap">
           <pre id="rfen-step4">sudo systemctl daemon-reload
-sudo systemctl enable --now {{ pod_name }}.service</pre>
+sudo systemctl start {{ pod_name }}.service</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rfen-step4')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>

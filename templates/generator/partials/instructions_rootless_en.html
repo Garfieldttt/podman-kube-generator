@@ -199,10 +199,10 @@ nano ~/.config/containers/systemd/{{ pod_name }}.kube</pre>
     <div class="d-flex gap-3">
       <div class="step-badge">4</div>
       <div class="flex-grow-1">
-        <p class="mb-2 fw-semibold">Enable systemd service</p>
+        <p class="mb-2 fw-semibold">Start systemd service</p>
         <div class="pre-wrap">
           <pre id="rlen-step4">systemctl --user daemon-reload
-systemctl --user enable --now {{ pod_name }}.service</pre>
+systemctl --user start {{ pod_name }}.service</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step4')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>
