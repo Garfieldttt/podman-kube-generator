@@ -202,7 +202,7 @@ nano ~/.config/containers/systemd/{{ pod_name }}.kube</pre>
         <p class="mb-2 fw-semibold">Enable systemd service</p>
         <div class="pre-wrap">
           <pre id="rlen-step4">systemctl --user daemon-reload
-systemctl --user enable --now {{ pod_name }}-pod.service</pre>
+systemctl --user enable --now {{ pod_name }}.service</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step4')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>
@@ -215,8 +215,8 @@ systemctl --user enable --now {{ pod_name }}-pod.service</pre>
       <div class="flex-grow-1">
         <p class="mb-2 fw-semibold">Status &amp; Logs</p>
         <div class="pre-wrap">
-          <pre id="rlen-step5">systemctl --user status {{ pod_name }}-pod.service
-journalctl --user -u {{ pod_name }}-pod.service -f
+          <pre id="rlen-step5">systemctl --user status {{ pod_name }}.service
+journalctl --user -u {{ pod_name }}.service -f
 podman pod ps
 podman ps</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step5')"><i class="bi bi-clipboard"></i></button>
@@ -236,7 +236,7 @@ podman ps</pre>
 podman play kube --replace ~/.config/containers/{{ pod_name }}.yaml
 
 # or via systemd:
-systemctl --user restart {{ pod_name }}-pod.service</pre>
+systemctl --user restart {{ pod_name }}.service</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step6')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>
