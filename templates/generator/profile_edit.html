@@ -29,7 +29,7 @@
       <!-- Avatar + Bio -->
       <div class="card mb-4 p-4">
         <div class="d-flex align-items-center gap-4 mb-4 flex-wrap">
-          <!-- Avatar Vorschau -->
+          <!-- Avatar preview -->
           <div style="position:relative;flex-shrink:0;">
             <div id="avatar-preview-wrap">
               {% if profile.get_avatar_url %}
@@ -40,7 +40,7 @@
               <div id="avatar-initials" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);border:2px solid rgba(20,184,166,.3);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#fff;text-transform:uppercase;">{{ request.user.username|first }}</div>
               {% endif %}
             </div>
-            <!-- Upload-Overlay -->
+            <!-- Upload overlay -->
             <label for="avatar-file-input" title="Upload image"
               style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:#0d9488;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid var(--bg);">
               <i class="bi bi-camera-fill" style="font-size:.7rem;color:#fff;"></i>
@@ -117,7 +117,7 @@
       </div>
     </form>
 
-    <!-- DSGVO: Konto löschen -->
+    <!-- GDPR: Delete account -->
     <div class="card p-4" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.03);">
       <h2 class="h6 mb-1" style="color:#f87171;"><i class="bi bi-exclamation-triangle me-2"></i>Delete account</h2>
       <p class="small mb-3" style="color:var(--text-dim);">
@@ -132,7 +132,7 @@
   </div>
 </div>
 
-<!-- Konto löschen Modal -->
+<!-- Delete account modal -->
 <div id="delete-account-modal"
   style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
   <div class="card p-4" style="max-width:420px;width:90%;background:var(--surface);border-color:rgba(239,68,68,.4);">

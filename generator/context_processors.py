@@ -44,7 +44,7 @@ def site(request):
 
 def hiro_messages(request):
     msgs = HiroMessage.objects.filter(is_active=True)
-    data = [m.text_en or m.text_de for m in msgs]
+    data = [m.text_en for m in msgs if m.text_en]
     return {'hiro_msgs_json': json.dumps(data, ensure_ascii=False)}
 
 

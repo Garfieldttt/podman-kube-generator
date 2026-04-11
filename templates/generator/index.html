@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <!-- Stack-Vorlagen -->
+    <!-- Stack templates -->
     <div class="card mb-4" style="border-color:rgba(20,184,166,.3);background:linear-gradient(135deg,rgba(20,184,166,.05),rgba(34,211,238,.02));">
       <div class="card-header d-flex align-items-center justify-content-between" style="background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.25);">
         <span class="fw-semibold" style="color:#5eead4;font-size:.85rem;">
@@ -309,7 +309,7 @@
         </button>
       </div>
 
-      <!-- Verbindungs-Assistent -->
+      <!-- Connection wizard -->
       <div class="card mb-4" id="connection-assistant" style="display:none;">
         <div class="card-header py-2 px-3" style="background:#0a1f12; border-color:#166534;">
           <span class="fw-semibold text-success">
@@ -456,8 +456,7 @@ let _pendingStack = null;
 function showStackInfo(stack) {
   const meta = stack._meta;
   if (!meta) return;
-  const lang = document.documentElement.lang || 'de';
-  const desc = (lang === 'en' && meta.description_en) ? meta.description_en : meta.description;
+  const desc = meta.description_en || meta.description;
   document.getElementById('si-icon').className = 'bi ' + (meta.icon || 'bi-collection');
   document.getElementById('si-label').textContent = meta.label || '';
   document.getElementById('si-category').textContent = meta.category || '';

@@ -21,7 +21,7 @@
       </div>
     </div>
 
-    <!-- Netzwerk-Banner (nur bei mehreren Containern) -->
+    <!-- Network banner (only for multiple containers) -->
     {% if net_info|length > 1 %}
     <div class="card mb-4" style="border-color:#166534; background:#0a1a0e;">
       <div class="card-body py-3">
@@ -202,7 +202,7 @@
 
     </div>
 
-    <!-- Speichern + Community Stack -->
+    <!-- Save + community stack -->
     <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
       <form method="post" action="{% url 'save_config' %}">
         {% csrf_token %}
@@ -388,7 +388,7 @@
 
     <hr class="border-secondary my-4">
 
-    <!-- Deployment-Anleitung -->
+    <!-- Deployment instructions -->
     <h2 class="h5 mb-3">
       <i class="bi bi-terminal me-2 text-success"></i>Deployment Guide
       {% if mode == 'rootful' %}

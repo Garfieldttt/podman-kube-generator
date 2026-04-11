@@ -34,7 +34,7 @@
     <div class="card p-4 mb-4">
       <div class="d-flex align-items-start gap-3 flex-wrap">
 
-        <!-- Autor -->
+        <!-- Author -->
         <a href="{% url 'profile_public' stack.user.username %}" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
           {% with stack.user.profile as p %}
           {% with p.get_avatar_url as av %}
@@ -108,7 +108,7 @@
       </h2>
     </div>
 
-    <!-- Kommentar-Liste -->
+    <!-- Comment list -->
     <div id="comment-list" class="d-flex flex-column gap-3 mb-4">
       {% for c in comments %}
       <div class="card p-3">
@@ -136,7 +136,7 @@
       {% endfor %}
     </div>
 
-    <!-- Kommentar-Formular -->
+    <!-- Comment form -->
     {% if request.user.is_authenticated %}
     <div class="card p-3">
       <h3 class="h6 mb-3" style="color:var(--text-dim);">{% trans "Write a comment" %}</h3>

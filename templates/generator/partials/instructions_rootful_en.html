@@ -94,9 +94,10 @@ sudo podman play kube --down /etc/containers/{{ pod_name }}.yaml</pre>
       <div class="step-badge" style="background:#d97706;">3</div>
       <div class="flex-grow-1">
         <p class="mb-2 fw-semibold">Create Quadlet .kube file (systemd)</p>
-        <p class="text-secondary small mb-2">Copy the <code>{{ pod_name }}.kube</code> file from the tab above and save it to:</p>
+        <p class="text-secondary small mb-2">Copy the <code>{{ pod_name }}.kube</code> file from the tab above and save it to <code>/etc/containers/systemd/</code>:</p>
         <div class="pre-wrap">
-          <pre id="rfen-step3">/etc/containers/systemd/{{ pod_name }}.kube</pre>
+          <pre id="rfen-step3">sudo mkdir -p /etc/containers/systemd/
+sudo nano /etc/containers/systemd/{{ pod_name }}.kube</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rfen-step3')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>

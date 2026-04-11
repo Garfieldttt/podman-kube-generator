@@ -138,6 +138,11 @@ rc-update add {{ pod_name }}-pod default</pre>
 </div>
 
 <!-- ── From here on as deployment user ────────────────────────── -->
+<p class="mb-3 fw-semibold" style="color:#94a3b8;">
+  As deployment user
+  <span class="badge ms-2" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.7rem;font-weight:600;">as {{ pod_name }}</span>
+</p>
+
 <div class="step-block">
   <div class="d-flex gap-3">
     <div class="step-badge">1</div>
@@ -180,9 +185,10 @@ podman play kube --down ~/.config/containers/{{ pod_name }}.yaml</pre>
       <div class="step-badge">3</div>
       <div class="flex-grow-1">
         <p class="mb-2 fw-semibold">Create Quadlet .kube file</p>
-        <p class="small mb-2" style="color:var(--text-dim);">Copy the <code>{{ pod_name }}.kube</code> file from the tab above and save it to:</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Copy the <code>{{ pod_name }}.kube</code> file from the tab above and save it to <code>~/.config/containers/systemd/</code>:</p>
         <div class="pre-wrap">
-          <pre id="rlen-step3">~/.config/containers/systemd/{{ pod_name }}.kube</pre>
+          <pre id="rlen-step3">mkdir -p ~/.config/containers/systemd/
+nano ~/.config/containers/systemd/{{ pod_name }}.kube</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step3')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>

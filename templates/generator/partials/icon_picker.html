@@ -1,6 +1,6 @@
 {% comment %}
-  Params: picker_id (z.B. "submit" oder "update")
-  Erwartet: <i id="icon-preview-<picker_id>"> und input[name=icon] im umgebenden Form
+  Params: picker_id (e.g. "submit" or "update")
+  Requires: <i id="icon-preview-<picker_id>"> and input[name=icon] in the surrounding form
 {% endcomment %}
 {% for ic in icons %}
 <button type="button" class="btn btn-sm p-1" title="{{ ic }}"

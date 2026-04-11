@@ -24,6 +24,12 @@ def generate_quadlet(form_data, yaml_filename=None):
     if yaml_filename is None:
         yaml_filename = f'{pod_name}.yaml'
 
+    # Absolute YAML path — must match the path shown in the deployment instructions
+    if rootless:
+        yaml_path = f'%h/.config/containers/{yaml_filename}'
+    else:
+        yaml_path = f'/etc/containers/{yaml_filename}'
+
     install_dir = '~/.config/containers/systemd' if rootless else '/etc/containers/systemd'
     systemctl = 'systemctl --user' if rootless else 'sudo systemctl'
     wanted_by = 'default.target' if rootless else 'multi-user.target'
@@ -45,8 +51,7 @@ def generate_quadlet(form_data, yaml_filename=None):
 
     kube_lines = [
         '[Kube]',
-        f'Yaml={yaml_filename}',
-        'SetWorkingDirectory=yaml',
+        f'Yaml={yaml_path}',
     ]
     if network:
         kube_lines.append(f'Network={network}')
