@@ -1422,6 +1422,12 @@ STACKS = {
                 'image': 'ghcr.io/dgtlmoon/changedetection.io:latest',
                 'ports': '5000:5000',
                 'volumes': 'changedetection-data:/datastore:Z',
+                'env': 'PLAYWRIGHT_DRIVER_URL=ws://localhost:3000/?stealth=1&--disable-web-security=true',
+            },
+            {
+                'name': 'playwright-chrome',
+                'image': 'ghcr.io/dgtlmoon/sockpuppetbrowser:latest',
+                'env': 'SCREEN_WIDTH=1920\nSCREEN_HEIGHT=1024\nSCREEN_DEPTH=16\nMAX_CONCURRENT_CHROME_PROCESSES=10',
             },
         ],
     },
