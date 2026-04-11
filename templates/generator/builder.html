@@ -851,6 +851,9 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         <button class="btn btn-sm btn-outline-info" onclick="openDockerRunImport()" title="Import docker run command">
           <i class="bi bi-terminal me-1"></i>Import docker run
         </button>
+        <button class="btn btn-sm btn-outline-info" onclick="openPodYamlImport()" title="Import Pod YAML">
+          <i class="bi bi-filetype-yml me-1"></i>Import Pod YAML
+        </button>
         <button class="btn btn-sm btn-outline-danger" onclick="clearCanvas()" title="Clear pod builder">
           <i class="bi bi-trash"></i>
         </button>
@@ -1024,6 +1027,38 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         <button class="btn btn-primary" onclick="applyFillVars()">
           <i class="bi bi-check2 me-1"></i>Apply
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ══ Pod YAML Import Modal ═══════════════════════════════════════ #}
+<div class="modal fade" id="pod-yaml-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="background:var(--surface-2);border:1px solid var(--border);">
+      <div class="modal-header" style="border-color:var(--border);">
+        <h5 class="modal-title"><i class="bi bi-filetype-yml me-2"></i>Import Pod YAML</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small mb-2">Paste an existing <code>podman play kube</code> YAML (<code>kind: Pod</code>) — containers, volumes, ports and environment variables will be loaded into the builder.</p>
+        <div style="position:relative;">
+          <textarea id="pod-yaml-ta" class="cv-ctrl" rows="14"
+            placeholder="apiVersion: v1&#10;kind: Pod&#10;metadata:&#10;  name: myapp&#10;spec:&#10;  containers:&#10;  - name: app&#10;    image: ..."
+            style="font-family:monospace;font-size:.8rem;resize:vertical;"
+            ondragover="event.preventDefault();document.getElementById('pod-yaml-drop-overlay').style.display='flex';"
+            ondragleave="document.getElementById('pod-yaml-drop-overlay').style.display='none';"
+            ondrop="_onPodYamlDrop(event)"></textarea>
+          <div id="pod-yaml-drop-overlay" style="display:none;position:absolute;inset:0;background:rgba(20,184,166,.15);border:2px dashed var(--accent);border-radius:6px;align-items:center;justify-content:center;pointer-events:none;">
+            <span style="color:var(--accent);font-weight:600;"><i class="bi bi-file-earmark-arrow-down me-2"></i>Drop Pod YAML file</span>
+          </div>
+        </div>
+        <div id="pod-yaml-error" class="text-danger small mt-2" style="display:none"></div>
+        <div id="pod-yaml-warnings" class="mt-2" style="display:none"></div>
+      </div>
+      <div class="modal-footer" style="border-color:var(--border);">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-info" onclick="doPodYamlImport()"><i class="bi bi-upload me-1"></i>Import</button>
       </div>
     </div>
   </div>
@@ -3896,6 +3931,112 @@ function _doFetch(envVars) {
     }
   })
   .catch(e => { console.error('[compose-import]', e); err.textContent = 'Network error: ' + e.message; err.style.display = ''; });
+}
+
+// ══ Pod YAML Import ═══════════════════════════════════════════════
+let _podYamlModalInst = null;
+
+function openPodYamlImport() {
+  if (!_podYamlModalInst) {
+    _podYamlModalInst = new bootstrap.Modal(document.getElementById('pod-yaml-modal'));
+  }
+  document.getElementById('pod-yaml-ta').value = '';
+  document.getElementById('pod-yaml-error').style.display = 'none';
+  document.getElementById('pod-yaml-warnings').style.display = 'none';
+  _podYamlModalInst.show();
+}
+
+function _onPodYamlDrop(event) {
+  event.preventDefault();
+  document.getElementById('pod-yaml-drop-overlay').style.display = 'none';
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('pod-yaml-ta').value = e.target.result; };
+  reader.readAsText(file);
+}
+
+function doPodYamlImport() {
+  const ta  = document.getElementById('pod-yaml-ta');
+  const err = document.getElementById('pod-yaml-error');
+  err.style.display = 'none';
+  const text = ta.value.trim();
+  if (!text) { err.textContent = 'Please paste a Pod YAML first.'; err.style.display = ''; return; }
+
+  fetch('/builder/pod-yaml-import/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+    body: JSON.stringify({ yaml: text }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) { err.textContent = data.error; err.style.display = ''; return; }
+    pushUndo();
+    state.containers = data.containers.map(c => mkC({
+      ...c,
+      ports:   parsePorts(c.ports),
+      volumes: parseVols(c.volumes),
+      env:     parseEnv(c.env),
+    }));
+    state.connections = [];
+
+    if (data.pod_name) {
+      state.pod_name = data.pod_name;
+      const pn = document.getElementById('cv-pod-name');
+      if (pn) pn.value = data.pod_name;
+    }
+    if (data.restart_policy) {
+      state.restart_policy = data.restart_policy;
+      const rs = document.getElementById('cv-restart');
+      if (rs) rs.value = data.restart_policy;
+    }
+    if (data.host_network) {
+      state.host_network = true;
+      const hn = document.getElementById('cv-host-network');
+      if (hn) { hn.checked = true; }
+    }
+    if (data.host_pid) {
+      state.host_pid = true;
+      const hp = document.getElementById('cv-host-pid');
+      if (hp) hp.checked = true;
+    }
+    if (data.host_ipc) {
+      state.host_ipc = true;
+      const hi = document.getElementById('cv-host-ipc');
+      if (hi) hi.checked = true;
+    }
+    if (data.dns) {
+      state.dns = data.dns;
+      const dn = document.getElementById('cv-dns');
+      if (dn) dn.value = data.dns;
+    }
+    if (data.host_aliases) {
+      state.host_aliases = data.host_aliases;
+      const ha = document.getElementById('cv-host-aliases');
+      if (ha) ha.value = data.host_aliases;
+    }
+    autoExpandNetworkIfNeeded();
+    updateNetworkState();
+    syncDbCredentials();
+    renderAll();
+    scanForTips();
+    _podYamlModalInst.hide();
+
+    const warnings = data.warnings || [];
+    if (warnings.length) {
+      const body = document.getElementById('warnings-modal-body');
+      body.innerHTML = warnings.map(w => `
+        <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded" style="background:rgba(245,158,11,.08)">
+          <i class="bi bi-exclamation-triangle-fill text-warning mt-1 flex-shrink-0"></i>
+          <span style="font-size:.85rem;flex:1">${esc(w.msg)}</span>
+        </div>`).join('');
+      const warnModal = document.getElementById('warnings-modal');
+      warnModal.querySelector('.modal-title').innerHTML = '<i class="bi bi-filetype-yml me-2 text-warning"></i>Import warnings';
+      warnModal.querySelector('.modal-footer').innerHTML = '<button class="btn btn-primary" data-bs-dismiss="modal">OK</button>';
+      new bootstrap.Modal(warnModal).show();
+    }
+  })
+  .catch(e => { err.textContent = 'Network error: ' + e.message; err.style.display = ''; });
 }
 
 // ══ Live Validation Badges ════════════════════════════════════════

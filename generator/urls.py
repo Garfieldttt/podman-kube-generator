@@ -74,5 +74,6 @@ urlpatterns = [
     path('builder/', views.builder_view, name='builder'),
     path('builder/generate/', views.builder_generate, name='builder_generate'),
     path('builder/compose-import/', views.compose_import, name='builder_compose_import'),
+    path('builder/pod-yaml-import/', views.pod_yaml_import, name='builder_pod_yaml_import'),
     path('builder/image-inspect/', views.image_inspect, name='image_inspect'),
 ]

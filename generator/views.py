@@ -2584,3 +2584,29 @@ def compose_import(request):
         if _timeout > 0:
             signal.alarm(0)
             signal.signal(signal.SIGALRM, _old_handler)
+
+
+@ratelimit(key='ip', rate='20/m', method='POST', block=True)
+def pod_yaml_import(request):
+    """Parse a Pod YAML and return canvas-compatible container state."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST only'}, status=405)
+    if getattr(request, 'limited', False):
+        return JsonResponse({'error': 'Rate limit reached.'}, status=429)
+    try:
+        body = json.loads(request.body)
+        yaml_text = body.get('yaml', '')
+    except Exception:
+        return JsonResponse({'error': 'Invalid request body'}, status=400)
+
+    if not yaml_text.strip():
+        return JsonResponse({'error': 'Empty input'}, status=400)
+    if len(yaml_text) > 100_000:
+        return JsonResponse({'error': 'Input too large (max 100 KB)'}, status=400)
+
+    from .pod_parser import parse_pod_yaml
+    try:
+        result = parse_pod_yaml(yaml_text)
+        return JsonResponse(result)
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=400)
