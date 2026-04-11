@@ -2051,7 +2051,8 @@ function tabGeneral(c) {
       <div class="cfg-section-title"><i class="bi bi-box-seam"></i>Container image</div>
       <div style="display:flex;gap:.4rem;align-items:center;">
         <input type="text" id="cfg-image-inp" class="cfg-inp cfg-inp-full" value="${esc(c.image)}" placeholder="e.g. nginx:alpine or docker.io/nginx:alpine"
-          oninput="cfgSet('image',this.value);document.getElementById('cfg-header-image').textContent=this.value.split('/').pop().split(':')[0]||this.value;renderVersionPicker(this.value)">
+          oninput="cfgSet('image',this.value);document.getElementById('cfg-header-image').textContent=this.value.split('/').pop().split(':')[0]||this.value;renderVersionPicker(this.value)"
+          onblur="const q=qualifyImage(this.value);if(q!==this.value){this.value=q;cfgSet('image',q);document.getElementById('cfg-header-image').textContent=q.split('/').pop().split(':')[0]||q;renderVersionPicker(q);}">
         <button class="btn btn-sm btn-outline-secondary flex-shrink-0" style="font-size:.72rem;padding:.2rem .5rem;white-space:nowrap;"
           onclick="openImageInspect()" title="Image Inspector">
           <i class="bi bi-search"></i>
@@ -2745,6 +2746,15 @@ function tabResources(c) {
 // Generic setter for simple fields
 function cfgSet(field, value) {
   const c = getC(selectedId); if (c) { c[field] = value; refreshBadges(selectedId); }
+}
+
+function qualifyImage(img) {
+  img = img.trim();
+  if (!img) return img;
+  const registries = ['docker.io/', 'ghcr.io/', 'quay.io/', 'lscr.io/', 'gcr.io/', 'mcr.microsoft.com/', 'registry.k8s.io/'];
+  if (registries.some(r => img.startsWith(r))) return img;
+  // No registry prefix — qualify for Docker Hub
+  return img.includes('/') ? 'docker.io/' + img : 'docker.io/library/' + img;
 }
 
 function updateUsernsState(val) {
