@@ -87,7 +87,8 @@
                 <input type="text" id="stack-search"
                   class="form-control form-control-sm"
                   placeholder="Search…" autocomplete="off"
-                  oninput="filterStacks(this.value)">
+                  oninput="filterStacks(this.value)"
+                  onkeydown="event.stopPropagation()">
               </div>
 
               <div id="stack-list" style="max-height:340px;overflow-y:auto;">
