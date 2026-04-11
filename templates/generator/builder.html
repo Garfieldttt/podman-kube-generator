@@ -788,7 +788,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
             {% for group in stack_groups %}
             <div class="cvs-cat-label">{{ group.grouper }}</div>
             {% for s in group.list %}
-            <button class="cvs-stack-btn" onclick="loadStack('{{ s.key }}')">
+            <button class="cvs-stack-btn" data-label="{{ s.label|lower }}" onclick="loadStack('{{ s.key }}')">
               <i class="bi {{ s.icon }}"></i><span>{{ s.label }}</span>
             </button>
             {% endfor %}
@@ -799,7 +799,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-stacks-list" style="margin-top:.5rem;">
             <div class="cvs-cat-label"><i class="bi bi-people me-1"></i>Community</div>
             {% for cs in community_stacks %}
-            <button class="cvs-stack-btn" onclick="loadCommunityStack({{ cs.id }})">
+            <button class="cvs-stack-btn" data-label="{{ cs.name|lower }}" onclick="loadCommunityStack({{ cs.id }})">
               <i class="bi bi-collection"></i><span>{{ cs.name }} <span style="font-size:.65rem;color:var(--text-muted);">· {{ cs.user.username }}</span></span>
             </button>
             {% endfor %}
@@ -1583,7 +1583,8 @@ function filterStacks(val) {
   const q = val.trim().toLowerCase();
   const pane = document.getElementById('cvs-stacks-pane');
   document.querySelectorAll('.cvs-stack-btn').forEach(btn => {
-    btn.style.display = (!q || btn.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    const label = btn.dataset.label || btn.textContent.toLowerCase();
+    btn.style.display = (!q || label.includes(q)) ? '' : 'none';
   });
   // Hide category label if all its following buttons (until next label) are hidden
   document.querySelectorAll('.cvs-cat-label').forEach(lbl => {
