@@ -678,6 +678,53 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         </div>
       </details>
 
+      {# Quadlet Options #}
+      <details class="cvs-net-details" id="cvs-quadlet-details">
+        <summary class="cvs-net-summary">
+          <i class="bi bi-gear me-1" style="color:var(--accent)"></i>
+          <span>Quadlet</span>
+          <i class="bi bi-chevron-right cvs-net-chev"></i>
+        </summary>
+        <div class="cvs-net-body">
+          <div class="cvs-field">
+            <label class="cvs-field-label">Auto-Update</label>
+            <select id="cv-quadlet-auto-update" class="cv-ctrl" onchange="state.quadlet_auto_update=this.value">
+              <option value="">off</option>
+              <option value="registry">registry</option>
+              <option value="local">local</option>
+            </select>
+          </div>
+          <div class="cvs-field">
+            <label class="cvs-field-label">Log Driver</label>
+            <select id="cv-quadlet-log-driver" class="cv-ctrl" onchange="state.quadlet_log_driver=this.value">
+              <option value="">— default —</option>
+              <option value="journald">journald</option>
+              <option value="k8s-file">k8s-file</option>
+              <option value="none">none</option>
+              <option value="passthrough">passthrough</option>
+            </select>
+          </div>
+          <div class="cvs-field">
+            <label class="cvs-field-label">Exit Code Propagation</label>
+            <select id="cv-quadlet-exit-code" class="cv-ctrl" onchange="state.quadlet_exit_code_propagation=this.value">
+              <option value="">— none —</option>
+              <option value="all">all</option>
+              <option value="any">any</option>
+            </select>
+          </div>
+          <div class="cvs-field">
+            <label class="cvs-field-label">Timeout Start (seconds)</label>
+            <input type="number" id="cv-quadlet-timeout" class="cv-ctrl" placeholder="e.g. 120" min="1"
+              oninput="state.quadlet_timeout_start=this.value?parseInt(this.value):null">
+          </div>
+          <div class="cvs-field" style="display:flex;align-items:center;gap:.5rem;padding-top:.15rem">
+            <input type="checkbox" id="cv-quadlet-down-force" class="form-check-input"
+              onchange="state.quadlet_kube_down_force=this.checked" style="margin:0">
+            <label for="cv-quadlet-down-force" class="cvs-field-label" style="margin:0">KubeDownForce</label>
+          </div>
+        </div>
+      </details>
+
       {# Images — header + always-visible pills + collapsible body #}
       <div class="cvs-collapse" id="cvs-images-pane">
         <div class="cvs-collapse-hd" onclick="togglePane('images')">
@@ -1359,6 +1406,8 @@ const state = {
   pod_name: 'mypod', restart_policy: 'Always', mode: 'rootless',
   host_network: false, host_pid: false, host_ipc: false,
   hostname: '', host_aliases: '', dns: '', network: '',
+  quadlet_auto_update: '', quadlet_log_driver: '', quadlet_exit_code_propagation: '',
+  quadlet_kube_down_force: false, quadlet_timeout_start: null,
   containers: [], connections: [],
 };
 
@@ -2742,6 +2791,11 @@ function toFormData() {
     host_pid:!!state.host_pid, host_ipc:!!state.host_ipc,
     hostname:state.hostname||'', host_aliases:state.host_aliases||'',
     userns:'', dns:state.dns||'', network:state.network||'',
+    quadlet_auto_update:state.quadlet_auto_update||'',
+    quadlet_log_driver:state.quadlet_log_driver||'',
+    quadlet_exit_code_propagation:state.quadlet_exit_code_propagation||'',
+    quadlet_kube_down_force:!!state.quadlet_kube_down_force,
+    quadlet_timeout_start:state.quadlet_timeout_start||null,
     init_containers:[],
     containers: state.containers.map(c => ({
       name:  c.name  || shortName(c.image) || 'container',

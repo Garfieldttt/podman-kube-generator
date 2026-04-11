@@ -25,6 +25,26 @@ USERNS_CHOICES = [
     ('host', 'host (no user namespace)'),
 ]
 
+QUADLET_AUTO_UPDATE_CHOICES = [
+    ('', 'off'),
+    ('registry', 'registry (pull new image on update)'),
+    ('local', 'local (rebuild from local image)'),
+]
+
+QUADLET_LOG_DRIVER_CHOICES = [
+    ('', '— default —'),
+    ('journald', 'journald'),
+    ('k8s-file', 'k8s-file'),
+    ('none', 'none'),
+    ('passthrough', 'passthrough'),
+]
+
+QUADLET_EXIT_CODE_CHOICES = [
+    ('', '— none —'),
+    ('all', 'all (exit 0 only if all containers exit 0)'),
+    ('any', 'any (exit 0 if any container exits 0)'),
+]
+
 MODE_CHOICES = [
     ('rootless', 'Rootless (recommended, regular user)'),
     ('rootful', 'Rootful (root / sudo)'),
@@ -108,6 +128,35 @@ class PodForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'e.g. podman-net (empty = default)',
         }),
+    )
+    # Quadlet options
+    quadlet_auto_update = forms.ChoiceField(
+        label='Auto-Update',
+        choices=QUADLET_AUTO_UPDATE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    quadlet_log_driver = forms.ChoiceField(
+        label='Log Driver',
+        choices=QUADLET_LOG_DRIVER_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    quadlet_exit_code_propagation = forms.ChoiceField(
+        label='Exit Code Propagation',
+        choices=QUADLET_EXIT_CODE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    quadlet_kube_down_force = forms.BooleanField(
+        label='KubeDownForce (force remove on stop)',
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+    quadlet_timeout_start = forms.IntegerField(
+        label='Timeout Start (seconds)',
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 120'}),
     )
 
 

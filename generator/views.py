@@ -229,25 +229,6 @@ def validate_form_data(form_data):
                 ),
             })
 
-    # 6. runAsUser: 0 in rootless mode → maps to host user, not real root
-    # Exception: DB images intentionally run as UID 0 so the container-internal
-    # re-exec (e.g. gosu postgres) can write to a hostPath volume owned by the host user.
-    for c in containers:
-        if mode == 'rootless' and c.get('run_as_user') == 0 and _img_base(c.get('image', '')) not in _DB_IMAGES:
-            warnings.append({
-                'level': 'warning',
-                'msg': f'<code>{c.get("name")}</code>: <code>runAsUser: 0</code> in rootless mode '
-                       f'maps to your host user — not real root, but unusual',
-                'hint': 'runAsUser: 0',
-                'suggestion': (
-                    'In rootless mode, UID 0 inside the container\n'
-                    'runs as your host user (not actual root).\n\n'
-                    'If the process genuinely needs root:\n'
-                    '  → use rootful mode\n\n'
-                    'If the image runs as UID 0 but does not need root:\n'
-                    '  → omit run_as_user or set it to 1000'
-                ),
-            })
 
     # 7. :latest tag on DB containers → uncontrolled major version upgrades
     _DB_VERSIONS = {'mysql': '8.0', 'mariadb': '11', 'postgres': '16', 'postgresql': '16',
@@ -282,21 +263,6 @@ def validate_form_data(form_data):
                 'suggestion': 'Set an image, e.g.:\n  image: docker.io/library/nginx:alpine',
             })
             continue
-        if (img.endswith(':latest') or ':' not in img.split('/')[-1]) and not is_db(img):
-            img_name = _img_base(img)
-            warnings.append({
-                'level': 'warning',
-                'msg': f'<code>{c.get("name")}</code>: <code>:latest</code> — '
-                       f'image may change silently on <code>podman pull</code>',
-                'hint': f'image: {img}',
-                'suggestion': (
-                    f'Pin a specific tag for reproducible deployments:\n'
-                    f'  image: docker.io/{img_name}:1.2.3\n\n'
-                    f'Check the current version:\n'
-                    f'  podman pull docker.io/{img_name}:latest\n'
-                    f'  podman image inspect docker.io/{img_name}:latest | grep -i version'
-                ),
-            })
 
     # 9. ZBX_DB_TYPE set but DB connection vars missing → proxy cannot connect
     for c in containers:
