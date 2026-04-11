@@ -1426,7 +1426,7 @@ STACKS = {
             },
             {
                 'name': 'playwright-chrome',
-                'image': 'browserless/chrome:latest',
+                'image': 'docker.io/browserless/chrome:latest',
                 'env': 'SCREEN_WIDTH=1920\nSCREEN_HEIGHT=1024\nSCREEN_DEPTH=16\nMAX_CONCURRENT_CHROME_PROCESSES=10',
             },
         ],
