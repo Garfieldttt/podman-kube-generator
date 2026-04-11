@@ -238,6 +238,16 @@ migrate() {
 }
 
 # ── Static files ───────────────────────────────────────────────
+load_stacks() {
+    step "── Syncing stacks from stacks.py ───────────────────────"
+
+    if ! $MANAGE load_stacks >> "$LOG" 2>&1; then
+        err "load_stacks failed."
+        rollback "load_stacks failed"
+    fi
+    ok "Stacks synced."
+}
+
 collectstatic() {
     step "── Collecting static files ─────────────────────────────"
 
@@ -294,6 +304,7 @@ confirm
 update_packages
 django_check
 migrate
+load_stacks
 collectstatic
 restart_service
 summary
