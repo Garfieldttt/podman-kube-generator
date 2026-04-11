@@ -69,29 +69,29 @@
       <div class="card-body py-3">
         <div class="d-flex align-items-center gap-3 flex-wrap">
 
-          <div class="dropdown" id="stack-picker">
-            <button type="button" class="btn dropdown-toggle"
-              id="stack-picker-btn"
-              data-bs-toggle="dropdown" data-bs-auto-close="outside"
-              aria-expanded="false"
-              style="background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.3);color:#5eead4;min-width:230px;text-align:left;font-size:.875rem;">
-              <i class="bi bi-layers me-2"></i>
-              <span id="stack-picker-label">Select stack...</span>
-            </button>
-
-            <div class="dropdown-menu p-0"
-              id="stack-picker-menu"
-              style="min-width:300px;z-index:1050;border-color:rgba(20,184,166,.3) !important;">
-
-              <div class="p-2" style="border-bottom:1px solid var(--border);">
+          <div class="position-relative" id="stack-picker">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <div class="position-relative">
+                <i class="bi bi-search position-absolute" style="left:9px;top:50%;transform:translateY(-50%);color:#5eead4;pointer-events:none;font-size:.8rem;"></i>
                 <input type="text" id="stack-search"
                   class="form-control form-control-sm"
-                  placeholder="Search…" autocomplete="off"
-                  oninput="filterStacks(this.value)"
-                  onkeydown="event.stopPropagation()">
+                  placeholder="Search stacks…" autocomplete="off"
+                  style="padding-left:2rem;min-width:220px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.3);color:#f9fafb;"
+                  oninput="filterStacks(this.value); showStackPanel()"
+                  onfocus="showStackPanel()"
+                  onkeydown="stackSearchKeydown(event)">
               </div>
+              <span id="stack-picker-label" style="color:#5eead4;font-size:.875rem;display:none;">
+                <i class="bi bi-layers me-1"></i><span id="stack-picker-label-text"></span>
+              </span>
+            </div>
 
-              <div id="stack-list" style="max-height:340px;overflow-y:auto;">
+            <div id="stack-picker-menu"
+              style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:300px;z-index:1050;
+                     background:var(--surface-2,#1e2130);border:1px solid rgba(20,184,166,.3);
+                     border-radius:.5rem;box-shadow:0 4px 24px rgba(0,0,0,.5);">
+
+              <div id="stack-list" style="max-height:340px;overflow-y:auto;padding:.5rem 0;">
                 {% regroup stacks by category as grouped_stacks %}
                 {% for group in grouped_stacks %}
                 <div class="stack-group pt-2 px-1" data-category="{{ group.grouper|lower }}">
@@ -426,13 +426,22 @@ document.body.addEventListener('htmx:afterSwap', function(e) {
   refreshConnectionAssistant();
 });
 
-// ── Stack-Picker Dropdown ─────────────────────────────────────────
-// Bootstrap dropdown — focus search on open
-document.addEventListener('shown.bs.dropdown', function(e) {
-  if (e.target.id === 'stack-picker-btn') {
-    const search = document.getElementById('stack-search');
-    if (search) { search.value = ''; filterStacks(''); search.focus(); }
-  }
+// ── Stack-Picker ──────────────────────────────────────────────────
+function showStackPanel() {
+  document.getElementById('stack-picker-menu').style.display = 'block';
+}
+
+function hideStackPanel() {
+  document.getElementById('stack-picker-menu').style.display = 'none';
+}
+
+function stackSearchKeydown(e) {
+  if (e.key === 'Escape') { hideStackPanel(); e.target.blur(); }
+}
+
+// Close panel on outside click
+document.addEventListener('click', function(e) {
+  if (!document.getElementById('stack-picker').contains(e.target)) hideStackPanel();
 });
 
 function filterStacks(q) {
@@ -486,9 +495,12 @@ function showStackInfo(stack) {
 }
 
 async function pickCommunityStack(id, username, name) {
-  document.getElementById('stack-picker-label').textContent = name + ' (' + username + ')';
-  const btn = document.getElementById('stack-picker-btn');
-  bootstrap.Dropdown.getInstance(btn)?.hide();
+  const lbl = document.getElementById('stack-picker-label');
+  document.getElementById('stack-picker-label-text').textContent = name + ' (' + username + ')';
+  lbl.style.display = 'inline';
+  document.getElementById('stack-search').value = '';
+  filterStacks('');
+  hideStackPanel();
 
   const r = await fetch(`/community-stack/?id=${id}`);
   const stack = await r.json();
@@ -499,9 +511,12 @@ async function pickCommunityStack(id, username, name) {
 }
 
 async function pickStack(key, label) {
-  document.getElementById('stack-picker-label').textContent = label;
-  const btn = document.getElementById('stack-picker-btn');
-  bootstrap.Dropdown.getInstance(btn)?.hide();
+  const lbl = document.getElementById('stack-picker-label');
+  document.getElementById('stack-picker-label-text').textContent = label;
+  lbl.style.display = 'inline';
+  document.getElementById('stack-search').value = '';
+  filterStacks('');
+  hideStackPanel();
 
   const r = await fetch(`/stack-load/?key=${key}`);
   const stack = await r.json();
