@@ -78,6 +78,7 @@
     </div>
 
     {% if private_page.has_other_pages %}
+
     <nav class="mt-2 mb-4 d-flex justify-content-center gap-2">
       {% if private_page.has_previous %}
       <a href="?private_page={{ private_page.previous_page_number }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-left"></i></a>
@@ -148,9 +149,11 @@
           <a href="/view-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Show YAML">
             <i class="bi bi-code-square"></i>
           </a>
+          {% if not s.is_approved %}
           <a href="/edit-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Edit">
             <i class="bi bi-pencil"></i>
           </a>
+          {% endif %}
           <form method="post" action="/delete-stack/{{ s.pk }}/" onsubmit="return confirm('Delete stack?')">
             {% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">

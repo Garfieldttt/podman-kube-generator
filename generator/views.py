@@ -1344,6 +1344,8 @@ def _clean_icon(value):
 @login_required(login_url='/login/')
 def edit_user_stack(request, stack_id):
     stack = get_object_or_404(UserStack, pk=stack_id, user=request.user)
+    if stack.is_approved and not stack.is_private:
+        return redirect('my_stacks')
     stacks = StackTemplate.objects.filter(is_active=True).order_by('category', 'sort_order', 'label')
     community_stacks = UserStack.objects.filter(is_approved=True).select_related('user').order_by('user__username', 'name')
     return render(request, 'generator/index.html', {
@@ -1367,6 +1369,8 @@ def update_user_stack(request, stack_id):
     if request.method != 'POST':
         return redirect('my_stacks')
     stack = get_object_or_404(UserStack, pk=stack_id, user=request.user)
+    if stack.is_approved and not stack.is_private:
+        return redirect('my_stacks')
     name = request.POST.get('name', '').strip() or stack.name
     description = request.POST.get('description', '').strip()
     form_data_json = request.POST.get('form_data_json', '')
