@@ -116,7 +116,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('Features', {'fields': ['canvas_enabled', 'compose_import_timeout']}),
         ('Navbar', {'fields': ['brand_icon', 'brand_name', 'brand_tagline', 'brand_name_en', 'brand_tagline_en']}),
         ('Homepage', {'fields': ['home_heading', 'home_intro', 'home_heading_en', 'home_intro_en']}),
-        ('Footer', {'fields': ['footer_author', 'footer_author_url', 'donation_url']}),
+        ('Footer', {'fields': ['donation_url']}),
     ]
 
     def has_add_permission(self, request):
