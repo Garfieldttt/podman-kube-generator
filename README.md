@@ -3,22 +3,56 @@
 Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quadlet** configs.
 
 **Hosted Instance:** https://podman-generator.rzen.at/
+
 <img width="2883" height="1393" alt="podman-kube-builder" src="https://github.com/user-attachments/assets/c1b6556b-4f7d-4a9b-bde5-224f584164d6" />
 <img width="2883" height="1393" alt="podman-kube-builder-env" src="https://github.com/user-attachments/assets/c99d598a-d089-46de-aaa1-6ff30809e64b" />
 <img width="2883" height="1393" alt="podman-kube-generator" src="https://github.com/user-attachments/assets/a276e55e-3b9f-4d4a-979c-b47d4224f1c5" />
 <img width="2883" height="1393" alt="podman-kube-generator2" src="https://github.com/user-attachments/assets/4575e00a-5237-45d6-8ca0-af4067b003ef" />
 
-
 ## Features
 
+### Generator
 - Generate Kubernetes YAML for `podman play kube`
-- Generate Quadlet `.container` / `.pod` files
-- Visual Pod Builder (Canvas)
-- Import from Docker Compose
-- Community stack templates
-- Docker Hub image & tag search with vulnerability info
-- User accounts with TOTP 2FA
-- Analytics dashboard
+- Generate Quadlet `.container` / `.pod` / `.kube` files
+- Download `.env` file for secret variables
+- Save config as a shareable link (no account required)
+- Version history per saved config
+- Organize saved configs in collections
+
+### Import
+- **Docker Compose** → import `docker-compose.yml` / `podman-compose.yml` directly
+- **Existing Kubernetes YAML** → re-edit an existing pod YAML
+
+### Visual Pod Builder
+- Drag-and-drop canvas for building multi-container pods
+- Add, connect and configure containers visually
+
+### Image Tools
+- Docker Hub image & tag search
+- Vulnerability scan info per image tag
+- Pre-configured environment variables for known images (e.g. MariaDB, PostgreSQL, Redis)
+- Connection hints between containers (e.g. which env vars to set for app ↔ database)
+
+### Stack Templates
+- 47 ready-to-use templates (WordPress, Nextcloud, Gitea, Vaultwarden, Zabbix, and more)
+- DB variant switcher (MariaDB ↔ MySQL ↔ PostgreSQL where supported)
+
+### Community
+- Share your stack publicly (requires account, approved by admin)
+- Like and comment on community stacks
+- Public user profiles
+
+### User Accounts
+- Optional registration (can be disabled)
+- Email verification
+- TOTP 2FA
+- Password reset via email
+
+### Admin
+- Full Django admin interface
+- SEO, analytics, cookie banner, email, registration settings
+- Visitor analytics with IP blocking
+- Stack template management (upload Compose file, icon picker)
 
 > **Note:** This tool generates configuration files only. Pulling container images from Docker Hub may be subject to [Docker's subscription requirements](https://www.docker.com/pricing/) for commercial use.
 
@@ -30,7 +64,7 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 ## Installation
 
 ```bash
-git clone git@github.com:Garfieldttt/podman-kube-generator.git
+git clone https://github.com/Garfieldttt/podman-kube-generator.git
 cd podman-kube-generator
 bash install.sh
 ```
@@ -39,9 +73,9 @@ bash install.sh
 - venv creation & dependency installation
 - `.env` setup with generated secret key
 - Database migration
-- Stack import
+- Stack templates import (47 templates included)
 - Admin account creation (username + password prompted)
-- systemd user service setup (optional)
+- systemd user service setup on port 9500 (optional)
 
 > **Note:** For the systemd user service to survive logout, `loginctl enable-linger <user>` must be enabled as **root**. `install.sh` prompts for this automatically.
 
@@ -58,7 +92,9 @@ CSRF_TRUSTED_ORIGINS=https://your-domain.com
 ADMIN_URL=admin                # change to obscure the admin URL (default: /admin/)
 ```
 
-> **Admin URL:** By default the admin is at `/admin/`. Set `ADMIN_URL` in `.env` to any path (e.g. `secret-panel`) to move it.
+> **Admin URL:** Set `ADMIN_URL` in `.env` to any path (e.g. `secret-panel`) to move the admin away from `/admin/`.
+
+> **Reverse Proxy:** If running behind Nginx, Caddy or Cloudflare, make sure `CSRF_TRUSTED_ORIGINS` includes your full domain with protocol (e.g. `https://your-domain.com`).
 
 ## Update
 
@@ -83,11 +119,11 @@ systemctl --user restart podman-kube-gen.service
 journalctl --user -u podman-kube-gen.service -f
 ```
 
-> For these commands to work after logout, `loginctl enable-linger <user>` must be active (requires root — set automatically by `install.sh`).
+> The app runs on port **9500** by default. For these commands to work after logout, `loginctl enable-linger <user>` must be active.
 
 ## Nginx Reverse Proxy (optional)
 
-Only needed if you want HTTPS or a custom domain. The app runs directly on port 9500 without it.
+Only needed if you want HTTPS or a custom domain.
 
 ```nginx
 server {
