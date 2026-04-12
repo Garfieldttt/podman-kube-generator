@@ -39,8 +39,10 @@ def _lines(raw):
 
 
 def _quote_env(val):
-    """Simple shell quoting for env values (double quotes, escape inner ")."""
-    return '"' + val.replace('"', '\\"') + '"'
+    """Shell-safe quoting for env values using single quotes.
+    Single quotes prevent $, `, \\, and variable expansion entirely.
+    Inner single quotes are escaped as '\\''."""
+    return "'" + val.replace("'", "'\\''") + "'"
 
 
 
@@ -61,7 +63,10 @@ def generate_shell(form_data):
     pod_args = [f'{sudo}podman pod create \\', f'--name {pod_name} \\']
 
     # Collect ports from ALL containers → publish only at pod level
+    # internal_only containers: no host port mapping (pod-internal only)
     for c in containers:
+        if c.get('internal_only'):
+            continue
         for line in _lines(c.get('ports', '')):
             pod_args.append(f'-p {line} \\')
 
