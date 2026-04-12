@@ -231,6 +231,8 @@ def parse_docker_run(command: str) -> tuple:
     privileged = False
     read_only = False
     host_network = False
+    host_pid = False
+    host_ipc = False
     hostname = ''
     dns_servers = []
     add_hosts = []
@@ -314,6 +316,12 @@ def parse_docker_run(command: str) -> tuple:
                 cap_drop.append(val)
             elif tok in ('--hostname', '-h'):
                 hostname = val
+            elif tok == '--pid':
+                if val == 'host':
+                    host_pid = True
+            elif tok == '--ipc':
+                if val == 'host':
+                    host_ipc = True
             elif tok == '--dns':
                 dns_servers.append(val)
             elif tok == '--add-host':
@@ -384,6 +392,8 @@ def parse_docker_run(command: str) -> tuple:
         'named_volumes': named_volumes,
         'restart_policy': restart,
         'host_network': host_network,
+        'host_pid': host_pid,
+        'host_ipc': host_ipc,
         'dns': '\n'.join(dns_servers),
         'host_aliases': host_aliases_str,
         'warnings': [{'msg': w} for w in warnings],
