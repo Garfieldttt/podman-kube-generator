@@ -31,9 +31,13 @@ def _volumes_to_str(volumes):
     out = []
     for v in (volumes or []):
         if isinstance(v, dict):
+            vtype = v.get('type', 'volume')
+            if vtype == 'tmpfs':
+                continue  # tmpfs hat kein persistentes Äquivalent → überspringen
             src = v.get('source', '')
             tgt = v.get('target', '')
-            v = f'{src}:{tgt}' if src else tgt
+            ro = ':ro' if v.get('read_only') else ''
+            v = f'{src}:{tgt}{ro}' if src else tgt
         v = str(v)
         # Relativen Pfad zu absolutem machen
         if v.startswith('./') or v.startswith('../'):
@@ -159,9 +163,9 @@ def _norm_image(img):
     known = ('docker.io/', 'ghcr.io/', 'quay.io/', 'registry.')
     if any(img.startswith(r) for r in known):
         return img
-    name_part = img.split(':')[0]
+    name_part = img.split(':')[0].split('@')[0]
     first = name_part.split('/')[0]
-    if '.' in first:
+    if '.' in first or first == 'localhost':
         return img
     if '/' not in name_part:
         return f'docker.io/{img}' if ':' in img else f'docker.io/{img}:latest'
@@ -206,6 +210,7 @@ def parse_docker_run(command: str) -> tuple:
         '--ulimit', '--tmpfs', '--device', '--pid', '--ipc',
         '--env-file', '--pull', '--platform', '--stop-signal',
         '--stop-timeout', '--runtime', '--security-opt',
+        '--pod',
     }
 
     name = ''
@@ -227,6 +232,8 @@ def parse_docker_run(command: str) -> tuple:
     read_only = False
     host_network = False
     hostname = ''
+    dns_servers = []
+    add_hosts = []
     warnings = []
 
     i = 0
@@ -307,6 +314,15 @@ def parse_docker_run(command: str) -> tuple:
                 cap_drop.append(val)
             elif tok in ('--hostname', '-h'):
                 hostname = val
+            elif tok == '--dns':
+                dns_servers.append(val)
+            elif tok == '--add-host':
+                # format: host:ip → "ip hostname" for host_aliases
+                if ':' in val:
+                    h, ip = val.split(':', 1)
+                    add_hosts.append(f'{ip} {h}')
+                else:
+                    add_hosts.append(val)
             elif tok == '--network':
                 if val == 'host':
                     host_network = True
@@ -360,13 +376,16 @@ def parse_docker_run(command: str) -> tuple:
         if is_named and src not in named_volumes:
             named_volumes.append(src)
 
+    host_aliases_str = '\n'.join(add_hosts)
+
     return {
         'ok': True,
         'containers': [container],
         'named_volumes': named_volumes,
         'restart_policy': restart,
         'host_network': host_network,
-        'host_aliases': hostname and f'# hostname: {hostname}' or '',
+        'dns': '\n'.join(dns_servers),
+        'host_aliases': host_aliases_str,
         'warnings': [{'msg': w} for w in warnings],
         'env_file_svcs': [],
         'mode': 'rootful' if needs_rootful else 'rootless',

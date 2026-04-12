@@ -12,7 +12,9 @@ def _ports_from_container(c):
         host = p.get('hostPort') or p.get('containerPort')
         cont = p.get('containerPort') or host
         if host and cont:
-            lines.append(f'{host}:{cont}')
+            proto = (p.get('protocol') or 'TCP').upper()
+            suffix = f'/{proto}' if proto not in ('TCP', '') else ''
+            lines.append(f'{host}:{cont}{suffix}')
     return '\n'.join(lines)
 
 
