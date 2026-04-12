@@ -81,9 +81,10 @@ PRESETS = {
     },
     "nextcloud": {
         "ports": "8080:80",
-        "env": "NEXTCLOUD_ADMIN_USER=admin\nNEXTCLOUD_ADMIN_PASSWORD=changeme\nMYSQL_HOST=127.0.0.1\nMYSQL_DATABASE=nextcloud\nMYSQL_USER=nextcloud\nMYSQL_PASSWORD=changeme",
+        "env": "POSTGRES_HOST=127.0.0.1\nPOSTGRES_DB=nextcloud\nPOSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=changeme\nNEXTCLOUD_ADMIN_USER=admin\nNEXTCLOUD_ADMIN_PASSWORD=changeme\nNEXTCLOUD_TRUSTED_DOMAINS=localhost",
         "volumes": "nextcloud-html:/var/www/html:Z",
         "mode_hint": "rootless",
+        "note": "Supports PostgreSQL (default) and MySQL/MariaDB. For MySQL use MYSQL_HOST/DATABASE/USER/PASSWORD instead.",
     },
     "gitea": {
         "ports": "3000:3000\n2222:22",

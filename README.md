@@ -49,7 +49,7 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 ### Community
 - Share your stack publicly (requires account, approved by admin)
 - Like and comment on community stacks
-- Public user profiles with avatar
+- Public user profiles with avatar, bio, website and social links (email is never shown publicly)
 
 ### User Accounts
 - Registration disabled by default, can be enabled in admin
