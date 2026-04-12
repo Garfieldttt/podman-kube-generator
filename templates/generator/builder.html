@@ -4291,14 +4291,15 @@ function renderVersionPicker(imageVal) {
   const base      = imagePath.split('/').pop().toLowerCase();
   const current   = (imageVal||'').split(':')[1] || '';
 
-  // 1. Hardcoded list — instant
-  if (_IMG_VERSIONS[base]) {
-    wrap.style.display = '';
-    _renderVerBtns(_IMG_VERSIONS[base], current);
-    return;
+  if (!base || base.length < 2) { wrap.style.display = 'none'; return; }
+
+  // Only fetch for docker.io images
+  const imgFull = (imageVal||'').toLowerCase();
+  if (imgFull.startsWith('ghcr.io/') || imgFull.startsWith('quay.io/') || imgFull.startsWith('lscr.io/')) {
+    wrap.style.display = 'none'; return;
   }
 
-  // 2. Already fetched — instant
+  // Already fetched — render immediately
   if (_tagCache[base]) {
     const versions = _filterTags(_tagCache[base]);
     if (versions.length) { wrap.style.display = ''; _renderVerBtns(versions, current); }
@@ -4306,15 +4307,18 @@ function renderVersionPicker(imageVal) {
     return;
   }
 
-  // 3. Fetch from Docker Hub
-  if (!base || base.length < 2) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'none'; // hide while loading
+  // Show hardcoded list as placeholder while fetching
+  if (_IMG_VERSIONS[base]) {
+    wrap.style.display = '';
+    _renderVerBtns(_IMG_VERSIONS[base], current);
+  } else {
+    wrap.style.display = 'none';
+  }
+
+  // Always fetch live tags from Docker Hub
   const parts = imagePath.split('/');
   const namespace = parts.length >= 2 ? parts[parts.length - 2] : 'library';
   const name      = parts[parts.length - 1];
-  // Only fetch for docker.io images (no ghcr.io, quay.io)
-  const imgFull = (imageVal||'').toLowerCase();
-  if (imgFull.startsWith('ghcr.io/') || imgFull.startsWith('quay.io/') || imgFull.startsWith('lscr.io/')) return;
 
   fetch(`/image-tags/?namespace=${encodeURIComponent(namespace)}&name=${encodeURIComponent(name)}&format=json`)
     .then(r => r.ok ? r.json() : {tags: []})
@@ -4329,6 +4333,8 @@ function renderVersionPicker(imageVal) {
       if (versions.length) {
         wrap.style.display = '';
         _renderVerBtns(versions, c.image.split(':')[1] || '');
+      } else {
+        wrap.style.display = 'none';
       }
     })
     .catch(() => {});
