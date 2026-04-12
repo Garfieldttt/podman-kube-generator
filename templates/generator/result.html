@@ -376,13 +376,19 @@
                 <div class="col-sm-6">
                   <label class="form-label small" style="color:var(--text-dim);">Icon</label>
                   <div class="d-flex gap-2 align-items-center mb-1">
-                    <i id="icon-preview-submit" class="bi bi-box" style="font-size:1.4rem;color:#5eead4;width:28px;text-align:center;flex-shrink:0;"></i>
-                    <input type="text" name="icon" id="icon-input-submit" class="form-control form-control-sm" maxlength="60"
-                      value="bi-box" placeholder="Search icon…"
-                      oninput="document.getElementById('icon-preview-submit').className='bi '+this.value;filterIconPicker('icon-grid-submit',this.value)">
+                    <div style="width:32px;height:32px;border-radius:6px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                      <i id="icon-preview-submit" class="bi bi-box" style="color:#5eead4;font-size:1rem;"></i>
+                    </div>
+                    <input type="text" name="icon" id="icon-input-submit" class="form-control form-control-sm" maxlength="60" value="bi-box" readonly style="width:120px;">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleSubmitPicker()">
+                      <i class="bi bi-grid"></i>
+                    </button>
                   </div>
-                  <div id="icon-grid-submit" style="display:flex;flex-wrap:wrap;gap:3px;max-height:96px;overflow-y:auto;"></div>
-                  <script>renderIconPicker('icon-grid-submit','icon-preview-submit','icon-input-submit');</script>
+                  <div id="icon-picker-submit" style="display:none;border:1px solid var(--border);border-radius:8px;padding:.6rem;background:var(--surface-2);margin-top:.4rem;">
+                    <input type="text" id="icon-search-submit" placeholder="Search…" oninput="filterSubmitIcons(this.value)"
+                      class="form-control form-control-sm mb-2">
+                    <div id="icon-grid-submit" style="display:flex;flex-wrap:wrap;gap:5px;max-height:180px;overflow-y:auto;"></div>
+                  </div>
                 </div>
               </div>
               <p class="small mb-0" style="color:var(--text-muted);">
@@ -446,6 +452,38 @@
           }
         })
         .catch(() => { btn.disabled = false; });
+    });
+
+    function renderSubmitIcons(list) {
+      document.getElementById('icon-grid-submit').innerHTML = list.map(ic =>
+        `<button type="button" title="${ic}"
+          style="width:36px;height:36px;border:1px solid var(--border);border-radius:6px;background:rgba(20,184,166,.1);color:#5eead4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;"
+          onmouseover="this.style.background='rgba(20,184,166,.25)'" onmouseout="this.style.background='rgba(20,184,166,.1)'"
+          onclick="selectSubmitIcon('${ic}')">
+          <i class="bi ${ic}"></i>
+        </button>`
+      ).join('');
+    }
+    function filterSubmitIcons(q) {
+      renderSubmitIcons(q ? _STACK_ICONS.filter(i => i.includes(q.toLowerCase())) : _STACK_ICONS);
+    }
+    function selectSubmitIcon(ic) {
+      document.getElementById('icon-input-submit').value = ic;
+      document.getElementById('icon-preview-submit').className = 'bi ' + ic;
+      document.getElementById('icon-picker-submit').style.display = 'none';
+      document.getElementById('icon-search-submit').value = '';
+    }
+    function toggleSubmitPicker() {
+      const p = document.getElementById('icon-picker-submit');
+      p.style.display = p.style.display === 'none' ? 'block' : 'none';
+      if (p.style.display === 'block') {
+        renderSubmitIcons(_STACK_ICONS);
+        document.getElementById('icon-search-submit').value = '';
+        document.getElementById('icon-search-submit').focus();
+      }
+    }
+    document.getElementById('submit-stack-modal').addEventListener('shown.bs.modal', function() {
+      renderSubmitIcons(_STACK_ICONS);
     });
     </script>
     {% endif %}
