@@ -96,6 +96,35 @@ _TOTP_EXEMPT = {
 }
 
 
+class IPBlockMiddleware:
+    CACHE_KEY = 'ip_block_list'
+    CACHE_TTL = 60  # seconds
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def _get_blocked(self):
+        from django.core.cache import cache
+        blocked = cache.get(self.CACHE_KEY)
+        if blocked is None:
+            try:
+                from generator.models import AnalyticsSettings
+                s = AnalyticsSettings.objects.filter(pk=1).first()
+                raw = s.access_blocked_ips if s else ''
+            except Exception:
+                raw = ''
+            blocked = {line.strip() for line in raw.splitlines() if line.strip()}
+            cache.set(self.CACHE_KEY, blocked, self.CACHE_TTL)
+        return blocked
+
+    def __call__(self, request):
+        ip = _get_ip(request)
+        if ip and ip in self._get_blocked():
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden('Access denied.')
+        return self.get_response(request)
+
+
 class AdminTOTPMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

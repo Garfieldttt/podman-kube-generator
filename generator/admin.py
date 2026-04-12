@@ -162,6 +162,7 @@ class AnalyticsSettingsAdmin(admin.ModelAdmin):
     fieldsets = [
         ('Tracking', {'fields': ['enabled', 'anonymize_ip', 'track_bots', 'track_private_ips', 'retention_days']}),
         ('Exclusions', {'fields': ['exclude_paths', 'blocked_ips']}),
+        ('Access Control', {'fields': ['access_blocked_ips']}),
     ]
 
     def has_add_permission(self, request):

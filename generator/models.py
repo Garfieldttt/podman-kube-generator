@@ -94,6 +94,11 @@ class AnalyticsSettings(models.Model):
         verbose_name='Exclude IPs from analytics',
         help_text='One IP per line. Visits from these IPs will not be recorded in analytics.',
     )
+    access_blocked_ips = models.TextField(
+        blank=True, default='',
+        verbose_name='Block IPs (deny access)',
+        help_text='One IP per line. These IPs will receive a 403 Forbidden response site-wide.',
+    )
     retention_days = models.PositiveSmallIntegerField(
         default=90,
         verbose_name='Retention (days)',
