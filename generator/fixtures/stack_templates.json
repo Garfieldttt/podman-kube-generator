@@ -1,1823 +1,1859 @@
 [
-{
-  "model": "generator.stacktemplate",
-  "pk": 1,
-  "fields": {
-    "key": "wordpress-mariadb",
-    "label": "WordPress",
-    "icon": "bi-globe",
-    "category": "CMS",
-    "description": "CMS platform for blogs and websites with MariaDB database",
-    "stack_data": {
-      "pod_name": "wordpress",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "wordpress",
-          "image": "docker.io/wordpress:latest",
-          "ports": "8080:80",
-          "env": "WORDPRESS_DB_HOST=127.0.0.1:3306\nWORDPRESS_DB_USER=wordpress\nWORDPRESS_DB_PASSWORD=changeme\nWORDPRESS_DB_NAME=wordpress",
-          "volumes": "wordpress-html:/var/www/html:Z"
-        },
-        {
-          "name": "mariadb",
-          "image": "docker.io/mariadb:11",
-          "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=wordpress\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=wordpress",
-          "volumes": "wordpress-db:/var/lib/mysql:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ],
-      "db_variants": {
-        "replace": "mariadb",
-        "options": [
+  {
+    "model": "generator.stacktemplate",
+    "pk": 1,
+    "fields": {
+      "key": "wordpress-mariadb",
+      "label": "WordPress",
+      "icon": "bi-globe",
+      "category": "CMS",
+      "description": "CMS platform for blogs and websites with MariaDB database",
+      "stack_data": {
+        "pod_name": "wordpress",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
           {
-            "key": "mariadb",
-            "label": "MariaDB 11",
-            "icon": "bi-database",
-            "container": {
-              "name": "mariadb",
-              "image": "docker.io/mariadb:11",
-              "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=wordpress\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=wordpress",
-              "volumes": "wordpress-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            }
+            "name": "wordpress",
+            "image": "docker.io/wordpress:latest",
+            "ports": "8080:80",
+            "env": "WORDPRESS_DB_HOST=127.0.0.1:3306\nWORDPRESS_DB_USER=wordpress\nWORDPRESS_DB_PASSWORD=changeme\nWORDPRESS_DB_NAME=wordpress",
+            "volumes": "wordpress-html:/var/www/html:Z"
           },
           {
-            "key": "mysql",
-            "label": "MySQL 8",
-            "icon": "bi-database-fill",
-            "container": {
-              "name": "mysql",
-              "image": "docker.io/mysql:8",
-              "env": "MYSQL_ROOT_PASSWORD=changeme_root\nMYSQL_USER=wordpress\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=wordpress",
-              "volumes": "wordpress-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            },
-            "app_env": "WORDPRESS_DB_HOST=127.0.0.1:3306\nWORDPRESS_DB_USER=wordpress\nWORDPRESS_DB_PASSWORD=changeme\nWORDPRESS_DB_NAME=wordpress"
+            "name": "mariadb",
+            "image": "docker.io/mariadb:11",
+            "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=wordpress\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=wordpress",
+            "volumes": "wordpress-db:/var/lib/mysql:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
           }
-        ]
-      }
-    },
-    "is_active": true,
-    "sort_order": 0,
-    "created_at": "2026-03-20T16:09:17.837Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 2,
-  "fields": {
-    "key": "nextcloud-postgres",
-    "label": "Nextcloud",
-    "icon": "bi-cloud",
-    "category": "Cloud",
-    "description": "Private cloud storage solution with calendar, contacts and more",
-    "stack_data": {
-      "pod_name": "nextcloud",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "nextcloud",
-          "image": "docker.io/nextcloud:29",
-          "ports": "8080:80",
-          "env": "POSTGRES_HOST=127.0.0.1\nPOSTGRES_DB=nextcloud\nPOSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=changeme\nNEXTCLOUD_ADMIN_USER=admin\nNEXTCLOUD_ADMIN_PASSWORD=changeme\nNEXTCLOUD_TRUSTED_DOMAINS=localhost",
-          "volumes": "nextcloud-html:/var/www/html:Z"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=nextcloud",
-          "volumes": "nextcloud-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ],
-      "db_variants": {
-        "replace": "postgres",
-        "options": [
-          {
-            "key": "postgres",
-            "label": "PostgreSQL 16",
-            "icon": "bi-elephant",
-            "container": {
-              "name": "postgres",
-              "image": "docker.io/postgres:16",
-              "env": "POSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=nextcloud",
-              "volumes": "nextcloud-db:/var/lib/postgresql/data:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
+        ],
+        "db_variants": {
+          "replace": "mariadb",
+          "options": [
+            {
+              "key": "mariadb",
+              "label": "MariaDB 11",
+              "icon": "bi-database",
+              "container": {
+                "name": "mariadb",
+                "image": "docker.io/mariadb:11",
+                "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=wordpress\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=wordpress",
+                "volumes": "wordpress-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              }
+            },
+            {
+              "key": "mysql",
+              "label": "MySQL 8",
+              "icon": "bi-database-fill",
+              "container": {
+                "name": "mysql",
+                "image": "docker.io/mysql:8",
+                "env": "MYSQL_ROOT_PASSWORD=changeme_root\nMYSQL_USER=wordpress\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=wordpress",
+                "volumes": "wordpress-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              },
+              "app_env": "WORDPRESS_DB_HOST=127.0.0.1:3306\nWORDPRESS_DB_USER=wordpress\nWORDPRESS_DB_PASSWORD=changeme\nWORDPRESS_DB_NAME=wordpress"
             }
+          ]
+        }
+      },
+      "is_active": true,
+      "sort_order": 0,
+      "created_at": "2026-03-20T16:09:17.837Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 2,
+    "fields": {
+      "key": "nextcloud-postgres",
+      "label": "Nextcloud",
+      "icon": "bi-cloud",
+      "category": "Cloud",
+      "description": "Private cloud storage solution with calendar, contacts and more",
+      "stack_data": {
+        "pod_name": "nextcloud",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "nextcloud",
+            "image": "docker.io/nextcloud:29",
+            "ports": "8080:80",
+            "env": "POSTGRES_HOST=127.0.0.1\nPOSTGRES_DB=nextcloud\nPOSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=changeme\nNEXTCLOUD_ADMIN_USER=admin\nNEXTCLOUD_ADMIN_PASSWORD=changeme\nNEXTCLOUD_TRUSTED_DOMAINS=localhost",
+            "volumes": "nextcloud-html:/var/www/html:Z"
           },
           {
-            "key": "mariadb",
-            "label": "MariaDB 11",
-            "icon": "bi-database",
-            "container": {
-              "name": "mariadb",
-              "image": "docker.io/mariadb:11",
-              "env": "MARIADB_USER=nextcloud\nMARIADB_PASSWORD=changeme\nMARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_DATABASE=nextcloud",
-              "volumes": "nextcloud-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            },
-            "app_env": "MYSQL_HOST=127.0.0.1\nMYSQL_DATABASE=nextcloud\nMYSQL_USER=nextcloud\nMYSQL_PASSWORD=changeme\nNEXTCLOUD_ADMIN_USER=admin\nNEXTCLOUD_ADMIN_PASSWORD=changeme\nNEXTCLOUD_TRUSTED_DOMAINS=localhost"
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=nextcloud",
+            "volumes": "nextcloud-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
           }
-        ]
-      }
-    },
-    "is_active": true,
-    "sort_order": 1,
-    "created_at": "2026-03-20T16:09:17.851Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 3,
-  "fields": {
-    "key": "gitea-postgres",
-    "label": "Gitea",
-    "icon": "bi-git",
-    "category": "Git",
-    "description": "Lightweight self-hosted Git server with web UI",
-    "stack_data": {
-      "pod_name": "gitea",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "gitea",
-          "image": "docker.io/gitea/gitea:latest",
-          "ports": "3000:3000\n2222:22",
-          "env": "GITEA__database__DB_TYPE=postgres\nGITEA__database__HOST=127.0.0.1:5432\nGITEA__database__NAME=gitea\nGITEA__database__USER=gitea\nGITEA__database__PASSWD=changeme\nGITEA__server__ROOT_URL=http://localhost:3000\nGITEA__server__SSH_PORT=2222",
-          "volumes": "gitea-data:/data:Z"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=gitea\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=gitea",
-          "volumes": "gitea-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ],
-      "db_variants": {
-        "replace": "postgres",
-        "options": [
-          {
-            "key": "postgres",
-            "label": "PostgreSQL 16",
-            "icon": "bi-elephant",
-            "container": {
-              "name": "postgres",
-              "image": "docker.io/postgres:16",
-              "env": "POSTGRES_USER=gitea\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=gitea",
-              "volumes": "gitea-db:/var/lib/postgresql/data:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
+        ],
+        "db_variants": {
+          "replace": "postgres",
+          "options": [
+            {
+              "key": "postgres",
+              "label": "PostgreSQL 16",
+              "icon": "bi-elephant",
+              "container": {
+                "name": "postgres",
+                "image": "docker.io/postgres:16",
+                "env": "POSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=nextcloud",
+                "volumes": "nextcloud-db:/var/lib/postgresql/data:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              }
+            },
+            {
+              "key": "mariadb",
+              "label": "MariaDB 11",
+              "icon": "bi-database",
+              "container": {
+                "name": "mariadb",
+                "image": "docker.io/mariadb:11",
+                "env": "MARIADB_USER=nextcloud\nMARIADB_PASSWORD=changeme\nMARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_DATABASE=nextcloud",
+                "volumes": "nextcloud-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              },
+              "app_env": "MYSQL_HOST=127.0.0.1\nMYSQL_DATABASE=nextcloud\nMYSQL_USER=nextcloud\nMYSQL_PASSWORD=changeme\nNEXTCLOUD_ADMIN_USER=admin\nNEXTCLOUD_ADMIN_PASSWORD=changeme\nNEXTCLOUD_TRUSTED_DOMAINS=localhost"
             }
+          ]
+        }
+      },
+      "is_active": true,
+      "sort_order": 1,
+      "created_at": "2026-03-20T16:09:17.851Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 49,
+    "fields": {
+      "key": "nextcloud-mariadb",
+      "label": "Nextcloud (MariaDB)",
+      "icon": "bi-cloud",
+      "category": "Cloud",
+      "description": "Private cloud storage solution with calendar, contacts and more",
+      "stack_data": {
+        "pod_name": "nextcloud",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "nextcloud",
+            "image": "docker.io/nextcloud:29",
+            "ports": "8080:80",
+            "env": "MYSQL_HOST=127.0.0.1\nMYSQL_DATABASE=nextcloud\nMYSQL_USER=nextcloud\nMYSQL_PASSWORD=changeme\nNEXTCLOUD_ADMIN_USER=admin\nNEXTCLOUD_ADMIN_PASSWORD=changeme\nNEXTCLOUD_TRUSTED_DOMAINS=localhost",
+            "volumes": "nextcloud-html:/var/www/html:Z"
           },
           {
-            "key": "mysql",
-            "label": "MySQL 8",
-            "icon": "bi-database-fill",
-            "container": {
-              "name": "mysql",
-              "image": "docker.io/mysql:8",
-              "env": "MYSQL_USER=gitea\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=gitea\nMYSQL_ROOT_PASSWORD=changeme_root",
-              "volumes": "gitea-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            },
-            "app_env": "GITEA__database__DB_TYPE=mysql\nGITEA__database__HOST=127.0.0.1:3306\nGITEA__database__NAME=gitea\nGITEA__database__USER=gitea\nGITEA__database__PASSWD=changeme\nGITEA__server__ROOT_URL=http://localhost:3000\nGITEA__server__SSH_PORT=2222"
+            "name": "mariadb",
+            "image": "docker.io/mariadb:11",
+            "env": "MARIADB_USER=nextcloud\nMARIADB_PASSWORD=changeme\nMARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_DATABASE=nextcloud",
+            "volumes": "nextcloud-db:/var/lib/mysql:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
           }
         ]
       },
-      "sqlite_option": true,
-      "sqlite_env": "GITEA__database__DB_TYPE=sqlite3\nGITEA__database__PATH=/data/gitea/gitea.db\nGITEA__server__ROOT_URL=http://localhost:3000\nGITEA__server__SSH_PORT=2222"
-    },
-    "is_active": true,
-    "sort_order": 2,
-    "created_at": "2026-03-20T16:09:17.866Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 4,
-  "fields": {
-    "key": "grafana-influxdb",
-    "label": "Grafana + InfluxDB",
-    "icon": "bi-bar-chart-line",
-    "category": "Monitoring",
-    "description": "Time series database with Grafana dashboard for metrics",
-    "stack_data": {
-      "pod_name": "monitoring",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "grafana",
-          "image": "docker.io/grafana/grafana:latest",
-          "ports": "3000:3000",
-          "env": "GF_SECURITY_ADMIN_USER=admin\nGF_SECURITY_ADMIN_PASSWORD=changeme\nGF_USERS_ALLOW_SIGN_UP=false\nGF_SERVER_ROOT_URL=http://localhost:3000",
-          "volumes": "monitoring-grafana:/var/lib/grafana:Z",
-          "run_as_user": 0,
-          "run_as_group": 0
-        },
-        {
-          "name": "influxdb",
-          "image": "docker.io/influxdb:2",
-          "ports": "8086:8086",
-          "env": "DOCKER_INFLUXDB_INIT_MODE=setup\nDOCKER_INFLUXDB_INIT_USERNAME=admin\nDOCKER_INFLUXDB_INIT_PASSWORD=changeme123\nDOCKER_INFLUXDB_INIT_ORG=myorg\nDOCKER_INFLUXDB_INIT_BUCKET=metrics\nDOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mytoken",
-          "volumes": "monitoring-influxdb:/var/lib/influxdb2:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 3,
-    "created_at": "2026-03-20T16:09:17.881Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 5,
-  "fields": {
-    "key": "prometheus-grafana",
-    "label": "Prometheus + Grafana",
-    "icon": "bi-graph-up",
-    "category": "Monitoring",
-    "description": "Monitoring stack with Prometheus scraping and Grafana visualization",
-    "stack_data": {
-      "pod_name": "monitoring",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "prometheus",
-          "image": "docker.io/prom/prometheus:latest",
-          "ports": "9090:9090",
-          "volumes": "monitoring-prometheus:/etc/prometheus:Z\nmonitoring-prometheus-data:/prometheus:Z",
-          "args": "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.console.libraries=/usr/share/prometheus/console_libraries --web.console.templates=/usr/share/prometheus/consoles",
-          "run_as_user": 0,
-          "run_as_group": 0
-        },
-        {
-          "name": "grafana",
-          "image": "docker.io/grafana/grafana:latest",
-          "ports": "3000:3000",
-          "env": "GF_SECURITY_ADMIN_USER=admin\nGF_SECURITY_ADMIN_PASSWORD=changeme\nGF_USERS_ALLOW_SIGN_UP=false",
-          "volumes": "monitoring-grafana:/var/lib/grafana:Z",
-          "run_as_user": 0,
-          "run_as_group": 0
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 4,
-    "created_at": "2026-03-20T16:09:17.896Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 6,
-  "fields": {
-    "key": "vaultwarden",
-    "label": "Vaultwarden",
-    "icon": "bi-shield-lock",
-    "category": "Security",
-    "description": "Bitwarden-compatible password manager with low resource usage",
-    "stack_data": {
-      "pod_name": "vaultwarden",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "vaultwarden",
-          "image": "docker.io/vaultwarden/server:latest",
-          "ports": "8080:80",
-          "env": "ADMIN_TOKEN=changeme_token\nSIGNUPS_ALLOWED=false\nDOMAIN=https://vaultwarden.example.com\nWEBSOCKET_ENABLED=true",
-          "volumes": "vaultwarden-data:/data:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 5,
-    "created_at": "2026-03-20T16:09:17.914Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 7,
-  "fields": {
-    "key": "keycloak-postgres",
-    "label": "Keycloak",
-    "icon": "bi-person-badge",
-    "category": "Security",
-    "description": "Identity and access management with SSO, OAuth2 and SAML",
-    "stack_data": {
-      "pod_name": "keycloak",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "keycloak",
-          "image": "quay.io/keycloak/keycloak:latest",
-          "ports": "8080:8080",
-          "env": "KC_DB=postgres\nKC_DB_URL=jdbc:postgresql://127.0.0.1:5432/keycloak\nKC_DB_USERNAME=keycloak\nKC_DB_PASSWORD=changeme\nKEYCLOAK_ADMIN=admin\nKEYCLOAK_ADMIN_PASSWORD=changeme\nKC_HOSTNAME=localhost",
-          "args": "start-dev"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=keycloak\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=keycloak",
-          "volumes": "keycloak-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ],
-      "db_variants": {
-        "replace": "postgres",
-        "options": [
+      "is_active": true,
+      "sort_order": 2,
+      "created_at": "2026-04-12T00:00:00.000Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 3,
+    "fields": {
+      "key": "gitea-postgres",
+      "label": "Gitea",
+      "icon": "bi-git",
+      "category": "Git",
+      "description": "Lightweight self-hosted Git server with web UI",
+      "stack_data": {
+        "pod_name": "gitea",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
           {
-            "key": "postgres",
-            "label": "PostgreSQL 16",
-            "icon": "bi-elephant",
-            "container": {
-              "name": "postgres",
-              "image": "docker.io/postgres:16",
-              "env": "POSTGRES_USER=keycloak\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=keycloak",
-              "volumes": "keycloak-db:/var/lib/postgresql/data:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            }
+            "name": "gitea",
+            "image": "docker.io/gitea/gitea:latest",
+            "ports": "3000:3000\n2222:22",
+            "env": "GITEA__database__DB_TYPE=postgres\nGITEA__database__HOST=127.0.0.1:5432\nGITEA__database__NAME=gitea\nGITEA__database__USER=gitea\nGITEA__database__PASSWD=changeme\nGITEA__server__ROOT_URL=http://localhost:3000\nGITEA__server__SSH_PORT=2222",
+            "volumes": "gitea-data:/data:Z"
           },
           {
-            "key": "mariadb",
-            "label": "MariaDB 11",
-            "icon": "bi-database",
-            "container": {
-              "name": "mariadb",
-              "image": "docker.io/mariadb:11",
-              "env": "MARIADB_USER=keycloak\nMARIADB_PASSWORD=changeme\nMARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_DATABASE=keycloak",
-              "volumes": "keycloak-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            },
-            "app_env": "KC_DB=mariadb\nKC_DB_URL=jdbc:mariadb://127.0.0.1:3306/keycloak\nKC_DB_USERNAME=keycloak\nKC_DB_PASSWORD=changeme\nKEYCLOAK_ADMIN=admin\nKEYCLOAK_ADMIN_PASSWORD=changeme\nKC_HOSTNAME=localhost"
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=gitea\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=gitea",
+            "volumes": "gitea-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
           }
-        ]
-      }
-    },
-    "is_active": true,
-    "sort_order": 6,
-    "created_at": "2026-03-20T16:09:17.928Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 8,
-  "fields": {
-    "key": "uptime-kuma",
-    "label": "Uptime Kuma",
-    "icon": "bi-activity",
-    "category": "Monitoring",
-    "description": "Self-hosted monitoring tool for websites, services and ports",
-    "stack_data": {
-      "pod_name": "uptime-kuma",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "uptime-kuma",
-          "image": "docker.io/louislam/uptime-kuma:latest",
-          "ports": "3001:3001",
-          "volumes": "uptime-kuma-data:/app/data:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 9,
-    "created_at": "2026-03-20T16:09:17.943Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 9,
-  "fields": {
-    "key": "jellyfin",
-    "label": "Jellyfin",
-    "icon": "bi-play-circle",
-    "category": "Media",
-    "description": "Free media server for movies, series, music and photos",
-    "stack_data": {
-      "pod_name": "jellyfin",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "jellyfin",
-          "image": "docker.io/jellyfin/jellyfin:latest",
-          "ports": "8096:8096",
-          "env": "JELLYFIN_PublishedServerUrl=http://localhost:8096",
-          "volumes": "jellyfin-config:/config:Z\njellyfin-cache:/cache:Z\n/media:/media:ro"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 13,
-    "created_at": "2026-03-20T16:09:17.958Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 10,
-  "fields": {
-    "key": "immich-redis-postgres",
-    "label": "Immich + Redis + PostgreSQL",
-    "icon": "bi-images",
-    "category": "Media",
-    "description": "High-performance photo and video backup solution with AI recognition",
-    "stack_data": {
-      "pod_name": "immich",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "immich-server",
-          "image": "ghcr.io/immich-app/immich-server:release",
-          "ports": "2283:2283",
-          "env": "DB_HOSTNAME=127.0.0.1\nDB_PORT=5432\nDB_DATABASE_NAME=immich\nDB_USERNAME=immich\nDB_PASSWORD=changeme\nREDIS_HOSTNAME=127.0.0.1\nUPLOAD_LOCATION=/usr/src/app/upload",
-          "volumes": "immich-upload:/usr/src/app/upload:Z"
-        },
-        {
-          "name": "redis",
-          "image": "docker.io/redis:7-alpine",
-          "command": "redis-server --appendonly yes",
-          "volumes": "immich-redis:/data:Z"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/tensorchord/pgvecto-rs:pg16-v0.2.0",
-          "env": "POSTGRES_USER=immich\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=immich",
-          "volumes": "immich-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 14,
-    "created_at": "2026-03-20T16:09:17.973Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 11,
-  "fields": {
-    "key": "paperless-redis-postgres",
-    "label": "Paperless-ngx + Redis + PostgreSQL",
-    "icon": "bi-file-earmark-text",
-    "category": "Dokumente",
-    "description": "Document management system with OCR and automatic tagging",
-    "stack_data": {
-      "pod_name": "paperless",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "paperless",
-          "image": "ghcr.io/paperless-ngx/paperless-ngx:latest",
-          "ports": "8000:8000",
-          "env": "PAPERLESS_REDIS=redis://127.0.0.1:6379\nPAPERLESS_DBHOST=127.0.0.1\nPAPERLESS_DBPORT=5432\nPAPERLESS_DBNAME=paperless\nPAPERLESS_DBUSER=paperless\nPAPERLESS_DBPASS=changeme\nPAPERLESS_ADMIN_USER=admin\nPAPERLESS_ADMIN_PASSWORD=changeme\nPAPERLESS_SECRET_KEY=changeme_secret_key_min_50_chars_long_here",
-          "volumes": "paperless-data:/usr/src/paperless/data:Z\npaperless-media:/usr/src/paperless/media:Z\npaperless-export:/usr/src/paperless/export:Z\npaperless-consume:/usr/src/paperless/consume:Z",
-          "run_as_user": 0,
-          "run_as_group": 0
-        },
-        {
-          "name": "redis",
-          "image": "docker.io/redis:7-alpine",
-          "command": "redis-server --appendonly yes",
-          "volumes": "paperless-redis:/data:Z"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=paperless\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=paperless",
-          "volumes": "paperless-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 19,
-    "created_at": "2026-03-20T16:09:17.987Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 12,
-  "fields": {
-    "key": "mattermost-postgres",
-    "label": "Mattermost",
-    "icon": "bi-chat-dots",
-    "category": "Kommunikation",
-    "description": "Self-hosted team chat as Slack alternative with channels and bots",
-    "stack_data": {
-      "pod_name": "mattermost",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "mattermost",
-          "image": "docker.io/mattermost/mattermost-team-edition:latest",
-          "ports": "8065:8065",
-          "env": "MM_SQLSETTINGS_DRIVERNAME=postgres\nMM_SQLSETTINGS_DATASOURCE=postgres://mattermost:changeme@127.0.0.1:5432/mattermost?sslmode=disable\nMM_SERVICESETTINGS_SITEURL=http://localhost:8065",
-          "volumes": "mattermost-data:/mattermost/data:Z\nmattermost-logs:/mattermost/logs:Z\nmattermost-config:/mattermost/config:Z\nmattermost-plugins:/mattermost/plugins:Z",
-          "run_as_user": 0,
-          "run_as_group": 0
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=mattermost\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=mattermost",
-          "volumes": "mattermost-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ],
-      "db_variants": {
-        "replace": "postgres",
-        "options": [
-          {
-            "key": "postgres",
-            "label": "PostgreSQL 16",
-            "icon": "bi-elephant",
-            "container": {
-              "name": "postgres",
-              "image": "docker.io/postgres:16",
-              "env": "POSTGRES_USER=mattermost\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=mattermost",
-              "volumes": "mattermost-db:/var/lib/postgresql/data:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
+        ],
+        "db_variants": {
+          "replace": "postgres",
+          "options": [
+            {
+              "key": "postgres",
+              "label": "PostgreSQL 16",
+              "icon": "bi-elephant",
+              "container": {
+                "name": "postgres",
+                "image": "docker.io/postgres:16",
+                "env": "POSTGRES_USER=gitea\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=gitea",
+                "volumes": "gitea-db:/var/lib/postgresql/data:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              }
+            },
+            {
+              "key": "mysql",
+              "label": "MySQL 8",
+              "icon": "bi-database-fill",
+              "container": {
+                "name": "mysql",
+                "image": "docker.io/mysql:8",
+                "env": "MYSQL_USER=gitea\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=gitea\nMYSQL_ROOT_PASSWORD=changeme_root",
+                "volumes": "gitea-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              },
+              "app_env": "GITEA__database__DB_TYPE=mysql\nGITEA__database__HOST=127.0.0.1:3306\nGITEA__database__NAME=gitea\nGITEA__database__USER=gitea\nGITEA__database__PASSWD=changeme\nGITEA__server__ROOT_URL=http://localhost:3000\nGITEA__server__SSH_PORT=2222"
             }
+          ]
+        },
+        "sqlite_option": true,
+        "sqlite_env": "GITEA__database__DB_TYPE=sqlite3\nGITEA__database__PATH=/data/gitea/gitea.db\nGITEA__server__ROOT_URL=http://localhost:3000\nGITEA__server__SSH_PORT=2222"
+      },
+      "is_active": true,
+      "sort_order": 3,
+      "created_at": "2026-03-20T16:09:17.866Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 4,
+    "fields": {
+      "key": "grafana-influxdb",
+      "label": "Grafana + InfluxDB",
+      "icon": "bi-bar-chart-line",
+      "category": "Monitoring",
+      "description": "Time series database with Grafana dashboard for metrics",
+      "stack_data": {
+        "pod_name": "monitoring",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "grafana",
+            "image": "docker.io/grafana/grafana:latest",
+            "ports": "3000:3000",
+            "env": "GF_SECURITY_ADMIN_USER=admin\nGF_SECURITY_ADMIN_PASSWORD=changeme\nGF_USERS_ALLOW_SIGN_UP=false\nGF_SERVER_ROOT_URL=http://localhost:3000",
+            "volumes": "monitoring-grafana:/var/lib/grafana:Z",
+            "run_as_user": 0,
+            "run_as_group": 0
           },
           {
-            "key": "mysql",
-            "label": "MySQL 8",
-            "icon": "bi-database-fill",
-            "container": {
-              "name": "mysql",
-              "image": "docker.io/mysql:8",
-              "env": "MYSQL_USER=mattermost\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=mattermost\nMYSQL_ROOT_PASSWORD=changeme_root",
-              "volumes": "mattermost-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            },
-            "app_env": "MM_SQLSETTINGS_DRIVERNAME=mysql\nMM_SQLSETTINGS_DATASOURCE=mattermost:changeme@tcp(127.0.0.1:3306)/mattermost?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s\nMM_SERVICESETTINGS_SITEURL=http://localhost:8065"
-          }
-        ]
-      }
-    },
-    "is_active": true,
-    "sort_order": 20,
-    "created_at": "2026-03-20T16:09:18.005Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 13,
-  "fields": {
-    "key": "miniflux-postgres",
-    "label": "Miniflux + PostgreSQL",
-    "icon": "bi-rss",
-    "category": "RSS",
-    "description": "Minimalist RSS reader with web interface and API",
-    "stack_data": {
-      "pod_name": "miniflux",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "miniflux",
-          "image": "docker.io/miniflux/miniflux:latest",
-          "ports": "8080:8080",
-          "env": "DATABASE_URL=postgres://miniflux:changeme@127.0.0.1/miniflux?sslmode=disable\nRUN_MIGRATIONS=1\nCREATE_ADMIN=1\nADMIN_USERNAME=admin\nADMIN_PASSWORD=changeme"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=miniflux\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=miniflux",
-          "volumes": "miniflux-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 21,
-    "created_at": "2026-03-20T16:09:18.020Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 14,
-  "fields": {
-    "key": "semaphore-postgres",
-    "label": "Semaphore",
-    "icon": "bi-play-btn",
-    "category": "DevOps",
-    "description": "Web UI for Ansible playbooks with inventory and task management",
-    "stack_data": {
-      "pod_name": "semaphore",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "semaphore",
-          "image": "docker.io/semaphoreui/semaphore:latest",
-          "ports": "3000:3000",
-          "env": "SEMAPHORE_DB_DIALECT=postgres\nSEMAPHORE_DB_HOST=127.0.0.1\nSEMAPHORE_DB_PORT=5432\nSEMAPHORE_DB_USER=semaphore\nSEMAPHORE_DB_PASS=changeme\nSEMAPHORE_DB=semaphore\nSEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore\nSEMAPHORE_ADMIN=admin\nSEMAPHORE_ADMIN_PASSWORD=changeme\nSEMAPHORE_ADMIN_EMAIL=admin@example.com",
-          "volumes": "semaphore-data:/home/semaphore:Z"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=semaphore\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=semaphore",
-          "volumes": "semaphore-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ],
-      "db_variants": {
-        "replace": "postgres",
-        "options": [
-          {
-            "key": "postgres",
-            "label": "PostgreSQL 16",
-            "icon": "bi-elephant",
-            "container": {
-              "name": "postgres",
-              "image": "docker.io/postgres:16",
-              "env": "POSTGRES_USER=semaphore\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=semaphore",
-              "volumes": "semaphore-db:/var/lib/postgresql/data:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            }
-          },
-          {
-            "key": "mysql",
-            "label": "MySQL 8",
-            "icon": "bi-database-fill",
-            "container": {
-              "name": "mysql",
-              "image": "docker.io/mysql:8",
-              "env": "MYSQL_USER=semaphore\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=semaphore\nMYSQL_ROOT_PASSWORD=changeme_root",
-              "volumes": "semaphore-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            },
-            "app_env": "SEMAPHORE_DB_DIALECT=mysql\nSEMAPHORE_DB_HOST=127.0.0.1\nSEMAPHORE_DB_PORT=3306\nSEMAPHORE_DB_USER=semaphore\nSEMAPHORE_DB_PASS=changeme\nSEMAPHORE_DB=semaphore\nSEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore\nSEMAPHORE_ADMIN=admin\nSEMAPHORE_ADMIN_PASSWORD=changeme\nSEMAPHORE_ADMIN_EMAIL=admin@example.com"
-          }
-        ]
-      }
-    },
-    "is_active": true,
-    "sort_order": 22,
-    "created_at": "2026-03-20T16:09:18.035Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 15,
-  "fields": {
-    "key": "nginx-app-postgres",
-    "label": "Nginx + App + PostgreSQL",
-    "icon": "bi-stack",
-    "category": "Web",
-    "description": "Template stack: Nginx + custom app + PostgreSQL database",
-    "stack_data": {
-      "pod_name": "webapp",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "nginx",
-          "image": "docker.io/nginx:stable",
-          "ports": "8080:80",
-          "volumes": "webapp-nginx:/etc/nginx/conf.d:Z"
-        },
-        {
-          "name": "app",
-          "image": "docker.io/python:3.12-slim",
-          "ports": "8000:8000",
-          "env": "DATABASE_URL=postgresql://appuser:changeme@127.0.0.1:5432/appdb",
-          "volumes": "webapp-app:/app:Z",
-          "command": "python -m http.server 8000 --directory /app"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=appuser\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=appdb",
-          "volumes": "webapp-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 23,
-    "created_at": "2026-03-20T16:09:18.049Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 16,
-  "fields": {
-    "key": "minio",
-    "label": "MinIO (S3-compatible)",
-    "icon": "bi-bucket",
-    "category": "Storage",
-    "description": "S3-compatible object storage for self-hosted cloud storage",
-    "stack_data": {
-      "pod_name": "minio",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "minio",
-          "image": "docker.io/minio/minio:latest",
-          "ports": "9000:9000\n9001:9001",
-          "env": "MINIO_ROOT_USER=admin\nMINIO_ROOT_PASSWORD=changeme123",
-          "volumes": "minio-data:/data:Z",
-          "args": "server /data --console-address :9001"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 24,
-    "created_at": "2026-03-20T16:09:18.068Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 17,
-  "fields": {
-    "key": "home-assistant",
-    "label": "Home Assistant",
-    "icon": "bi-house-gear",
-    "category": "Home",
-    "description": "Home automation platform for smart home devices and automations",
-    "stack_data": {
-      "pod_name": "homeassistant",
-      "restart_policy": "Always",
-      "mode": "rootful",
-      "host_network": true,
-      "containers": [
-        {
-          "name": "homeassistant",
-          "image": "ghcr.io/home-assistant/home-assistant:stable",
-          "env": "TZ=Europe/Vienna",
-          "volumes": "homeassistant-config:/config:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 26,
-    "created_at": "2026-03-20T16:09:18.082Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 18,
-  "fields": {
-    "key": "pihole",
-    "label": "Pi-hole",
-    "icon": "bi-funnel",
-    "category": "DNS",
-    "description": "Network-wide ad blocker as a DNS sinkhole",
-    "stack_data": {
-      "pod_name": "pihole",
-      "restart_policy": "Always",
-      "mode": "rootful",
-      "containers": [
-        {
-          "name": "pihole",
-          "image": "docker.io/pihole/pihole:latest",
-          "ports": "53:53\n8080:80",
-          "env": "TZ=Europe/Vienna\nWEBPASSWORD=changeme\nPIHOLE_DNS_=8.8.8.8;8.8.4.4",
-          "volumes": "pihole-etc:/etc/pihole:Z\npihole-dnsmasq:/etc/dnsmasq.d:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 39,
-    "created_at": "2026-03-20T16:09:18.097Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 19,
-  "fields": {
-    "key": "n8n-postgres",
-    "label": "n8n",
-    "icon": "bi-diagram-3",
-    "category": "Automation",
-    "description": "Low-code workflow automation with 400+ integrations",
-    "stack_data": {
-      "pod_name": "n8n",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "n8n",
-          "image": "docker.io/n8nio/n8n:latest",
-          "ports": "5678:5678",
-          "env": "DB_TYPE=postgresdb\nDB_POSTGRESDB_HOST=127.0.0.1\nDB_POSTGRESDB_PORT=5432\nDB_POSTGRESDB_DATABASE=n8n\nDB_POSTGRESDB_USER=n8n\nDB_POSTGRESDB_PASSWORD=changeme\nN8N_HOST=localhost\nN8N_PORT=5678\nN8N_PROTOCOL=http\nWEBHOOK_URL=http://localhost:5678/\nGENERIC_TIMEZONE=Europe/Vienna",
-          "volumes": "n8n-data:/home/node/.n8n:Z",
-          "run_as_user": 0,
-          "run_as_group": 0
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=n8n\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=n8n",
-          "volumes": "n8n-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ],
-      "db_variants": {
-        "replace": "postgres",
-        "options": [
-          {
-            "key": "postgres",
-            "label": "PostgreSQL 16",
-            "icon": "bi-elephant",
-            "container": {
-              "name": "postgres",
-              "image": "docker.io/postgres:16",
-              "env": "POSTGRES_USER=n8n\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=n8n",
-              "volumes": "n8n-db:/var/lib/postgresql/data:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            }
-          },
-          {
-            "key": "mysql",
-            "label": "MySQL 8",
-            "icon": "bi-database-fill",
-            "container": {
-              "name": "mysql",
-              "image": "docker.io/mysql:8",
-              "env": "MYSQL_USER=n8n\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=n8n\nMYSQL_ROOT_PASSWORD=changeme_root",
-              "volumes": "n8n-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            },
-            "app_env": "DB_TYPE=mysqldb\nDB_MYSQLDB_HOST=127.0.0.1\nDB_MYSQLDB_PORT=3306\nDB_MYSQLDB_DATABASE=n8n\nDB_MYSQLDB_USER=n8n\nDB_MYSQLDB_PASSWORD=changeme\nN8N_HOST=localhost\nN8N_PORT=5678\nN8N_PROTOCOL=http\nWEBHOOK_URL=http://localhost:5678/\nGENERIC_TIMEZONE=Europe/Vienna"
+            "name": "influxdb",
+            "image": "docker.io/influxdb:2",
+            "ports": "8086:8086",
+            "env": "DOCKER_INFLUXDB_INIT_MODE=setup\nDOCKER_INFLUXDB_INIT_USERNAME=admin\nDOCKER_INFLUXDB_INIT_PASSWORD=changeme123\nDOCKER_INFLUXDB_INIT_ORG=myorg\nDOCKER_INFLUXDB_INIT_BUCKET=metrics\nDOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mytoken",
+            "volumes": "monitoring-influxdb:/var/lib/influxdb2:Z"
           }
         ]
       },
-      "sqlite_option": true,
-      "sqlite_env": "DB_TYPE=sqlite\nN8N_HOST=localhost\nN8N_PORT=5678\nN8N_PROTOCOL=http\nWEBHOOK_URL=http://localhost:5678/\nGENERIC_TIMEZONE=Europe/Vienna"
-    },
-    "is_active": true,
-    "sort_order": 27,
-    "created_at": "2026-03-20T21:10:48.271Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 20,
-  "fields": {
-    "key": "technitium",
-    "label": "Technitium DNS",
-    "icon": "bi-reception-4",
-    "category": "DNS",
-    "description": "Self-hosted DNS server with blocklists and web interface",
-    "stack_data": {
-      "pod_name": "technitium",
-      "restart_policy": "Always",
-      "mode": "rootful",
-      "containers": [
-        {
-          "name": "technitium",
-          "image": "docker.io/technitium/dns-server:latest",
-          "ports": "53:53\n5380:5380",
-          "env": "DNS_SERVER_DOMAIN=dns.local\nDNS_SERVER_ADMIN_PASSWORD=changeme",
-          "volumes": "technitium-config:/etc/dns:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 38,
-    "created_at": "2026-03-20T21:10:48.295Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 21,
-  "fields": {
-    "key": "audiobookshelf",
-    "label": "Audiobookshelf",
-    "icon": "bi-headphones",
-    "category": "Media",
-    "description": "Self-hosted audiobook and podcast server with app support",
-    "stack_data": {
-      "pod_name": "audiobookshelf",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "audiobookshelf",
-          "image": "ghcr.io/advplyr/audiobookshelf:latest",
-          "ports": "13378:80",
-          "env": "TZ=Europe/Vienna",
-          "volumes": "audiobookshelf-config:/config:Z\naudiobookshelf-metadata:/metadata:Z\n/audiobooks:/audiobooks:ro\n/podcasts:/podcasts:ro"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 12,
-    "created_at": "2026-03-21T04:06:35.269Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 22,
-  "fields": {
-    "key": "zabbix-server-postgres",
-    "label": "Zabbix Server + Web + PostgreSQL",
-    "icon": "bi-graph-up-arrow",
-    "category": "Monitoring",
-    "description": "Enterprise monitoring platform for infrastructure and network",
-    "stack_data": {
-      "pod_name": "zabbix",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "zabbix-server",
-          "image": "docker.io/zabbix/zabbix-server-pgsql:latest",
-          "ports": "10051:10051",
-          "env": "DB_SERVER_HOST=127.0.0.1\nPOSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix",
-          "run_as_user": 1997,
-          "run_as_group": 1997
-        },
-        {
-          "name": "zabbix-web",
-          "image": "docker.io/zabbix/zabbix-web-nginx-pgsql:latest",
-          "ports": "8080:8080",
-          "env": "ZBX_SERVER_HOST=127.0.0.1\nDB_SERVER_HOST=127.0.0.1\nPOSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix\nPHP_TZ=Europe/Vienna",
-          "run_as_user": 1997,
-          "run_as_group": 1997
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix",
-          "volumes": "zabbix-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 10,
-    "created_at": "2026-03-21T04:06:35.287Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 24,
-  "fields": {
-    "key": "zabbix-proxy-postgres",
-    "label": "Zabbix Proxy + PostgreSQL",
-    "icon": "bi-hdd-network",
-    "category": "Monitoring",
-    "description": "Zabbix proxy for distributed monitoring, ideal for remote sites.",
-    "stack_data": {
-      "pod_name": "zabbix-proxy",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "zabbix-proxy",
-          "image": "docker.io/zabbix/zabbix-proxy-pgsql:latest",
-          "ports": "10051:10051",
-          "env": "ZBX_SERVER_HOST=changeme\nZBX_HOSTNAME=proxy-hostname\nZBX_PROXYMODE=0\nDB_SERVER_HOST=127.0.0.1\nPOSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix_proxy",
-          "run_as_user": 1997,
-          "run_as_group": 1997
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "ports": "5432:5432",
-          "env": "POSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix_proxy",
-          "volumes": "~/zabbix-proxy/db:/var/lib/postgresql/data:Z",
-          "run_as_user": null,
-          "run_as_group": null
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 11,
-    "created_at": "2026-03-21T04:12:15.725Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 25,
-  "fields": {
-    "key": "nginx-proxy-manager",
-    "label": "Nginx Proxy Manager",
-    "icon": "bi-shuffle",
-    "category": "Proxy",
-    "description": "Reverse proxy with web UI, Let's Encrypt SSL and redirections",
-    "stack_data": {
-      "pod_name": "nginx-proxy-manager",
-      "restart_policy": "Always",
-      "mode": "rootful",
-      "containers": [
-        {
-          "name": "nginx-proxy-manager",
-          "image": "docker.io/jc21/nginx-proxy-manager:latest",
-          "ports": "80:80\n443:443\n81:81",
-          "volumes": "nginx-proxy-manager-data:/data:Z\nnginx-proxy-manager-letsencrypt:/etc/letsencrypt:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 7,
-    "created_at": "2026-03-21T04:55:45.504Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 26,
-  "fields": {
-    "key": "zoraxy",
-    "label": "Zoraxy",
-    "icon": "bi-arrow-left-right",
-    "category": "Proxy",
-    "description": "Simple reverse proxy and static web hosting with HTTPS",
-    "stack_data": {
-      "pod_name": "zoraxy",
-      "restart_policy": "Always",
-      "mode": "rootful",
-      "containers": [
-        {
-          "name": "zoraxy",
-          "image": "ghcr.io/tobychui/zoraxy:latest",
-          "ports": "80:80\n443:443\n8000:8000",
-          "volumes": "zoraxy-config:/opt/zoraxy/config:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 8,
-    "created_at": "2026-03-21T04:55:45.521Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 27,
-  "fields": {
-    "key": "headscale",
-    "label": "Headscale",
-    "icon": "bi-hdd-network",
-    "category": "VPN",
-    "description": "Self-hosted Tailscale control server for a private WireGuard mesh VPN",
-    "stack_data": {
-      "pod_name": "headscale",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "headscale",
-          "image": "ghcr.io/juanfont/headscale:latest",
-          "ports": "8080:8080\n9090:9090",
-          "volumes": "headscale-config:/etc/headscale:Z\nheadscale-data:/var/lib/headscale:Z",
-          "command": "/ko-app/headscale serve"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 28,
-    "created_at": "2026-03-21T04:59:30.299Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 28,
-  "fields": {
-    "key": "wg-easy",
-    "label": "WireGuard Easy",
-    "icon": "bi-shield-lock",
-    "category": "VPN",
-    "description": "WireGuard VPN server with simple web interface for management",
-    "stack_data": {
-      "pod_name": "wg-easy",
-      "restart_policy": "Always",
-      "mode": "rootful",
-      "containers": [
-        {
-          "name": "wg-easy",
-          "image": "ghcr.io/wg-easy/wg-easy:latest",
-          "ports": "51820:51820\n51821:51821",
-          "env": "WG_HOST=changeme\nPASSWORD_HASH=changeme\nWG_PORT=51820\nWG_DEFAULT_DNS=1.1.1.1\nWG_ALLOWED_IPS=0.0.0.0/0",
-          "volumes": "wg-easy-data:/etc/wireguard:Z",
-          "cap_add": "NET_ADMIN\nSYS_MODULE"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 29,
-    "created_at": "2026-03-21T05:09:46.363Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 29,
-  "fields": {
-    "key": "photoprism",
-    "label": "PhotoPrism",
-    "icon": "bi-camera",
-    "category": "Media",
-    "description": "AI-powered photo management with automatic categorization",
-    "stack_data": {
-      "pod_name": "photoprism",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "photoprism",
-          "image": "docker.io/photoprism/photoprism:latest",
-          "ports": "2342:2342",
-          "env": "PHOTOPRISM_ADMIN_USER=admin\nPHOTOPRISM_ADMIN_PASSWORD=changeme\nPHOTOPRISM_SITE_URL=http://localhost:2342/\nPHOTOPRISM_DATABASE_DRIVER=mysql\nPHOTOPRISM_DATABASE_SERVER=127.0.0.1:3306\nPHOTOPRISM_DATABASE_NAME=photoprism\nPHOTOPRISM_DATABASE_USER=photoprism\nPHOTOPRISM_DATABASE_PASSWORD=changeme\nTZ=Europe/Vienna",
-          "volumes": "photoprism-originals:/photoprism/originals:Z\nphotoprism-storage:/photoprism/storage:Z"
-        },
-        {
-          "name": "mariadb",
-          "image": "docker.io/mariadb:11",
-          "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=photoprism\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=photoprism",
-          "volumes": "photoprism-db:/var/lib/mysql:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 15,
-    "created_at": "2026-03-21T07:48:34.386Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 30,
-  "fields": {
-    "key": "sonarr",
-    "label": "Sonarr",
-    "icon": "bi-tv",
-    "category": "Media",
-    "description": "Automatic download manager for TV series",
-    "stack_data": {
-      "pod_name": "sonarr",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "sonarr",
-          "image": "lscr.io/linuxserver/sonarr:latest",
-          "ports": "8989:8989",
-          "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna",
-          "volumes": "sonarr-config:/config:Z\n/tv:/tv\n/downloads:/downloads"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 16,
-    "created_at": "2026-03-21T07:48:34.410Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 31,
-  "fields": {
-    "key": "radarr",
-    "label": "Radarr",
-    "icon": "bi-film",
-    "category": "Media",
-    "description": "Automatic download manager for movies",
-    "stack_data": {
-      "pod_name": "radarr",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "radarr",
-          "image": "lscr.io/linuxserver/radarr:latest",
-          "ports": "7878:7878",
-          "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna",
-          "volumes": "radarr-config:/config:Z\n/movies:/movies\n/downloads:/downloads"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 17,
-    "created_at": "2026-03-21T07:48:34.428Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 32,
-  "fields": {
-    "key": "prowlarr",
-    "label": "Prowlarr",
-    "icon": "bi-search",
-    "category": "Media",
-    "description": "Indexer manager for Sonarr, Radarr and other *arr apps",
-    "stack_data": {
-      "pod_name": "prowlarr",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "prowlarr",
-          "image": "lscr.io/linuxserver/prowlarr:latest",
-          "ports": "9696:9696",
-          "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna",
-          "volumes": "prowlarr-config:/config:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 18,
-    "created_at": "2026-03-21T07:48:34.446Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 33,
-  "fields": {
-    "key": "syncthing",
-    "label": "Syncthing",
-    "icon": "bi-arrow-repeat",
-    "category": "Storage",
-    "description": "Decentralized file synchronization between devices without a server",
-    "stack_data": {
-      "pod_name": "syncthing",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "syncthing",
-          "image": "docker.io/syncthing/syncthing:latest",
-          "ports": "8384:8384\n22000:22000",
-          "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna",
-          "volumes": "syncthing-config:/var/syncthing/config:Z\nsyncthing-data:/var/syncthing/data:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 25,
-    "created_at": "2026-03-21T07:48:34.580Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 34,
-  "fields": {
-    "key": "stirling-pdf",
-    "label": "Stirling PDF",
-    "icon": "bi-file-earmark-pdf",
-    "category": "Tools",
-    "description": "Local PDF tool: merge, split, convert and more",
-    "stack_data": {
-      "pod_name": "stirling-pdf",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "stirling-pdf",
-          "image": "docker.io/stirlingtools/stirling-pdf:latest",
-          "ports": "8080:8080",
-          "env": "DOCKER_ENABLE_SECURITY=false\nLANGS=de_DE",
-          "volumes": "stirling-pdf-data:/usr/share/tessdata:Z\nstirling-pdf-config:/configs:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 30,
-    "created_at": "2026-03-21T07:48:34.674Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 35,
-  "fields": {
-    "key": "changedetection",
-    "label": "changedetection.io",
-    "icon": "bi-eye",
-    "category": "Tools",
-    "description": "Web change detection with push notifications via HTTP",
-    "stack_data": {
-      "pod_name": "changedetection",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "changedetection",
-          "image": "ghcr.io/dgtlmoon/changedetection.io:latest",
-          "ports": "5000:5000",
-          "volumes": "changedetection-data:/datastore:Z",
-          "env": "PLAYWRIGHT_DRIVER_URL=ws://localhost:3000/?stealth=1&--disable-web-security=true"
-        },
-        {
-          "name": "playwright-chrome",
-          "image": "docker.io/browserless/chrome:latest",
-          "env": "SCREEN_WIDTH=1920\nSCREEN_HEIGHT=1024\nSCREEN_DEPTH=16\nMAX_CONCURRENT_CHROME_PROCESSES=10"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 31,
-    "created_at": "2026-03-21T07:48:34.691Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 36,
-  "fields": {
-    "key": "rustdesk-server",
-    "label": "RustDesk Server",
-    "icon": "bi-display",
-    "category": "Tools",
-    "description": "Self-hosted remote desktop server as TeamViewer alternative",
-    "stack_data": {
-      "pod_name": "rustdesk-server",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "hbbs",
-          "image": "docker.io/rustdesk/rustdesk-server:latest",
-          "ports": "21115:21115\n21116:21116\n21118:21118",
-          "volumes": "rustdesk-data:/root:Z",
-          "args": "hbbs"
-        },
-        {
-          "name": "hbbr",
-          "image": "docker.io/rustdesk/rustdesk-server:latest",
-          "ports": "21117:21117\n21119:21119",
-          "volumes": "rustdesk-data:/root:Z",
-          "args": "hbbr"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 32,
-    "created_at": "2026-03-21T07:48:34.710Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 37,
-  "fields": {
-    "key": "linkding",
-    "label": "Linkding",
-    "icon": "bi-bookmark",
-    "category": "Productivity",
-    "description": "Minimal self-hosted bookmark manager with browser extension",
-    "stack_data": {
-      "pod_name": "linkding",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "linkding",
-          "image": "docker.io/sissbruecker/linkding:latest",
-          "ports": "9090:9090",
-          "env": "LD_SUPERUSER_NAME=admin\nLD_SUPERUSER_PASSWORD=changeme",
-          "volumes": "linkding-data:/etc/linkding/data:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 33,
-    "created_at": "2026-03-21T07:48:34.728Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 38,
-  "fields": {
-    "key": "vikunja",
-    "label": "Vikunja",
-    "icon": "bi-kanban",
-    "category": "Productivity",
-    "description": "Self-hosted task management and project management",
-    "stack_data": {
-      "pod_name": "vikunja",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "vikunja",
-          "image": "docker.io/vikunja/vikunja:latest",
-          "ports": "3456:3456",
-          "env": "VIKUNJA_DATABASE_TYPE=postgres\nVIKUNJA_DATABASE_HOST=127.0.0.1\nVIKUNJA_DATABASE_DATABASE=vikunja\nVIKUNJA_DATABASE_USER=vikunja\nVIKUNJA_DATABASE_PASSWORD=changeme\nVIKUNJA_SERVICE_JWTSECRET=changeme\nVIKUNJA_SERVICE_FRONTENDURL=http://localhost:3456\nVIKUNJA_SERVICE_PUBLICURL=http://localhost:3456",
-          "volumes": "vikunja-files:/app/vikunja/files:Z",
-          "run_as_user": 0,
-          "run_as_group": 0
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=vikunja\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=vikunja",
-          "volumes": "vikunja-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ],
-      "db_variants": {
-        "replace": "postgres",
-        "options": [
+      "is_active": true,
+      "sort_order": 4,
+      "created_at": "2026-03-20T16:09:17.881Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 5,
+    "fields": {
+      "key": "prometheus-grafana",
+      "label": "Prometheus + Grafana",
+      "icon": "bi-graph-up",
+      "category": "Monitoring",
+      "description": "Monitoring stack with Prometheus scraping and Grafana visualization",
+      "stack_data": {
+        "pod_name": "monitoring",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
           {
-            "key": "postgres",
-            "label": "PostgreSQL 16",
-            "icon": "bi-elephant",
-            "container": {
-              "name": "postgres",
-              "image": "docker.io/postgres:16",
-              "env": "POSTGRES_USER=vikunja\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=vikunja",
-              "volumes": "vikunja-db:/var/lib/postgresql/data:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            }
+            "name": "prometheus",
+            "image": "docker.io/prom/prometheus:latest",
+            "ports": "9090:9090",
+            "volumes": "monitoring-prometheus:/etc/prometheus:Z\nmonitoring-prometheus-data:/prometheus:Z",
+            "args": "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.console.libraries=/usr/share/prometheus/console_libraries --web.console.templates=/usr/share/prometheus/consoles",
+            "run_as_user": 0,
+            "run_as_group": 0
           },
           {
-            "key": "mariadb",
-            "label": "MariaDB 11",
-            "icon": "bi-database",
-            "container": {
-              "name": "mariadb",
-              "image": "docker.io/mariadb:11",
-              "env": "MARIADB_USER=vikunja\nMARIADB_PASSWORD=changeme\nMARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_DATABASE=vikunja",
-              "volumes": "vikunja-db:/var/lib/mysql:Z",
-              "run_as_user": 999,
-              "run_as_group": 999
-            },
-            "app_env": "VIKUNJA_DATABASE_TYPE=mysql\nVIKUNJA_DATABASE_HOST=127.0.0.1\nVIKUNJA_DATABASE_DATABASE=vikunja\nVIKUNJA_DATABASE_USER=vikunja\nVIKUNJA_DATABASE_PASSWORD=changeme\nVIKUNJA_SERVICE_JWTSECRET=changeme\nVIKUNJA_SERVICE_FRONTENDURL=http://localhost:3456\nVIKUNJA_SERVICE_PUBLICURL=http://localhost:3456"
+            "name": "grafana",
+            "image": "docker.io/grafana/grafana:latest",
+            "ports": "3000:3000",
+            "env": "GF_SECURITY_ADMIN_USER=admin\nGF_SECURITY_ADMIN_PASSWORD=changeme\nGF_USERS_ALLOW_SIGN_UP=false",
+            "volumes": "monitoring-grafana:/var/lib/grafana:Z",
+            "run_as_user": 0,
+            "run_as_group": 0
           }
         ]
       },
-      "sqlite_option": true,
-      "sqlite_env": "VIKUNJA_DATABASE_TYPE=sqlite\nVIKUNJA_SERVICE_JWTSECRET=changeme\nVIKUNJA_SERVICE_FRONTENDURL=http://localhost:3456",
-      "sqlite_volumes_append": "vikunja-db:/app/vikunja:Z"
-    },
-    "is_active": true,
-    "sort_order": 34,
-    "created_at": "2026-03-21T07:48:34.751Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 39,
-  "fields": {
-    "key": "bookstack",
-    "label": "BookStack",
-    "icon": "bi-journal-text",
-    "category": "Productivity",
-    "description": "Wiki and documentation platform with book/chapter structure",
-    "stack_data": {
-      "pod_name": "bookstack",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "bookstack",
-          "image": "lscr.io/linuxserver/bookstack:latest",
-          "ports": "8080:80",
-          "env": "PUID=1000\nPGID=1000\nAPP_URL=http://localhost:8080\nDB_HOST=127.0.0.1\nDB_PORT=3306\nDB_USER=bookstack\nDB_PASS=changeme\nDB_DATABASE=bookstack",
-          "volumes": "bookstack-config:/config:Z"
+      "is_active": true,
+      "sort_order": 5,
+      "created_at": "2026-03-20T16:09:17.896Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 6,
+    "fields": {
+      "key": "vaultwarden",
+      "label": "Vaultwarden",
+      "icon": "bi-shield-lock",
+      "category": "Security",
+      "description": "Bitwarden-compatible password manager with low resource usage",
+      "stack_data": {
+        "pod_name": "vaultwarden",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "vaultwarden",
+            "image": "docker.io/vaultwarden/server:latest",
+            "ports": "8080:80",
+            "env": "ADMIN_TOKEN=changeme_token\nSIGNUPS_ALLOWED=false\nDOMAIN=https://vaultwarden.example.com\nWEBSOCKET_ENABLED=true",
+            "volumes": "vaultwarden-data:/data:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 6,
+      "created_at": "2026-03-20T16:09:17.914Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 7,
+    "fields": {
+      "key": "keycloak-postgres",
+      "label": "Keycloak",
+      "icon": "bi-person-badge",
+      "category": "Security",
+      "description": "Identity and access management with SSO, OAuth2 and SAML",
+      "stack_data": {
+        "pod_name": "keycloak",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "keycloak",
+            "image": "quay.io/keycloak/keycloak:latest",
+            "ports": "8080:8080",
+            "env": "KC_DB=postgres\nKC_DB_URL=jdbc:postgresql://127.0.0.1:5432/keycloak\nKC_DB_USERNAME=keycloak\nKC_DB_PASSWORD=changeme\nKEYCLOAK_ADMIN=admin\nKEYCLOAK_ADMIN_PASSWORD=changeme\nKC_HOSTNAME=localhost",
+            "args": "start-dev"
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=keycloak\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=keycloak",
+            "volumes": "keycloak-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ],
+        "db_variants": {
+          "replace": "postgres",
+          "options": [
+            {
+              "key": "postgres",
+              "label": "PostgreSQL 16",
+              "icon": "bi-elephant",
+              "container": {
+                "name": "postgres",
+                "image": "docker.io/postgres:16",
+                "env": "POSTGRES_USER=keycloak\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=keycloak",
+                "volumes": "keycloak-db:/var/lib/postgresql/data:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              }
+            },
+            {
+              "key": "mariadb",
+              "label": "MariaDB 11",
+              "icon": "bi-database",
+              "container": {
+                "name": "mariadb",
+                "image": "docker.io/mariadb:11",
+                "env": "MARIADB_USER=keycloak\nMARIADB_PASSWORD=changeme\nMARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_DATABASE=keycloak",
+                "volumes": "keycloak-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              },
+              "app_env": "KC_DB=mariadb\nKC_DB_URL=jdbc:mariadb://127.0.0.1:3306/keycloak\nKC_DB_USERNAME=keycloak\nKC_DB_PASSWORD=changeme\nKEYCLOAK_ADMIN=admin\nKEYCLOAK_ADMIN_PASSWORD=changeme\nKC_HOSTNAME=localhost"
+            }
+          ]
+        }
+      },
+      "is_active": true,
+      "sort_order": 7,
+      "created_at": "2026-03-20T16:09:17.928Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 8,
+    "fields": {
+      "key": "uptime-kuma",
+      "label": "Uptime Kuma",
+      "icon": "bi-activity",
+      "category": "Monitoring",
+      "description": "Self-hosted monitoring tool for websites, services and ports",
+      "stack_data": {
+        "pod_name": "uptime-kuma",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "uptime-kuma",
+            "image": "docker.io/louislam/uptime-kuma:latest",
+            "ports": "3001:3001",
+            "volumes": "uptime-kuma-data:/app/data:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 10,
+      "created_at": "2026-03-20T16:09:17.943Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 9,
+    "fields": {
+      "key": "jellyfin",
+      "label": "Jellyfin",
+      "icon": "bi-play-circle",
+      "category": "Media",
+      "description": "Free media server for movies, series, music and photos",
+      "stack_data": {
+        "pod_name": "jellyfin",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "jellyfin",
+            "image": "docker.io/jellyfin/jellyfin:latest",
+            "ports": "8096:8096",
+            "env": "JELLYFIN_PublishedServerUrl=http://localhost:8096",
+            "volumes": "jellyfin-config:/config:Z\njellyfin-cache:/cache:Z\n/media:/media:ro"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 14,
+      "created_at": "2026-03-20T16:09:17.958Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 10,
+    "fields": {
+      "key": "immich-redis-postgres",
+      "label": "Immich + Redis + PostgreSQL",
+      "icon": "bi-images",
+      "category": "Media",
+      "description": "High-performance photo and video backup solution with AI recognition",
+      "stack_data": {
+        "pod_name": "immich",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "immich-server",
+            "image": "ghcr.io/immich-app/immich-server:release",
+            "ports": "2283:2283",
+            "env": "DB_HOSTNAME=127.0.0.1\nDB_PORT=5432\nDB_DATABASE_NAME=immich\nDB_USERNAME=immich\nDB_PASSWORD=changeme\nREDIS_HOSTNAME=127.0.0.1\nUPLOAD_LOCATION=/usr/src/app/upload",
+            "volumes": "immich-upload:/usr/src/app/upload:Z"
+          },
+          {
+            "name": "redis",
+            "image": "docker.io/redis:7-alpine",
+            "command": "redis-server --appendonly yes",
+            "volumes": "immich-redis:/data:Z"
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/tensorchord/pgvecto-rs:pg16-v0.2.0",
+            "env": "POSTGRES_USER=immich\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=immich",
+            "volumes": "immich-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 15,
+      "created_at": "2026-03-20T16:09:17.973Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 11,
+    "fields": {
+      "key": "paperless-redis-postgres",
+      "label": "Paperless-ngx + Redis + PostgreSQL",
+      "icon": "bi-file-earmark-text",
+      "category": "Dokumente",
+      "description": "Document management system with OCR and automatic tagging",
+      "stack_data": {
+        "pod_name": "paperless",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "paperless",
+            "image": "ghcr.io/paperless-ngx/paperless-ngx:latest",
+            "ports": "8000:8000",
+            "env": "PAPERLESS_REDIS=redis://127.0.0.1:6379\nPAPERLESS_DBHOST=127.0.0.1\nPAPERLESS_DBPORT=5432\nPAPERLESS_DBNAME=paperless\nPAPERLESS_DBUSER=paperless\nPAPERLESS_DBPASS=changeme\nPAPERLESS_ADMIN_USER=admin\nPAPERLESS_ADMIN_PASSWORD=changeme\nPAPERLESS_SECRET_KEY=changeme_secret_key_min_50_chars_long_here",
+            "volumes": "paperless-data:/usr/src/paperless/data:Z\npaperless-media:/usr/src/paperless/media:Z\npaperless-export:/usr/src/paperless/export:Z\npaperless-consume:/usr/src/paperless/consume:Z",
+            "run_as_user": 0,
+            "run_as_group": 0
+          },
+          {
+            "name": "redis",
+            "image": "docker.io/redis:7-alpine",
+            "command": "redis-server --appendonly yes",
+            "volumes": "paperless-redis:/data:Z"
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=paperless\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=paperless",
+            "volumes": "paperless-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 20,
+      "created_at": "2026-03-20T16:09:17.987Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 12,
+    "fields": {
+      "key": "mattermost-postgres",
+      "label": "Mattermost",
+      "icon": "bi-chat-dots",
+      "category": "Kommunikation",
+      "description": "Self-hosted team chat as Slack alternative with channels and bots",
+      "stack_data": {
+        "pod_name": "mattermost",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "mattermost",
+            "image": "docker.io/mattermost/mattermost-team-edition:latest",
+            "ports": "8065:8065",
+            "env": "MM_SQLSETTINGS_DRIVERNAME=postgres\nMM_SQLSETTINGS_DATASOURCE=postgres://mattermost:changeme@127.0.0.1:5432/mattermost?sslmode=disable\nMM_SERVICESETTINGS_SITEURL=http://localhost:8065",
+            "volumes": "mattermost-data:/mattermost/data:Z\nmattermost-logs:/mattermost/logs:Z\nmattermost-config:/mattermost/config:Z\nmattermost-plugins:/mattermost/plugins:Z",
+            "run_as_user": 0,
+            "run_as_group": 0
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=mattermost\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=mattermost",
+            "volumes": "mattermost-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ],
+        "db_variants": {
+          "replace": "postgres",
+          "options": [
+            {
+              "key": "postgres",
+              "label": "PostgreSQL 16",
+              "icon": "bi-elephant",
+              "container": {
+                "name": "postgres",
+                "image": "docker.io/postgres:16",
+                "env": "POSTGRES_USER=mattermost\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=mattermost",
+                "volumes": "mattermost-db:/var/lib/postgresql/data:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              }
+            },
+            {
+              "key": "mysql",
+              "label": "MySQL 8",
+              "icon": "bi-database-fill",
+              "container": {
+                "name": "mysql",
+                "image": "docker.io/mysql:8",
+                "env": "MYSQL_USER=mattermost\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=mattermost\nMYSQL_ROOT_PASSWORD=changeme_root",
+                "volumes": "mattermost-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              },
+              "app_env": "MM_SQLSETTINGS_DRIVERNAME=mysql\nMM_SQLSETTINGS_DATASOURCE=mattermost:changeme@tcp(127.0.0.1:3306)/mattermost?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s\nMM_SERVICESETTINGS_SITEURL=http://localhost:8065"
+            }
+          ]
+        }
+      },
+      "is_active": true,
+      "sort_order": 21,
+      "created_at": "2026-03-20T16:09:18.005Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 13,
+    "fields": {
+      "key": "miniflux-postgres",
+      "label": "Miniflux + PostgreSQL",
+      "icon": "bi-rss",
+      "category": "RSS",
+      "description": "Minimalist RSS reader with web interface and API",
+      "stack_data": {
+        "pod_name": "miniflux",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "miniflux",
+            "image": "docker.io/miniflux/miniflux:latest",
+            "ports": "8080:8080",
+            "env": "DATABASE_URL=postgres://miniflux:changeme@127.0.0.1/miniflux?sslmode=disable\nRUN_MIGRATIONS=1\nCREATE_ADMIN=1\nADMIN_USERNAME=admin\nADMIN_PASSWORD=changeme"
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=miniflux\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=miniflux",
+            "volumes": "miniflux-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 22,
+      "created_at": "2026-03-20T16:09:18.020Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 14,
+    "fields": {
+      "key": "semaphore-postgres",
+      "label": "Semaphore",
+      "icon": "bi-play-btn",
+      "category": "DevOps",
+      "description": "Web UI for Ansible playbooks with inventory and task management",
+      "stack_data": {
+        "pod_name": "semaphore",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "semaphore",
+            "image": "docker.io/semaphoreui/semaphore:latest",
+            "ports": "3000:3000",
+            "env": "SEMAPHORE_DB_DIALECT=postgres\nSEMAPHORE_DB_HOST=127.0.0.1\nSEMAPHORE_DB_PORT=5432\nSEMAPHORE_DB_USER=semaphore\nSEMAPHORE_DB_PASS=changeme\nSEMAPHORE_DB=semaphore\nSEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore\nSEMAPHORE_ADMIN=admin\nSEMAPHORE_ADMIN_PASSWORD=changeme\nSEMAPHORE_ADMIN_EMAIL=admin@example.com",
+            "volumes": "semaphore-data:/home/semaphore:Z"
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=semaphore\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=semaphore",
+            "volumes": "semaphore-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ],
+        "db_variants": {
+          "replace": "postgres",
+          "options": [
+            {
+              "key": "postgres",
+              "label": "PostgreSQL 16",
+              "icon": "bi-elephant",
+              "container": {
+                "name": "postgres",
+                "image": "docker.io/postgres:16",
+                "env": "POSTGRES_USER=semaphore\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=semaphore",
+                "volumes": "semaphore-db:/var/lib/postgresql/data:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              }
+            },
+            {
+              "key": "mysql",
+              "label": "MySQL 8",
+              "icon": "bi-database-fill",
+              "container": {
+                "name": "mysql",
+                "image": "docker.io/mysql:8",
+                "env": "MYSQL_USER=semaphore\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=semaphore\nMYSQL_ROOT_PASSWORD=changeme_root",
+                "volumes": "semaphore-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              },
+              "app_env": "SEMAPHORE_DB_DIALECT=mysql\nSEMAPHORE_DB_HOST=127.0.0.1\nSEMAPHORE_DB_PORT=3306\nSEMAPHORE_DB_USER=semaphore\nSEMAPHORE_DB_PASS=changeme\nSEMAPHORE_DB=semaphore\nSEMAPHORE_PLAYBOOK_PATH=/tmp/semaphore\nSEMAPHORE_ADMIN=admin\nSEMAPHORE_ADMIN_PASSWORD=changeme\nSEMAPHORE_ADMIN_EMAIL=admin@example.com"
+            }
+          ]
+        }
+      },
+      "is_active": true,
+      "sort_order": 23,
+      "created_at": "2026-03-20T16:09:18.035Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 15,
+    "fields": {
+      "key": "nginx-app-postgres",
+      "label": "Nginx + App + PostgreSQL",
+      "icon": "bi-stack",
+      "category": "Web",
+      "description": "Template stack: Nginx + custom app + PostgreSQL database",
+      "stack_data": {
+        "pod_name": "webapp",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "nginx",
+            "image": "docker.io/nginx:stable",
+            "ports": "8080:80",
+            "volumes": "webapp-nginx:/etc/nginx/conf.d:Z"
+          },
+          {
+            "name": "app",
+            "image": "docker.io/python:3.12-slim",
+            "ports": "8000:8000",
+            "env": "DATABASE_URL=postgresql://appuser:changeme@127.0.0.1:5432/appdb",
+            "volumes": "webapp-app:/app:Z",
+            "command": "python -m http.server 8000 --directory /app"
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=appuser\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=appdb",
+            "volumes": "webapp-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 24,
+      "created_at": "2026-03-20T16:09:18.049Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 16,
+    "fields": {
+      "key": "minio",
+      "label": "MinIO (S3-compatible)",
+      "icon": "bi-bucket",
+      "category": "Storage",
+      "description": "S3-compatible object storage for self-hosted cloud storage",
+      "stack_data": {
+        "pod_name": "minio",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "minio",
+            "image": "docker.io/minio/minio:latest",
+            "ports": "9000:9000\n9001:9001",
+            "env": "MINIO_ROOT_USER=admin\nMINIO_ROOT_PASSWORD=changeme123",
+            "volumes": "minio-data:/data:Z",
+            "args": "server /data --console-address :9001"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 25,
+      "created_at": "2026-03-20T16:09:18.068Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 17,
+    "fields": {
+      "key": "home-assistant",
+      "label": "Home Assistant",
+      "icon": "bi-house-gear",
+      "category": "Home",
+      "description": "Home automation platform for smart home devices and automations",
+      "stack_data": {
+        "pod_name": "homeassistant",
+        "restart_policy": "Always",
+        "mode": "rootful",
+        "host_network": true,
+        "containers": [
+          {
+            "name": "homeassistant",
+            "image": "ghcr.io/home-assistant/home-assistant:stable",
+            "env": "TZ=Europe/Vienna",
+            "volumes": "homeassistant-config:/config:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 27,
+      "created_at": "2026-03-20T16:09:18.082Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 18,
+    "fields": {
+      "key": "pihole",
+      "label": "Pi-hole",
+      "icon": "bi-funnel",
+      "category": "DNS",
+      "description": "Network-wide ad blocker as a DNS sinkhole",
+      "stack_data": {
+        "pod_name": "pihole",
+        "restart_policy": "Always",
+        "mode": "rootful",
+        "containers": [
+          {
+            "name": "pihole",
+            "image": "docker.io/pihole/pihole:latest",
+            "ports": "53:53\n8080:80",
+            "env": "TZ=Europe/Vienna\nWEBPASSWORD=changeme\nPIHOLE_DNS_=8.8.8.8;8.8.4.4",
+            "volumes": "pihole-etc:/etc/pihole:Z\npihole-dnsmasq:/etc/dnsmasq.d:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 40,
+      "created_at": "2026-03-20T16:09:18.097Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 19,
+    "fields": {
+      "key": "n8n-postgres",
+      "label": "n8n",
+      "icon": "bi-diagram-3",
+      "category": "Automation",
+      "description": "Low-code workflow automation with 400+ integrations",
+      "stack_data": {
+        "pod_name": "n8n",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "n8n",
+            "image": "docker.io/n8nio/n8n:latest",
+            "ports": "5678:5678",
+            "env": "DB_TYPE=postgresdb\nDB_POSTGRESDB_HOST=127.0.0.1\nDB_POSTGRESDB_PORT=5432\nDB_POSTGRESDB_DATABASE=n8n\nDB_POSTGRESDB_USER=n8n\nDB_POSTGRESDB_PASSWORD=changeme\nN8N_HOST=localhost\nN8N_PORT=5678\nN8N_PROTOCOL=http\nWEBHOOK_URL=http://localhost:5678/\nGENERIC_TIMEZONE=Europe/Vienna",
+            "volumes": "n8n-data:/home/node/.n8n:Z",
+            "run_as_user": 0,
+            "run_as_group": 0
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=n8n\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=n8n",
+            "volumes": "n8n-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ],
+        "db_variants": {
+          "replace": "postgres",
+          "options": [
+            {
+              "key": "postgres",
+              "label": "PostgreSQL 16",
+              "icon": "bi-elephant",
+              "container": {
+                "name": "postgres",
+                "image": "docker.io/postgres:16",
+                "env": "POSTGRES_USER=n8n\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=n8n",
+                "volumes": "n8n-db:/var/lib/postgresql/data:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              }
+            },
+            {
+              "key": "mysql",
+              "label": "MySQL 8",
+              "icon": "bi-database-fill",
+              "container": {
+                "name": "mysql",
+                "image": "docker.io/mysql:8",
+                "env": "MYSQL_USER=n8n\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=n8n\nMYSQL_ROOT_PASSWORD=changeme_root",
+                "volumes": "n8n-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              },
+              "app_env": "DB_TYPE=mysqldb\nDB_MYSQLDB_HOST=127.0.0.1\nDB_MYSQLDB_PORT=3306\nDB_MYSQLDB_DATABASE=n8n\nDB_MYSQLDB_USER=n8n\nDB_MYSQLDB_PASSWORD=changeme\nN8N_HOST=localhost\nN8N_PORT=5678\nN8N_PROTOCOL=http\nWEBHOOK_URL=http://localhost:5678/\nGENERIC_TIMEZONE=Europe/Vienna"
+            }
+          ]
         },
-        {
-          "name": "mariadb",
-          "image": "docker.io/mariadb:11",
-          "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=bookstack\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=bookstack",
-          "volumes": "bookstack-db:/var/lib/mysql:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 35,
-    "created_at": "2026-03-21T07:48:34.769Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 40,
-  "fields": {
-    "key": "code-server",
-    "label": "code-server",
-    "icon": "bi-code-slash",
-    "category": "DevOps",
-    "description": "VS Code in the browser — development environment accessible anywhere",
-    "stack_data": {
-      "pod_name": "code-server",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "code-server",
-          "image": "lscr.io/linuxserver/code-server:latest",
-          "ports": "8443:8443",
-          "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna\nPASSWORD=changeme\nSUDO_PASSWORD=changeme",
-          "volumes": "code-server-config:/config:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 36,
-    "created_at": "2026-03-21T07:48:34.788Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 41,
-  "fields": {
-    "key": "authentik",
-    "label": "Authentik",
-    "icon": "bi-person-badge",
-    "category": "Security",
-    "description": "Flexible identity provider with SSO, OAuth2, SAML and LDAP",
-    "stack_data": {
-      "pod_name": "authentik",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "authentik-server",
-          "image": "ghcr.io/goauthentik/server:latest",
-          "ports": "9000:9000\n9443:9443",
-          "env": "AUTHENTIK_REDIS__HOST=127.0.0.1\nAUTHENTIK_POSTGRESQL__HOST=127.0.0.1\nAUTHENTIK_POSTGRESQL__USER=authentik\nAUTHENTIK_POSTGRESQL__PASSWORD=changeme\nAUTHENTIK_POSTGRESQL__NAME=authentik\nAUTHENTIK_SECRET_KEY=changeme",
-          "command": "dumb-init -- ak server"
+        "sqlite_option": true,
+        "sqlite_env": "DB_TYPE=sqlite\nN8N_HOST=localhost\nN8N_PORT=5678\nN8N_PROTOCOL=http\nWEBHOOK_URL=http://localhost:5678/\nGENERIC_TIMEZONE=Europe/Vienna"
+      },
+      "is_active": true,
+      "sort_order": 28,
+      "created_at": "2026-03-20T21:10:48.271Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 20,
+    "fields": {
+      "key": "technitium",
+      "label": "Technitium DNS",
+      "icon": "bi-reception-4",
+      "category": "DNS",
+      "description": "Self-hosted DNS server with blocklists and web interface",
+      "stack_data": {
+        "pod_name": "technitium",
+        "restart_policy": "Always",
+        "mode": "rootful",
+        "containers": [
+          {
+            "name": "technitium",
+            "image": "docker.io/technitium/dns-server:latest",
+            "ports": "53:53\n5380:5380",
+            "env": "DNS_SERVER_DOMAIN=dns.local\nDNS_SERVER_ADMIN_PASSWORD=changeme",
+            "volumes": "technitium-config:/etc/dns:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 39,
+      "created_at": "2026-03-20T21:10:48.295Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 21,
+    "fields": {
+      "key": "audiobookshelf",
+      "label": "Audiobookshelf",
+      "icon": "bi-headphones",
+      "category": "Media",
+      "description": "Self-hosted audiobook and podcast server with app support",
+      "stack_data": {
+        "pod_name": "audiobookshelf",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "audiobookshelf",
+            "image": "ghcr.io/advplyr/audiobookshelf:latest",
+            "ports": "13378:80",
+            "env": "TZ=Europe/Vienna",
+            "volumes": "audiobookshelf-config:/config:Z\naudiobookshelf-metadata:/metadata:Z\n/audiobooks:/audiobooks:ro\n/podcasts:/podcasts:ro"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 13,
+      "created_at": "2026-03-21T04:06:35.269Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 22,
+    "fields": {
+      "key": "zabbix-server-postgres",
+      "label": "Zabbix Server + Web + PostgreSQL",
+      "icon": "bi-graph-up-arrow",
+      "category": "Monitoring",
+      "description": "Enterprise monitoring platform for infrastructure and network",
+      "stack_data": {
+        "pod_name": "zabbix",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "zabbix-server",
+            "image": "docker.io/zabbix/zabbix-server-pgsql:latest",
+            "ports": "10051:10051",
+            "env": "DB_SERVER_HOST=127.0.0.1\nPOSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix",
+            "run_as_user": 1997,
+            "run_as_group": 1997
+          },
+          {
+            "name": "zabbix-web",
+            "image": "docker.io/zabbix/zabbix-web-nginx-pgsql:latest",
+            "ports": "8080:8080",
+            "env": "ZBX_SERVER_HOST=127.0.0.1\nDB_SERVER_HOST=127.0.0.1\nPOSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix\nPHP_TZ=Europe/Vienna",
+            "run_as_user": 1997,
+            "run_as_group": 1997
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix",
+            "volumes": "zabbix-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 11,
+      "created_at": "2026-03-21T04:06:35.287Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 24,
+    "fields": {
+      "key": "zabbix-proxy-postgres",
+      "label": "Zabbix Proxy + PostgreSQL",
+      "icon": "bi-hdd-network",
+      "category": "Monitoring",
+      "description": "Zabbix proxy for distributed monitoring, ideal for remote sites.",
+      "stack_data": {
+        "pod_name": "zabbix-proxy",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "zabbix-proxy",
+            "image": "docker.io/zabbix/zabbix-proxy-pgsql:latest",
+            "ports": "10051:10051",
+            "env": "ZBX_SERVER_HOST=changeme\nZBX_HOSTNAME=proxy-hostname\nZBX_PROXYMODE=0\nDB_SERVER_HOST=127.0.0.1\nPOSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix_proxy",
+            "run_as_user": 1997,
+            "run_as_group": 1997
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "ports": "5432:5432",
+            "env": "POSTGRES_USER=zabbix\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=zabbix_proxy",
+            "volumes": "~/zabbix-proxy/db:/var/lib/postgresql/data:Z",
+            "run_as_user": null,
+            "run_as_group": null
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 12,
+      "created_at": "2026-03-21T04:12:15.725Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 25,
+    "fields": {
+      "key": "nginx-proxy-manager",
+      "label": "Nginx Proxy Manager",
+      "icon": "bi-shuffle",
+      "category": "Proxy",
+      "description": "Reverse proxy with web UI, Let's Encrypt SSL and redirections",
+      "stack_data": {
+        "pod_name": "nginx-proxy-manager",
+        "restart_policy": "Always",
+        "mode": "rootful",
+        "containers": [
+          {
+            "name": "nginx-proxy-manager",
+            "image": "docker.io/jc21/nginx-proxy-manager:latest",
+            "ports": "80:80\n443:443\n81:81",
+            "volumes": "nginx-proxy-manager-data:/data:Z\nnginx-proxy-manager-letsencrypt:/etc/letsencrypt:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 8,
+      "created_at": "2026-03-21T04:55:45.504Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 26,
+    "fields": {
+      "key": "zoraxy",
+      "label": "Zoraxy",
+      "icon": "bi-arrow-left-right",
+      "category": "Proxy",
+      "description": "Simple reverse proxy and static web hosting with HTTPS",
+      "stack_data": {
+        "pod_name": "zoraxy",
+        "restart_policy": "Always",
+        "mode": "rootful",
+        "containers": [
+          {
+            "name": "zoraxy",
+            "image": "ghcr.io/tobychui/zoraxy:latest",
+            "ports": "80:80\n443:443\n8000:8000",
+            "volumes": "zoraxy-config:/opt/zoraxy/config:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 9,
+      "created_at": "2026-03-21T04:55:45.521Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 27,
+    "fields": {
+      "key": "headscale",
+      "label": "Headscale",
+      "icon": "bi-hdd-network",
+      "category": "VPN",
+      "description": "Self-hosted Tailscale control server for a private WireGuard mesh VPN",
+      "stack_data": {
+        "pod_name": "headscale",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "headscale",
+            "image": "ghcr.io/juanfont/headscale:latest",
+            "ports": "8080:8080\n9090:9090",
+            "volumes": "headscale-config:/etc/headscale:Z\nheadscale-data:/var/lib/headscale:Z",
+            "command": "/ko-app/headscale serve"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 29,
+      "created_at": "2026-03-21T04:59:30.299Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 28,
+    "fields": {
+      "key": "wg-easy",
+      "label": "WireGuard Easy",
+      "icon": "bi-shield-lock",
+      "category": "VPN",
+      "description": "WireGuard VPN server with simple web interface for management",
+      "stack_data": {
+        "pod_name": "wg-easy",
+        "restart_policy": "Always",
+        "mode": "rootful",
+        "containers": [
+          {
+            "name": "wg-easy",
+            "image": "ghcr.io/wg-easy/wg-easy:latest",
+            "ports": "51820:51820\n51821:51821",
+            "env": "WG_HOST=changeme\nPASSWORD_HASH=changeme\nWG_PORT=51820\nWG_DEFAULT_DNS=1.1.1.1\nWG_ALLOWED_IPS=0.0.0.0/0",
+            "volumes": "wg-easy-data:/etc/wireguard:Z",
+            "cap_add": "NET_ADMIN\nSYS_MODULE"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 30,
+      "created_at": "2026-03-21T05:09:46.363Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 29,
+    "fields": {
+      "key": "photoprism",
+      "label": "PhotoPrism",
+      "icon": "bi-camera",
+      "category": "Media",
+      "description": "AI-powered photo management with automatic categorization",
+      "stack_data": {
+        "pod_name": "photoprism",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "photoprism",
+            "image": "docker.io/photoprism/photoprism:latest",
+            "ports": "2342:2342",
+            "env": "PHOTOPRISM_ADMIN_USER=admin\nPHOTOPRISM_ADMIN_PASSWORD=changeme\nPHOTOPRISM_SITE_URL=http://localhost:2342/\nPHOTOPRISM_DATABASE_DRIVER=mysql\nPHOTOPRISM_DATABASE_SERVER=127.0.0.1:3306\nPHOTOPRISM_DATABASE_NAME=photoprism\nPHOTOPRISM_DATABASE_USER=photoprism\nPHOTOPRISM_DATABASE_PASSWORD=changeme\nTZ=Europe/Vienna",
+            "volumes": "photoprism-originals:/photoprism/originals:Z\nphotoprism-storage:/photoprism/storage:Z"
+          },
+          {
+            "name": "mariadb",
+            "image": "docker.io/mariadb:11",
+            "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=photoprism\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=photoprism",
+            "volumes": "photoprism-db:/var/lib/mysql:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 16,
+      "created_at": "2026-03-21T07:48:34.386Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 30,
+    "fields": {
+      "key": "sonarr",
+      "label": "Sonarr",
+      "icon": "bi-tv",
+      "category": "Media",
+      "description": "Automatic download manager for TV series",
+      "stack_data": {
+        "pod_name": "sonarr",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "sonarr",
+            "image": "lscr.io/linuxserver/sonarr:latest",
+            "ports": "8989:8989",
+            "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna",
+            "volumes": "sonarr-config:/config:Z\n/tv:/tv\n/downloads:/downloads"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 17,
+      "created_at": "2026-03-21T07:48:34.410Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 31,
+    "fields": {
+      "key": "radarr",
+      "label": "Radarr",
+      "icon": "bi-film",
+      "category": "Media",
+      "description": "Automatic download manager for movies",
+      "stack_data": {
+        "pod_name": "radarr",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "radarr",
+            "image": "lscr.io/linuxserver/radarr:latest",
+            "ports": "7878:7878",
+            "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna",
+            "volumes": "radarr-config:/config:Z\n/movies:/movies\n/downloads:/downloads"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 18,
+      "created_at": "2026-03-21T07:48:34.428Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 32,
+    "fields": {
+      "key": "prowlarr",
+      "label": "Prowlarr",
+      "icon": "bi-search",
+      "category": "Media",
+      "description": "Indexer manager for Sonarr, Radarr and other *arr apps",
+      "stack_data": {
+        "pod_name": "prowlarr",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "prowlarr",
+            "image": "lscr.io/linuxserver/prowlarr:latest",
+            "ports": "9696:9696",
+            "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna",
+            "volumes": "prowlarr-config:/config:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 19,
+      "created_at": "2026-03-21T07:48:34.446Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 33,
+    "fields": {
+      "key": "syncthing",
+      "label": "Syncthing",
+      "icon": "bi-arrow-repeat",
+      "category": "Storage",
+      "description": "Decentralized file synchronization between devices without a server",
+      "stack_data": {
+        "pod_name": "syncthing",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "syncthing",
+            "image": "docker.io/syncthing/syncthing:latest",
+            "ports": "8384:8384\n22000:22000",
+            "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna",
+            "volumes": "syncthing-config:/var/syncthing/config:Z\nsyncthing-data:/var/syncthing/data:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 26,
+      "created_at": "2026-03-21T07:48:34.580Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 34,
+    "fields": {
+      "key": "stirling-pdf",
+      "label": "Stirling PDF",
+      "icon": "bi-file-earmark-pdf",
+      "category": "Tools",
+      "description": "Local PDF tool: merge, split, convert and more",
+      "stack_data": {
+        "pod_name": "stirling-pdf",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "stirling-pdf",
+            "image": "docker.io/stirlingtools/stirling-pdf:latest",
+            "ports": "8080:8080",
+            "env": "DOCKER_ENABLE_SECURITY=false\nLANGS=de_DE",
+            "volumes": "stirling-pdf-data:/usr/share/tessdata:Z\nstirling-pdf-config:/configs:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 31,
+      "created_at": "2026-03-21T07:48:34.674Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 35,
+    "fields": {
+      "key": "changedetection",
+      "label": "changedetection.io",
+      "icon": "bi-eye",
+      "category": "Tools",
+      "description": "Web change detection with push notifications via HTTP",
+      "stack_data": {
+        "pod_name": "changedetection",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "changedetection",
+            "image": "ghcr.io/dgtlmoon/changedetection.io:latest",
+            "ports": "5000:5000",
+            "volumes": "changedetection-data:/datastore:Z",
+            "env": "PLAYWRIGHT_DRIVER_URL=ws://localhost:3000/?stealth=1&--disable-web-security=true"
+          },
+          {
+            "name": "playwright-chrome",
+            "image": "docker.io/browserless/chrome:latest",
+            "env": "SCREEN_WIDTH=1920\nSCREEN_HEIGHT=1024\nSCREEN_DEPTH=16\nMAX_CONCURRENT_CHROME_PROCESSES=10"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 32,
+      "created_at": "2026-03-21T07:48:34.691Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 36,
+    "fields": {
+      "key": "rustdesk-server",
+      "label": "RustDesk Server",
+      "icon": "bi-display",
+      "category": "Tools",
+      "description": "Self-hosted remote desktop server as TeamViewer alternative",
+      "stack_data": {
+        "pod_name": "rustdesk-server",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "hbbs",
+            "image": "docker.io/rustdesk/rustdesk-server:latest",
+            "ports": "21115:21115\n21116:21116\n21118:21118",
+            "volumes": "rustdesk-data:/root:Z",
+            "args": "hbbs"
+          },
+          {
+            "name": "hbbr",
+            "image": "docker.io/rustdesk/rustdesk-server:latest",
+            "ports": "21117:21117\n21119:21119",
+            "volumes": "rustdesk-data:/root:Z",
+            "args": "hbbr"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 33,
+      "created_at": "2026-03-21T07:48:34.710Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 37,
+    "fields": {
+      "key": "linkding",
+      "label": "Linkding",
+      "icon": "bi-bookmark",
+      "category": "Productivity",
+      "description": "Minimal self-hosted bookmark manager with browser extension",
+      "stack_data": {
+        "pod_name": "linkding",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "linkding",
+            "image": "docker.io/sissbruecker/linkding:latest",
+            "ports": "9090:9090",
+            "env": "LD_SUPERUSER_NAME=admin\nLD_SUPERUSER_PASSWORD=changeme",
+            "volumes": "linkding-data:/etc/linkding/data:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 34,
+      "created_at": "2026-03-21T07:48:34.728Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 38,
+    "fields": {
+      "key": "vikunja",
+      "label": "Vikunja",
+      "icon": "bi-kanban",
+      "category": "Productivity",
+      "description": "Self-hosted task management and project management",
+      "stack_data": {
+        "pod_name": "vikunja",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "vikunja",
+            "image": "docker.io/vikunja/vikunja:latest",
+            "ports": "3456:3456",
+            "env": "VIKUNJA_DATABASE_TYPE=postgres\nVIKUNJA_DATABASE_HOST=127.0.0.1\nVIKUNJA_DATABASE_DATABASE=vikunja\nVIKUNJA_DATABASE_USER=vikunja\nVIKUNJA_DATABASE_PASSWORD=changeme\nVIKUNJA_SERVICE_JWTSECRET=changeme\nVIKUNJA_SERVICE_FRONTENDURL=http://localhost:3456\nVIKUNJA_SERVICE_PUBLICURL=http://localhost:3456",
+            "volumes": "vikunja-files:/app/vikunja/files:Z",
+            "run_as_user": 0,
+            "run_as_group": 0
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=vikunja\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=vikunja",
+            "volumes": "vikunja-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ],
+        "db_variants": {
+          "replace": "postgres",
+          "options": [
+            {
+              "key": "postgres",
+              "label": "PostgreSQL 16",
+              "icon": "bi-elephant",
+              "container": {
+                "name": "postgres",
+                "image": "docker.io/postgres:16",
+                "env": "POSTGRES_USER=vikunja\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=vikunja",
+                "volumes": "vikunja-db:/var/lib/postgresql/data:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              }
+            },
+            {
+              "key": "mariadb",
+              "label": "MariaDB 11",
+              "icon": "bi-database",
+              "container": {
+                "name": "mariadb",
+                "image": "docker.io/mariadb:11",
+                "env": "MARIADB_USER=vikunja\nMARIADB_PASSWORD=changeme\nMARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_DATABASE=vikunja",
+                "volumes": "vikunja-db:/var/lib/mysql:Z",
+                "run_as_user": 999,
+                "run_as_group": 999
+              },
+              "app_env": "VIKUNJA_DATABASE_TYPE=mysql\nVIKUNJA_DATABASE_HOST=127.0.0.1\nVIKUNJA_DATABASE_DATABASE=vikunja\nVIKUNJA_DATABASE_USER=vikunja\nVIKUNJA_DATABASE_PASSWORD=changeme\nVIKUNJA_SERVICE_JWTSECRET=changeme\nVIKUNJA_SERVICE_FRONTENDURL=http://localhost:3456\nVIKUNJA_SERVICE_PUBLICURL=http://localhost:3456"
+            }
+          ]
         },
-        {
-          "name": "authentik-worker",
-          "image": "ghcr.io/goauthentik/server:latest",
-          "env": "AUTHENTIK_REDIS__HOST=127.0.0.1\nAUTHENTIK_POSTGRESQL__HOST=127.0.0.1\nAUTHENTIK_POSTGRESQL__USER=authentik\nAUTHENTIK_POSTGRESQL__PASSWORD=changeme\nAUTHENTIK_POSTGRESQL__NAME=authentik\nAUTHENTIK_SECRET_KEY=changeme",
-          "command": "dumb-init -- ak worker"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=authentik\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=authentik",
-          "volumes": "authentik-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        },
-        {
-          "name": "redis",
-          "image": "docker.io/redis:7-alpine",
-          "command": "redis-server --appendonly yes",
-          "volumes": "authentik-redis:/data:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 37,
-    "created_at": "2026-03-21T07:48:34.807Z"
+        "sqlite_option": true,
+        "sqlite_env": "VIKUNJA_DATABASE_TYPE=sqlite\nVIKUNJA_SERVICE_JWTSECRET=changeme\nVIKUNJA_SERVICE_FRONTENDURL=http://localhost:3456",
+        "sqlite_volumes_append": "vikunja-db:/app/vikunja:Z"
+      },
+      "is_active": true,
+      "sort_order": 35,
+      "created_at": "2026-03-21T07:48:34.751Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 39,
+    "fields": {
+      "key": "bookstack",
+      "label": "BookStack",
+      "icon": "bi-journal-text",
+      "category": "Productivity",
+      "description": "Wiki and documentation platform with book/chapter structure",
+      "stack_data": {
+        "pod_name": "bookstack",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "bookstack",
+            "image": "lscr.io/linuxserver/bookstack:latest",
+            "ports": "8080:80",
+            "env": "PUID=1000\nPGID=1000\nAPP_URL=http://localhost:8080\nDB_HOST=127.0.0.1\nDB_PORT=3306\nDB_USER=bookstack\nDB_PASS=changeme\nDB_DATABASE=bookstack",
+            "volumes": "bookstack-config:/config:Z"
+          },
+          {
+            "name": "mariadb",
+            "image": "docker.io/mariadb:11",
+            "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=bookstack\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=bookstack",
+            "volumes": "bookstack-db:/var/lib/mysql:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 36,
+      "created_at": "2026-03-21T07:48:34.769Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 40,
+    "fields": {
+      "key": "code-server",
+      "label": "code-server",
+      "icon": "bi-code-slash",
+      "category": "DevOps",
+      "description": "VS Code in the browser — development environment accessible anywhere",
+      "stack_data": {
+        "pod_name": "code-server",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "code-server",
+            "image": "lscr.io/linuxserver/code-server:latest",
+            "ports": "8443:8443",
+            "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna\nPASSWORD=changeme\nSUDO_PASSWORD=changeme",
+            "volumes": "code-server-config:/config:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 37,
+      "created_at": "2026-03-21T07:48:34.788Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 41,
+    "fields": {
+      "key": "authentik",
+      "label": "Authentik",
+      "icon": "bi-person-badge",
+      "category": "Security",
+      "description": "Flexible identity provider with SSO, OAuth2, SAML and LDAP",
+      "stack_data": {
+        "pod_name": "authentik",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "authentik-server",
+            "image": "ghcr.io/goauthentik/server:latest",
+            "ports": "9000:9000\n9443:9443",
+            "env": "AUTHENTIK_REDIS__HOST=127.0.0.1\nAUTHENTIK_POSTGRESQL__HOST=127.0.0.1\nAUTHENTIK_POSTGRESQL__USER=authentik\nAUTHENTIK_POSTGRESQL__PASSWORD=changeme\nAUTHENTIK_POSTGRESQL__NAME=authentik\nAUTHENTIK_SECRET_KEY=changeme",
+            "command": "dumb-init -- ak server"
+          },
+          {
+            "name": "authentik-worker",
+            "image": "ghcr.io/goauthentik/server:latest",
+            "env": "AUTHENTIK_REDIS__HOST=127.0.0.1\nAUTHENTIK_POSTGRESQL__HOST=127.0.0.1\nAUTHENTIK_POSTGRESQL__USER=authentik\nAUTHENTIK_POSTGRESQL__PASSWORD=changeme\nAUTHENTIK_POSTGRESQL__NAME=authentik\nAUTHENTIK_SECRET_KEY=changeme",
+            "command": "dumb-init -- ak worker"
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=authentik\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=authentik",
+            "volumes": "authentik-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          },
+          {
+            "name": "redis",
+            "image": "docker.io/redis:7-alpine",
+            "command": "redis-server --appendonly yes",
+            "volumes": "authentik-redis:/data:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 38,
+      "created_at": "2026-03-21T07:48:34.807Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 42,
+    "fields": {
+      "key": "adguard-home",
+      "label": "AdGuard Home",
+      "icon": "bi-shield-check",
+      "category": "DNS",
+      "description": "DNS-based ad blocker with advanced filtering and statistics",
+      "stack_data": {
+        "pod_name": "adguard-home",
+        "restart_policy": "Always",
+        "mode": "rootful",
+        "containers": [
+          {
+            "name": "adguard-home",
+            "image": "docker.io/adguard/adguardhome:latest",
+            "ports": "53:53\n3000:3000\n80:80",
+            "volumes": "adguard-home-work:/opt/adguardhome/work:Z\nadguard-home-conf:/opt/adguardhome/conf:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 41,
+      "created_at": "2026-03-21T07:48:34.869Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 43,
+    "fields": {
+      "key": "navidrome",
+      "label": "Navidrome",
+      "icon": "bi-music-note-beamed",
+      "category": "Media",
+      "description": "Lightweight music streaming server, compatible with Subsonic/Airsonic clients",
+      "stack_data": {
+        "pod_name": "navidrome",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "navidrome",
+            "image": "docker.io/deluan/navidrome:latest",
+            "ports": "4533:4533",
+            "env": "ND_SCANSCHEDULE=1h\nND_LOGLEVEL=info\nND_SESSIONTIMEOUT=24h\nND_BASEURL=\nTZ=Europe/Vienna",
+            "volumes": "navidrome-data:/data:Z\n/music:/music:ro"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 42,
+      "created_at": "2026-03-21T13:45:55.056Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 44,
+    "fields": {
+      "key": "unifi",
+      "label": "UniFi Network Application",
+      "icon": "bi-wifi",
+      "category": "Network",
+      "description": "Self-hosted UniFi Network Application for managing Ubiquiti access points and switches",
+      "stack_data": {
+        "pod_name": "unifi",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "unifi",
+            "image": "lscr.io/linuxserver/unifi-network-application:latest",
+            "ports": "8443:8443\n8080:8080",
+            "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna\nMONGO_USER=unifi\nMONGO_PASS=changeme\nMONGO_HOST=127.0.0.1\nMONGO_PORT=27017\nMONGO_DBNAME=unifi\nMONGO_AUTHSOURCE=admin",
+            "volumes": "unifi-config:/config:Z"
+          },
+          {
+            "name": "mongodb",
+            "image": "docker.io/mongo:7",
+            "env": "MONGO_INITDB_ROOT_USERNAME=unifi\nMONGO_INITDB_ROOT_PASSWORD=changeme",
+            "volumes": "unifi-db:/data/db:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 43,
+      "created_at": "2026-03-21T13:45:55.076Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 45,
+    "fields": {
+      "key": "passbolt",
+      "label": "Passbolt",
+      "icon": "bi-key",
+      "category": "Security",
+      "description": "Open-source password manager for teams with end-to-end encryption and browser extension",
+      "stack_data": {
+        "pod_name": "passbolt",
+        "restart_policy": "Always",
+        "mode": "rootful",
+        "containers": [
+          {
+            "name": "passbolt",
+            "image": "docker.io/passbolt/passbolt:latest-ce",
+            "ports": "80:80\n443:443",
+            "env": "APP_FULL_BASE_URL=https://passbolt.example.com\nDATASOURCES_DEFAULT_HOST=127.0.0.1\nDATASOURCES_DEFAULT_USERNAME=passbolt\nDATASOURCES_DEFAULT_PASSWORD=changeme\nDATASOURCES_DEFAULT_DATABASE=passbolt\nEMAIL_TRANSPORT_DEFAULT_HOST=smtp.example.com\nEMAIL_TRANSPORT_DEFAULT_PORT=587\nEMAIL_TRANSPORT_DEFAULT_TLS=true\nEMAIL_DEFAULT_FROM=passbolt@example.com",
+            "volumes": "passbolt-gpg:/etc/passbolt/gpg:Z\npassbolt-jwt:/etc/passbolt/jwt:Z"
+          },
+          {
+            "name": "mariadb",
+            "image": "docker.io/mariadb:11",
+            "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=passbolt\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=passbolt",
+            "volumes": "passbolt-db:/var/lib/mysql:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 44,
+      "created_at": "2026-03-21T13:45:55.101Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 46,
+    "fields": {
+      "key": "linkwarden",
+      "label": "Linkwarden",
+      "icon": "bi-bookmark-star",
+      "category": "Productivity",
+      "description": "Self-hosted bookmark manager with archiving, tagging and collaboration",
+      "stack_data": {
+        "pod_name": "linkwarden",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "linkwarden",
+            "image": "ghcr.io/linkwarden/linkwarden:latest",
+            "ports": "3000:3000",
+            "env": "DATABASE_URL=postgresql://linkwarden:changeme@127.0.0.1:5432/linkwarden\nNEXTAUTH_SECRET=changeme_secret\nNEXTAUTH_URL=http://localhost:3000\nNEXT_PUBLIC_DISABLE_REGISTRATION=false",
+            "volumes": "linkwarden-data:/data/data:Z"
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:16",
+            "env": "POSTGRES_USER=linkwarden\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=linkwarden",
+            "volumes": "linkwarden-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 45,
+      "created_at": "2026-03-21T13:45:55.121Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 47,
+    "fields": {
+      "key": "zabbix-proxy-sqlite",
+      "label": "Zabbix Proxy (SQLite)",
+      "icon": "bi-hdd-network",
+      "category": "Monitoring",
+      "description": "Zabbix proxy with SQLite for distributed monitoring",
+      "stack_data": {
+        "pod_name": "zabbix-proxy",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "zabbix-proxy",
+            "image": "docker.io/zabbix/zabbix-proxy-sqlite3:latest",
+            "ports": "10051:10051",
+            "env": "ZBX_SERVER_HOST=changeme\nZBX_HOSTNAME=proxy-hostname\nZBX_PROXYMODE=0",
+            "volumes": "zabbix-proxy-db:/var/lib/zabbix/db_data:Z",
+            "run_as_user": 0,
+            "run_as_group": 0
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 12,
+      "created_at": "2026-03-22T08:20:49.254Z"
+    }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 48,
+    "fields": {
+      "key": "collabora",
+      "label": "Collabora Online",
+      "icon": "bi-file-earmark-richtext",
+      "category": "Dokumente",
+      "description": "Self-hosted office suite for Nextcloud and other WOPI clients (Writer, Calc, Impress)",
+      "stack_data": {
+        "pod_name": "collabora",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "collabora",
+            "image": "docker.io/collabora/code:latest",
+            "ports": "9980:9980",
+            "env": "domain=cloud\\.example\\.com\nDONT_GEN_SSL_CERT=1\nextra_params=--o:ssl.enable=false --o:ssl.termination=true --o:mount_jail_tree=false --o:mount_namespaces=false --o:welcome.enable=false --o:net.frame_ancestors=https://cloud.example.com --o:num_prespawn_children=8 --o:net.connection_timeout_secs=30 --o:per_document.idle_timeout_secs=60 --o:per_document.max_concurrency=4",
+            "cap_add": "SYS_CHROOT\nMKNOD\nCHOWN",
+            "run_as_user": 0,
+            "run_as_group": 0,
+            "volumes": "collabora-fonts:/usr/local/share/fonts:ro\ncollabora-fonts:/opt/cool/systemplate/usr/local/share/fonts:ro"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 45,
+      "created_at": "2026-04-05T04:19:09.107Z"
+    }
   }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 42,
-  "fields": {
-    "key": "adguard-home",
-    "label": "AdGuard Home",
-    "icon": "bi-shield-check",
-    "category": "DNS",
-    "description": "DNS-based ad blocker with advanced filtering and statistics",
-    "stack_data": {
-      "pod_name": "adguard-home",
-      "restart_policy": "Always",
-      "mode": "rootful",
-      "containers": [
-        {
-          "name": "adguard-home",
-          "image": "docker.io/adguard/adguardhome:latest",
-          "ports": "53:53\n3000:3000\n80:80",
-          "volumes": "adguard-home-work:/opt/adguardhome/work:Z\nadguard-home-conf:/opt/adguardhome/conf:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 40,
-    "created_at": "2026-03-21T07:48:34.869Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 43,
-  "fields": {
-    "key": "navidrome",
-    "label": "Navidrome",
-    "icon": "bi-music-note-beamed",
-    "category": "Media",
-    "description": "Lightweight music streaming server, compatible with Subsonic/Airsonic clients",
-    "stack_data": {
-      "pod_name": "navidrome",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "navidrome",
-          "image": "docker.io/deluan/navidrome:latest",
-          "ports": "4533:4533",
-          "env": "ND_SCANSCHEDULE=1h\nND_LOGLEVEL=info\nND_SESSIONTIMEOUT=24h\nND_BASEURL=\nTZ=Europe/Vienna",
-          "volumes": "navidrome-data:/data:Z\n/music:/music:ro"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 41,
-    "created_at": "2026-03-21T13:45:55.056Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 44,
-  "fields": {
-    "key": "unifi",
-    "label": "UniFi Network Application",
-    "icon": "bi-wifi",
-    "category": "Network",
-    "description": "Self-hosted UniFi Network Application for managing Ubiquiti access points and switches",
-    "stack_data": {
-      "pod_name": "unifi",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "unifi",
-          "image": "lscr.io/linuxserver/unifi-network-application:latest",
-          "ports": "8443:8443\n8080:8080",
-          "env": "PUID=1000\nPGID=1000\nTZ=Europe/Vienna\nMONGO_USER=unifi\nMONGO_PASS=changeme\nMONGO_HOST=127.0.0.1\nMONGO_PORT=27017\nMONGO_DBNAME=unifi\nMONGO_AUTHSOURCE=admin",
-          "volumes": "unifi-config:/config:Z"
-        },
-        {
-          "name": "mongodb",
-          "image": "docker.io/mongo:7",
-          "env": "MONGO_INITDB_ROOT_USERNAME=unifi\nMONGO_INITDB_ROOT_PASSWORD=changeme",
-          "volumes": "unifi-db:/data/db:Z"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 42,
-    "created_at": "2026-03-21T13:45:55.076Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 45,
-  "fields": {
-    "key": "passbolt",
-    "label": "Passbolt",
-    "icon": "bi-key",
-    "category": "Security",
-    "description": "Open-source password manager for teams with end-to-end encryption and browser extension",
-    "stack_data": {
-      "pod_name": "passbolt",
-      "restart_policy": "Always",
-      "mode": "rootful",
-      "containers": [
-        {
-          "name": "passbolt",
-          "image": "docker.io/passbolt/passbolt:latest-ce",
-          "ports": "80:80\n443:443",
-          "env": "APP_FULL_BASE_URL=https://passbolt.example.com\nDATASOURCES_DEFAULT_HOST=127.0.0.1\nDATASOURCES_DEFAULT_USERNAME=passbolt\nDATASOURCES_DEFAULT_PASSWORD=changeme\nDATASOURCES_DEFAULT_DATABASE=passbolt\nEMAIL_TRANSPORT_DEFAULT_HOST=smtp.example.com\nEMAIL_TRANSPORT_DEFAULT_PORT=587\nEMAIL_TRANSPORT_DEFAULT_TLS=true\nEMAIL_DEFAULT_FROM=passbolt@example.com",
-          "volumes": "passbolt-gpg:/etc/passbolt/gpg:Z\npassbolt-jwt:/etc/passbolt/jwt:Z"
-        },
-        {
-          "name": "mariadb",
-          "image": "docker.io/mariadb:11",
-          "env": "MARIADB_ROOT_PASSWORD=changeme_root\nMARIADB_USER=passbolt\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=passbolt",
-          "volumes": "passbolt-db:/var/lib/mysql:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 43,
-    "created_at": "2026-03-21T13:45:55.101Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 46,
-  "fields": {
-    "key": "linkwarden",
-    "label": "Linkwarden",
-    "icon": "bi-bookmark-star",
-    "category": "Productivity",
-    "description": "Self-hosted bookmark manager with archiving, tagging and collaboration",
-    "stack_data": {
-      "pod_name": "linkwarden",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "linkwarden",
-          "image": "ghcr.io/linkwarden/linkwarden:latest",
-          "ports": "3000:3000",
-          "env": "DATABASE_URL=postgresql://linkwarden:changeme@127.0.0.1:5432/linkwarden\nNEXTAUTH_SECRET=changeme_secret\nNEXTAUTH_URL=http://localhost:3000\nNEXT_PUBLIC_DISABLE_REGISTRATION=false",
-          "volumes": "linkwarden-data:/data/data:Z"
-        },
-        {
-          "name": "postgres",
-          "image": "docker.io/postgres:16",
-          "env": "POSTGRES_USER=linkwarden\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=linkwarden",
-          "volumes": "linkwarden-db:/var/lib/postgresql/data:Z",
-          "run_as_user": 999,
-          "run_as_group": 999
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 44,
-    "created_at": "2026-03-21T13:45:55.121Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 47,
-  "fields": {
-    "key": "zabbix-proxy-sqlite",
-    "label": "Zabbix Proxy (SQLite)",
-    "icon": "bi-hdd-network",
-    "category": "Monitoring",
-    "description": "Zabbix proxy with SQLite for distributed monitoring",
-    "stack_data": {
-      "pod_name": "zabbix-proxy",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "zabbix-proxy",
-          "image": "docker.io/zabbix/zabbix-proxy-sqlite3:latest",
-          "ports": "10051:10051",
-          "env": "ZBX_SERVER_HOST=changeme\nZBX_HOSTNAME=proxy-hostname\nZBX_PROXYMODE=0",
-          "volumes": "zabbix-proxy-db:/var/lib/zabbix/db_data:Z",
-          "run_as_user": 0,
-          "run_as_group": 0
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 11,
-    "created_at": "2026-03-22T08:20:49.254Z"
-  }
-},
-{
-  "model": "generator.stacktemplate",
-  "pk": 48,
-  "fields": {
-    "key": "collabora",
-    "label": "Collabora Online",
-    "icon": "bi-file-earmark-richtext",
-    "category": "Dokumente",
-    "description": "Self-hosted office suite for Nextcloud and other WOPI clients (Writer, Calc, Impress)",
-    "stack_data": {
-      "pod_name": "collabora",
-      "restart_policy": "Always",
-      "mode": "rootless",
-      "containers": [
-        {
-          "name": "collabora",
-          "image": "docker.io/collabora/code:latest",
-          "ports": "9980:9980",
-          "env": "domain=cloud\\.example\\.com\nDONT_GEN_SSL_CERT=1\nextra_params=--o:ssl.enable=false --o:ssl.termination=true --o:mount_jail_tree=false --o:mount_namespaces=false --o:welcome.enable=false --o:net.frame_ancestors=https://cloud.example.com --o:num_prespawn_children=8 --o:net.connection_timeout_secs=30 --o:per_document.idle_timeout_secs=60 --o:per_document.max_concurrency=4",
-          "cap_add": "SYS_CHROOT\nMKNOD\nCHOWN",
-          "run_as_user": 0,
-          "run_as_group": 0,
-          "volumes": "collabora-fonts:/usr/local/share/fonts:ro\ncollabora-fonts:/opt/cool/systemplate/usr/local/share/fonts:ro"
-        }
-      ]
-    },
-    "is_active": true,
-    "sort_order": 44,
-    "created_at": "2026-04-05T04:19:09.107Z"
-  }
-}
 ]

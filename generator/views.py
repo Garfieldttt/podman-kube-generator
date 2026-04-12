@@ -1790,6 +1790,24 @@ def builder_generate(request):
         pod_name = form_data.get('pod_name', 'unnamed').strip().lower().replace(' ', '-')
         validation_warnings = validate_form_data(form_data)
 
+        try:
+            from .models import GeneratedYAML
+            from .middleware import _get_ip
+            images = ', '.join(
+                c.get('image', '').split(':')[0].split('/')[-1]
+                for c in form_data.get('containers', []) if c.get('image')
+            )
+            GeneratedYAML.objects.create(
+                mode=form_data.get('mode', 'rootless'),
+                pod_name=pod_name,
+                container_count=len(form_data.get('containers', [])),
+                init_count=len(form_data.get('init_containers', [])),
+                images=images,
+                ip=_get_ip(request),
+            )
+        except Exception:
+            pass
+
         net_info = []
         for c in form_data.get('containers', []):
             ports = []
