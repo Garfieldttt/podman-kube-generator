@@ -522,6 +522,15 @@ class UserStackAdmin(admin.ModelAdmin):
     readonly_fields = ['user', 'name', 'description', 'form_data', 'created_at']
     search_fields = ['name', 'user__username']
 
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['subtitle'] = (
+            'Stacks submitted by registered users to be listed publicly in the Community section. '
+            'Unlike Saved Configs, these require an account and must be approved before they appear. '
+            'Toggle "Approved" directly in this list to publish or unpublish a stack.'
+        )
+        return super().changelist_view(request, extra_context=extra_context)
+
     def has_add_permission(self, request):
         return False
 
