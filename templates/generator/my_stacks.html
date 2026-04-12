@@ -22,36 +22,24 @@
     {% endfor %}
     {% endif %}
 
-    <!-- CTA: Create new stack -->
-    <div class="card mb-4 p-4" style="border-color:rgba(20,184,166,.3);background:rgba(20,184,166,.05);">
-      <div class="d-flex align-items-center gap-4 flex-wrap">
-        <div class="flex-grow-1">
-          <div class="fw-semibold mb-1" style="color:var(--text);font-size:1rem;">
-            <i class="bi bi-plus-circle me-2" style="color:var(--accent);"></i>Create a new stack
-          </div>
-          <p class="small mb-0" style="color:var(--text-dim);">
-            Build a pod in the generator, then save it privately or submit it to the community.
-          </p>
-        </div>
-        <a href="/" class="btn btn-primary">
-          <i class="bi bi-plus-lg me-1"></i>Open Pod Generator
-        </a>
-      </div>
-    </div>
-
     <!-- ── My Stacks (private) ──────────────────────────────────── -->
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h2 class="h5 mb-0">
         <i class="bi bi-lock me-2" style="color:var(--accent);"></i>My Stacks
       </h2>
-      <span class="badge" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);">
-        {{ private_page.paginator.count }} Stack{{ private_page.paginator.count|pluralize:"s" }}
-      </span>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);">
+          {{ private_page.paginator.count }} Stack{{ private_page.paginator.count|pluralize:"s" }}
+        </span>
+        <a href="/" class="btn btn-sm btn-primary">
+          <i class="bi bi-plus-lg me-1"></i>Add
+        </a>
+      </div>
     </div>
 
     <p class="small mb-3" style="color:var(--text-dim);">
       <i class="bi bi-info-circle me-1"></i>
-      Private stacks are only visible to you. No approval needed.
+      Private stacks are only visible to you. No approval needed — use <strong>"Save to My Stacks"</strong> in the generator.
     </p>
 
     {% if private_page.object_list %}
@@ -120,14 +108,19 @@
       <h2 class="h5 mb-0">
         <i class="bi bi-collection me-2" style="color:var(--accent);"></i>My Community Stacks
       </h2>
-      <span class="badge" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);">
-        {{ community_page.paginator.count }} Stack{{ community_page.paginator.count|pluralize:"s" }}
-      </span>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);">
+          {{ community_page.paginator.count }} Stack{{ community_page.paginator.count|pluralize:"s" }}
+        </span>
+        <a href="/" class="btn btn-sm btn-primary">
+          <i class="bi bi-plus-lg me-1"></i>Add
+        </a>
+      </div>
     </div>
 
     <p class="small mb-3" style="color:var(--text-dim);">
       <i class="bi bi-info-circle me-1"></i>
-      Community stacks are publicly visible after admin approval.
+      Community stacks are publicly visible after admin approval — use <strong>"Submit to Community"</strong> in the generator.
     </p>
 
     {% if community_page.object_list %}
