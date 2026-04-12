@@ -597,19 +597,3 @@ def fetch_registry_all(image_full: str) -> dict:
         'volumes': volumes,
     }
 
-
-# kept for backwards compatibility if called elsewhere
-def fetch_registry_ports(image_full: str) -> list[str]:
-    return fetch_registry_all(image_full).get('ports', [])
-
-
-def fetch_registry_env(image_full: str) -> str:
-    return fetch_registry_all(image_full).get('env', '')
-
-
-def fetch_registry_user(image_full: str):
-    return fetch_registry_all(image_full).get('run_as_user')
-
-
-def fetch_registry_volumes(image_full: str) -> list[str]:
-    return fetch_registry_all(image_full).get('volumes', [])
