@@ -30,7 +30,7 @@ from .stacks import CONNECTION_HINTS
 
 
 _VALID_USERNS = {'auto', 'keep-id', 'nomap', 'private', 'host'}
-_DB_IMAGES = {'mariadb', 'mysql', 'postgres', 'postgresql', 'mongodb', 'mongo'}
+_DB_IMAGES = {'mariadb', 'mysql', 'postgres', 'postgresql', 'mongodb', 'mongo', 'redis', 'valkey'}
 _DB_ENV_KEYS = {
     'mysql':    ['MYSQL_DATABASE', 'MYSQL_USER', 'MYSQL_PASSWORD'],
     'mariadb':  ['MARIADB_DATABASE', 'MARIADB_USER', 'MARIADB_PASSWORD'],
@@ -232,7 +232,7 @@ def validate_form_data(form_data):
 
     # 7. :latest tag on DB containers → uncontrolled major version upgrades
     _DB_VERSIONS = {'mysql': '8.0', 'mariadb': '11', 'postgres': '16', 'postgresql': '16',
-                    'mongodb': '7', 'mongo': '7', 'redis': '7'}
+                    'mongodb': '7', 'mongo': '7', 'redis': '7', 'valkey': '8'}
     for c in db_cs:
         img = c.get('image', '')
         if img.endswith(':latest') or ':' not in img.split('/')[-1]:
@@ -918,24 +918,6 @@ def collection_detail(request, collection_id):
         'items': items,
         'is_owner': request.user.is_authenticated and col.user == request.user,
     })
-
-
-@login_required
-@require_POST
-def collection_add_item(request, collection_id):
-    from .models import StackCollection, StackCollectionItem
-    col = get_object_or_404(StackCollection, pk=collection_id, user=request.user)
-    config_uuid = request.POST.get('config_uuid', '').strip()
-    config = get_object_or_404(SavedConfig, uuid=config_uuid)
-    note = request.POST.get('note', '')[:200]
-    StackCollectionItem.objects.get_or_create(
-        collection=col,
-        saved_config=config,
-        defaults={'note': note},
-    )
-    next_url = request.POST.get('next') or f'/{config_uuid}/'
-    messages.success(request, f'Added to "{col.name}".')
-    return redirect(next_url)
 
 
 @login_required

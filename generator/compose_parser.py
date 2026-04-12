@@ -83,7 +83,7 @@ def parse_compose(content: str, filename: str = 'compose') -> dict:
         raw_ep = svc.get('entrypoint')
         c = {
             'name':    svc_name,
-            'image':   svc.get('image', ''),
+            'image':   _norm_image(svc.get('image', '')),
             'ports':   _ports_to_str(svc.get('ports', [])),
             'env':     _env_to_str(svc.get('environment') or svc.get('env', [])),
             'volumes': _volumes_to_str(svc.get('volumes', [])),
