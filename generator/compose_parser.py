@@ -418,5 +418,8 @@ def parse_docker_run(command: str) -> tuple:
 
 def is_docker_run_command(text: str) -> bool:
     """Returns True if text looks like a docker/podman run command."""
-    t = text.strip().lstrip('sudo').strip()
+    t = text.strip()
+    # Remove leading "sudo " if present (lstrip would strip individual chars, not the word)
+    if re.match(r'^sudo\s+', t, re.I):
+        t = re.sub(r'^sudo\s+', '', t, flags=re.I)
     return bool(re.match(r'^(docker|podman)\s+run\b', t, re.I))

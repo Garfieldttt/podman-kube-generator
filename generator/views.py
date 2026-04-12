@@ -2200,8 +2200,11 @@ def compose_import(request):
                 'liveness_period': None,
                 'pull_policy': '',
             })
-            # network aliases
-            for net_cfg in (svc.get('networks') or {}).values():
+            # network aliases (networks: can be a list or a dict)
+            svc_networks = svc.get('networks') or {}
+            if isinstance(svc_networks, list):
+                svc_networks = {n: {} for n in svc_networks}
+            for net_cfg in svc_networks.values():
                 if isinstance(net_cfg, dict):
                     for alias in (net_cfg.get('aliases') or []):
                         _net_aliases_by_svc.setdefault(svc_name, []).append(str(alias))
@@ -2601,8 +2604,17 @@ def compose_import(request):
                 'msg': f"mixed restart policies ({', '.join(sorted(restart_policies))}) — pods use a single policy; using '{pod_restart}'",
             })
     
+        # Derive pod name from first non-infrastructure service name
+        _infra = {'postgres', 'postgresql', 'mysql', 'mariadb', 'redis', 'valkey',
+                  'mongodb', 'mongo', 'memcached', 'rabbitmq', 'db', 'database'}
+        _svc_names = list((data.get('services') or {}).keys())
+        _app_svcs = [s for s in _svc_names if s.lower().split('-')[0] not in _infra]
+        _pod_name_raw = (_app_svcs[0] if _app_svcs else _svc_names[0]) if _svc_names else 'pod'
+        pod_name = re.sub(r'[^a-z0-9-]', '', _pod_name_raw.lower().replace('_', '-').replace(' ', '-')) or 'pod'
+
         return JsonResponse({
             'ok': True,
+            'pod_name': pod_name,
             'containers': containers,
             'named_volumes': named_volumes,
             'restart_policy': pod_restart,
