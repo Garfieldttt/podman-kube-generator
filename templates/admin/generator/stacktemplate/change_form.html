@@ -1,0 +1,50 @@
+{% extends "admin/change_form.html" %}
+
+{% block after_field_sets %}
+{{ block.super }}
+{% include "admin/generator/stacktemplate/_icon_picker.html" %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const iconInput = document.querySelector('input[name="icon"]');
+  if (!iconInput) return;
+
+  // Add preview + pick button next to the icon input
+  const preview = document.createElement('i');
+  preview.className = 'bi ' + (iconInput.value || 'bi-box');
+  preview.style.cssText = 'font-size:1.4rem;margin-left:.5rem;vertical-align:middle;';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = 'Pick icon';
+  btn.style.cssText = 'margin-left:.5rem;padding:.3rem .7rem;background:#417690;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:.85rem;vertical-align:middle;';
+  btn.onclick = toggleIconPicker;
+
+  iconInput.style.fontFamily = 'monospace';
+  iconInput.insertAdjacentElement('afterend', btn);
+  iconInput.insertAdjacentElement('afterend', preview);
+  iconInput.addEventListener('input', () => { preview.className = 'bi ' + iconInput.value; });
+
+  // Move picker panel next to icon row
+  const panel = document.getElementById('icon-picker-panel');
+  iconInput.closest('.form-row').appendChild(panel);
+  panel.style.marginTop = '.5rem';
+});
+
+function updateIconPreview(val) {
+  const p = document.querySelector('input[name="icon"]');
+  if (p) { const prev = document.querySelector('.bi[id="icon-preview"]'); if(prev) prev.className='bi '+val; }
+}
+function toggleIconPicker() {
+  const p = document.getElementById('icon-picker-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+function selectIcon(cls) {
+  const input = document.querySelector('input[name="icon"]');
+  if (input) {
+    input.value = cls;
+    input.dispatchEvent(new Event('input'));
+  }
+  document.getElementById('icon-picker-panel').style.display = 'none';
+}
+</script>
+{% endblock %}

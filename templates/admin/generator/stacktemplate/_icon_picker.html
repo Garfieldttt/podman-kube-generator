@@ -1,0 +1,69 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<div id="icon-picker-panel" style="display:none;margin-top:.5rem;border:1px solid #ccc;border-radius:4px;padding:.75rem;background:#fafafa;max-width:600px;">
+  <input type="text" id="icon-search" placeholder="Search icons…" oninput="filterIcons(this.value)"
+    style="width:100%;padding:.4rem .6rem;margin-bottom:.6rem;border:1px solid #ccc;border-radius:3px;font-size:.85rem;box-sizing:border-box;">
+  <div id="icon-grid" style="display:flex;flex-wrap:wrap;gap:6px;max-height:260px;overflow-y:auto;">
+  </div>
+</div>
+
+<script>
+const ICONS = [
+  'bi-box','bi-boxes','bi-box-seam','bi-box2','bi-archive','bi-archive-fill',
+  'bi-database','bi-database-fill','bi-database-add','bi-database-check',
+  'bi-server','bi-hdd','bi-hdd-fill','bi-hdd-network','bi-hdd-stack',
+  'bi-cloud','bi-cloud-fill','bi-cloud-arrow-up','bi-cloud-arrow-down',
+  'bi-globe','bi-globe2','bi-globe-americas','bi-globe-europe-africa',
+  'bi-file-earmark-code','bi-file-earmark-code-fill','bi-file-code','bi-file-code-fill',
+  'bi-code','bi-code-slash','bi-code-square','bi-terminal','bi-terminal-fill',
+  'bi-gear','bi-gear-fill','bi-gear-wide','bi-gear-wide-connected','bi-tools',
+  'bi-wrench','bi-wrench-adjustable','bi-screwdriver','bi-cpu','bi-cpu-fill',
+  'bi-memory','bi-motherboard','bi-motherboard-fill','bi-gpu-card',
+  'bi-shield','bi-shield-fill','bi-shield-check','bi-shield-lock','bi-shield-lock-fill',
+  'bi-lock','bi-lock-fill','bi-unlock','bi-key','bi-key-fill',
+  'bi-graph-up','bi-graph-down','bi-bar-chart','bi-bar-chart-fill','bi-pie-chart',
+  'bi-activity','bi-speedometer','bi-speedometer2','bi-sliders','bi-sliders2',
+  'bi-envelope','bi-envelope-fill','bi-envelope-at','bi-chat','bi-chat-fill',
+  'bi-bell','bi-bell-fill','bi-alarm','bi-alarm-fill',
+  'bi-person','bi-person-fill','bi-people','bi-people-fill','bi-person-badge',
+  'bi-house','bi-house-fill','bi-building','bi-building-fill','bi-buildings',
+  'bi-folder','bi-folder-fill','bi-folder2','bi-folder2-open','bi-collection',
+  'bi-grid','bi-grid-fill','bi-grid-3x3','bi-list','bi-list-ul','bi-layout-sidebar',
+  'bi-app','bi-app-indicator','bi-window','bi-window-stack','bi-display',
+  'bi-camera-video','bi-camera','bi-music-note','bi-film','bi-image',
+  'bi-wifi','bi-wifi-2','bi-router','bi-reception-4','bi-broadcast',
+  'bi-download','bi-upload','bi-arrow-repeat','bi-arrow-clockwise','bi-recycle',
+  'bi-play','bi-play-fill','bi-play-circle','bi-pause','bi-stop','bi-record',
+  'bi-lightning','bi-lightning-fill','bi-lightning-charge','bi-power','bi-toggle-on',
+  'bi-check-circle','bi-check-circle-fill','bi-x-circle','bi-x-circle-fill',
+  'bi-exclamation-triangle','bi-exclamation-triangle-fill','bi-info-circle','bi-question-circle',
+  'bi-star','bi-star-fill','bi-heart','bi-heart-fill','bi-bookmark','bi-bookmark-fill',
+  'bi-tag','bi-tags','bi-flag','bi-trophy','bi-award',
+  'bi-calendar','bi-calendar-fill','bi-clock','bi-clock-fill','bi-hourglass',
+  'bi-search','bi-zoom-in','bi-zoom-out','bi-binoculars','bi-eye','bi-eye-fill',
+  'bi-link','bi-link-45deg','bi-share','bi-qr-code','bi-upc',
+  'bi-bug','bi-bug-fill','bi-bandaid','bi-clipboard','bi-clipboard-fill',
+  'bi-pencil','bi-pencil-fill','bi-pen','bi-brush','bi-eraser',
+  'bi-trash','bi-trash-fill','bi-x','bi-x-lg','bi-plus','bi-plus-circle',
+  'bi-send','bi-send-fill','bi-cursor','bi-hand-index','bi-mouse',
+  'bi-robot','bi-braces','bi-braces-asterisk','bi-hash','bi-asterisk',
+  'bi-wordpress','bi-git','bi-github','bi-gitlab','bi-docker',
+];
+
+function renderIcons(list) {
+  const grid = document.getElementById('icon-grid');
+  grid.innerHTML = list.map(cls =>
+    `<button type="button" onclick="selectIcon('${cls}')" title="${cls}"
+      style="width:42px;height:42px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;"
+      onmouseover="this.style.background='#e8f0fe'" onmouseout="this.style.background='#fff'">
+      <i class="bi ${cls}"></i>
+    </button>`
+  ).join('');
+}
+
+function filterIcons(q) {
+  const filtered = q ? ICONS.filter(i => i.includes(q.toLowerCase())) : ICONS;
+  renderIcons(filtered);
+}
+
+document.addEventListener('DOMContentLoaded', () => renderIcons(ICONS));
+</script>

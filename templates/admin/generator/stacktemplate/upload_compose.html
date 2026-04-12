@@ -1,13 +1,13 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
 
-{% block title %}Compose-Datei hochladen{% endblock %}
+{% block title %}Upload Compose file{% endblock %}
 
 {% block content %}
-<h1>Compose-Datei hochladen</h1>
+<h1>Upload Compose file</h1>
 <p class="help">
-  Lade eine <code>docker-compose.yml</code> oder <code>podman-compose.yml</code> hoch —
-  sie wird automatisch als Stack-Template importiert.
+  Upload a <code>docker-compose.yml</code> or <code>podman-compose.yml</code> —
+  it will be automatically imported as a stack template.
 </p>
 
 {% if messages %}
@@ -24,33 +24,60 @@
     <fieldset class="module aligned">
       <div class="form-row">
         <div class="flex-container">
-          <label class="required" for="id_compose_file">Compose-Datei:</label>
+          <label class="required" for="id_compose_file">Compose file:</label>
           <input type="file" name="compose_file" id="id_compose_file" accept=".yml,.yaml" required>
         </div>
       </div>
       <div class="form-row">
         <div class="flex-container">
-          <label for="id_label">Anzeigename:</label>
-          <input type="text" name="label" id="id_label" maxlength="100" placeholder="Leer lassen = Pod-Name aus Datei">
+          <label for="id_label">Display name:</label>
+          <input type="text" name="label" id="id_label" maxlength="100" placeholder="Leave empty = pod name from file">
         </div>
       </div>
       <div class="form-row">
         <div class="flex-container">
-          <label for="id_category">Kategorie:</label>
-          <input type="text" name="category" id="id_category" maxlength="50" value="Eigene">
+          <label for="id_category">Category:</label>
+          <input type="text" name="category" id="id_category" maxlength="50" value="Other">
         </div>
       </div>
       <div class="form-row">
         <div class="flex-container">
-          <label for="id_icon">Icon (Bootstrap Icons Klasse):</label>
-          <input type="text" name="icon" id="id_icon" maxlength="60" value="bi-file-earmark-code">
+          <label for="id_icon">Icon:</label>
+          <div>
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem;">
+              <i id="icon-preview" class="bi bi-file-earmark-code" style="font-size:1.4rem;"></i>
+              <input type="text" name="icon" id="id_icon" maxlength="60" value="bi-file-earmark-code"
+                style="font-family:monospace;width:220px;" oninput="updateIconPreview(this.value)">
+              <button type="button" onclick="toggleIconPicker()"
+                style="padding:.3rem .7rem;background:#417690;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:.85rem;">
+                Pick icon
+              </button>
+            </div>
+            {% include "admin/generator/stacktemplate/_icon_picker.html" %}
+          </div>
         </div>
       </div>
     </fieldset>
     <div class="submit-row">
-      <input type="submit" value="Hochladen &amp; importieren" class="default">
-      <a href="{% url 'admin:generator_stacktemplate_changelist' %}" class="button cancel-link">Abbrechen</a>
+      <input type="submit" value="Upload &amp; import" class="default">
+      <a href="{% url 'admin:generator_stacktemplate_changelist' %}" class="button cancel-link">Cancel</a>
     </div>
   </form>
 </div>
+
+<script>
+function updateIconPreview(val) {
+  const el = document.getElementById('icon-preview');
+  el.className = 'bi ' + val;
+}
+function toggleIconPicker() {
+  const p = document.getElementById('icon-picker-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+function selectIcon(cls) {
+  document.getElementById('id_icon').value = cls;
+  updateIconPreview(cls);
+  document.getElementById('icon-picker-panel').style.display = 'none';
+}
+</script>
 {% endblock %}

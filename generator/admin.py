@@ -35,6 +35,7 @@ class PrettyJSONWidget(AdminTextareaWidget):
 @admin.register(StackTemplate)
 class StackTemplateAdmin(admin.ModelAdmin):
     change_list_template = 'admin/generator/stacktemplate/change_list.html'
+    change_form_template = 'admin/generator/stacktemplate/change_form.html'
     formfield_overrides = {
         db_models.JSONField: {'widget': PrettyJSONWidget(attrs={'rows': 30, 'style': 'font-family: monospace; width: 100%;'})},
     }
@@ -73,7 +74,7 @@ class StackTemplateAdmin(admin.ModelAdmin):
         if request.method == 'POST':
             f = request.FILES.get('compose_file')
             label = request.POST.get('label', '').strip()
-            category = request.POST.get('category', 'Eigene').strip() or 'Eigene'
+            category = request.POST.get('category', 'Other').strip() or 'Other'
             icon = request.POST.get('icon', 'bi-file-earmark-code').strip() or 'bi-file-earmark-code'
 
             if not f:
