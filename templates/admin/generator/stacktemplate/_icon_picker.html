@@ -53,8 +53,8 @@ function renderIcons(list) {
   const grid = document.getElementById('icon-grid');
   grid.innerHTML = list.map(cls =>
     `<button type="button" onclick="selectIcon('${cls}')" title="${cls}"
-      style="width:42px;height:42px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;"
-      onmouseover="this.style.background='#e8f0fe'" onmouseout="this.style.background='#fff'">
+      style="width:42px;height:42px;border:1px solid #ccc;border-radius:4px;background:#417690;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;"
+      onmouseover="this.style.background='#2a5068'" onmouseout="this.style.background='#417690'">
       <i class="bi ${cls}"></i>
     </button>`
   ).join('');
