@@ -89,6 +89,8 @@ git_pull() {
     fi
 
     info "Fetching updates..."
+    # Discard local lock file changes — it gets regenerated after package update anyway
+    git -C "$SCRIPT_DIR" checkout -- requirements.lock.txt 2>/dev/null || true
     if ! git -C "$SCRIPT_DIR" pull --ff-only >> "$LOG" 2>&1; then
         err "git pull failed. Resolve conflicts manually and try again."
         exit 1
@@ -191,10 +193,8 @@ confirm() {
 update_packages() {
     step "── Updating packages ───────────────────────────────────"
 
-    info "Installing updates..."
-    REQ_FILE="$SCRIPT_DIR/requirements.lock.txt"
-    [[ -f "$REQ_FILE" ]] || REQ_FILE="$SCRIPT_DIR/requirements.txt"
-    if ! "$PIP" install -q -r "$REQ_FILE" >> "$LOG" 2>&1; then
+    info "Upgrading to latest allowed versions..."
+    if ! "$PIP" install -q --upgrade -r "$SCRIPT_DIR/requirements.txt" >> "$LOG" 2>&1; then
         err "pip install failed."
         rollback "pip install failed"
     fi
@@ -205,7 +205,11 @@ update_packages() {
         err "pip check: dependency conflicts after update!"
         rollback "pip check failed"
     fi
-    ok "Packages updated and dependencies consistent."
+
+    info "Regenerating lock file..."
+    "$PIP" freeze > "$SCRIPT_DIR/requirements.lock.txt"
+
+    ok "Packages updated and lock file regenerated."
 }
 
 # ── Django system check ────────────────────────────────────────
