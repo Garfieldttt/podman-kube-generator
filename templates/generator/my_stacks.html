@@ -63,7 +63,11 @@
           <a href="/view-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Show YAML">
             <i class="bi bi-code-square"></i>
           </a>
-          <a href="/edit-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Edit">
+          <button type="button" class="btn btn-sm btn-outline-secondary" title="Edit name, description, icon"
+            onclick="openMetaModal({{ s.pk }}, '{{ s.name|escapejs }}', '{{ s.description|escapejs }}', '{{ s.icon|default:'bi-box'|escapejs }}', '{{ s.category|escapejs }}')">
+            <i class="bi bi-pencil-square"></i>
+          </button>
+          <a href="/edit-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Edit stack">
             <i class="bi bi-pencil"></i>
           </a>
           <form method="post" action="/delete-stack/{{ s.pk }}/" onsubmit="return confirm('Delete stack?')">
@@ -78,7 +82,6 @@
     </div>
 
     {% if private_page.has_other_pages %}
-
     <nav class="mt-2 mb-4 d-flex justify-content-center gap-2">
       {% if private_page.has_previous %}
       <a href="?private_page={{ private_page.previous_page_number }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-left"></i></a>
@@ -149,8 +152,12 @@
           <a href="/view-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Show YAML">
             <i class="bi bi-code-square"></i>
           </a>
+          <button type="button" class="btn btn-sm btn-outline-secondary" title="Edit name, description, icon"
+            onclick="openMetaModal({{ s.pk }}, '{{ s.name|escapejs }}', '{{ s.description|escapejs }}', '{{ s.icon|default:'bi-box'|escapejs }}', '{{ s.category|escapejs }}')">
+            <i class="bi bi-pencil-square"></i>
+          </button>
           {% if not s.is_approved %}
-          <a href="/edit-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Edit">
+          <a href="/edit-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Edit stack">
             <i class="bi bi-pencil"></i>
           </a>
           {% endif %}
@@ -191,4 +198,146 @@
 
   </div>
 </div>
+
+<!-- ── Meta Edit Modal ──────────────────────────────────────────── -->
+<div id="metaModal" style="display:none;position:fixed;inset:0;z-index:1050;background:rgba(0,0,0,.6);align-items:center;justify-content:center;">
+  <div class="card p-4" style="width:100%;max-width:520px;max-height:90vh;overflow-y:auto;margin:1rem;">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h5 class="mb-0"><i class="bi bi-pencil-square me-2" style="color:var(--accent);"></i>Edit Stack Info</h5>
+      <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeMetaModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <form id="metaForm" method="post" action="">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label small fw-semibold" style="color:var(--text-dim);">Name</label>
+        <input type="text" name="name" id="metaName" class="form-control" maxlength="100" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold" style="color:var(--text-dim);">Description</label>
+        <textarea name="description" id="metaDescription" class="form-control" rows="3" maxlength="300"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold" style="color:var(--text-dim);">Category</label>
+        <input type="text" name="category" id="metaCategory" class="form-control" maxlength="50">
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold" style="color:var(--text-dim);">Icon</label>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div id="metaIconPreview" style="width:36px;height:36px;border-radius:8px;background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.25);display:flex;align-items:center;justify-content:center;">
+            <i id="metaIconPreviewIcon" class="bi bi-box" style="color:#5eead4;font-size:1.1rem;"></i>
+          </div>
+          <input type="text" name="icon" id="metaIcon" class="form-control form-control-sm" maxlength="60" readonly style="width:160px;">
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleMetaPicker()">
+            <i class="bi bi-grid me-1"></i>Pick
+          </button>
+        </div>
+        <div id="metaPickerPanel" style="display:none;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.75rem;background:var(--card-bg);">
+          <input type="text" id="metaIconSearch" placeholder="Search icons…" oninput="filterMetaIcons(this.value)"
+            class="form-control form-control-sm mb-2">
+          <div id="metaIconGrid" style="display:flex;flex-wrap:wrap;gap:6px;max-height:220px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeMetaModal()">Cancel</button>
+        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const META_ICONS = [
+  'bi-box','bi-boxes','bi-box-seam','bi-box2','bi-archive','bi-archive-fill',
+  'bi-database','bi-database-fill','bi-database-add','bi-database-check',
+  'bi-server','bi-hdd','bi-hdd-fill','bi-hdd-network','bi-hdd-stack',
+  'bi-cloud','bi-cloud-fill','bi-cloud-arrow-up','bi-cloud-arrow-down',
+  'bi-globe','bi-globe2','bi-globe-americas','bi-globe-europe-africa',
+  'bi-file-earmark-code','bi-file-earmark-code-fill','bi-file-code','bi-file-code-fill',
+  'bi-code','bi-code-slash','bi-code-square','bi-terminal','bi-terminal-fill',
+  'bi-gear','bi-gear-fill','bi-gear-wide','bi-gear-wide-connected','bi-tools',
+  'bi-wrench','bi-wrench-adjustable','bi-screwdriver','bi-cpu','bi-cpu-fill',
+  'bi-memory','bi-motherboard','bi-motherboard-fill','bi-gpu-card',
+  'bi-shield','bi-shield-fill','bi-shield-check','bi-shield-lock','bi-shield-lock-fill',
+  'bi-lock','bi-lock-fill','bi-unlock','bi-key','bi-key-fill',
+  'bi-graph-up','bi-graph-down','bi-bar-chart','bi-bar-chart-fill','bi-pie-chart',
+  'bi-activity','bi-speedometer','bi-speedometer2','bi-sliders','bi-sliders2',
+  'bi-envelope','bi-envelope-fill','bi-envelope-at','bi-chat','bi-chat-fill',
+  'bi-bell','bi-bell-fill','bi-alarm','bi-alarm-fill',
+  'bi-person','bi-person-fill','bi-people','bi-people-fill','bi-person-badge',
+  'bi-house','bi-house-fill','bi-building','bi-building-fill','bi-buildings',
+  'bi-folder','bi-folder-fill','bi-folder2','bi-folder2-open','bi-collection',
+  'bi-grid','bi-grid-fill','bi-grid-3x3','bi-list','bi-list-ul','bi-layout-sidebar',
+  'bi-app','bi-app-indicator','bi-window','bi-window-stack','bi-display',
+  'bi-camera-video','bi-camera','bi-music-note','bi-film','bi-image',
+  'bi-wifi','bi-wifi-2','bi-router','bi-reception-4','bi-broadcast',
+  'bi-download','bi-upload','bi-arrow-repeat','bi-arrow-clockwise','bi-recycle',
+  'bi-play','bi-play-fill','bi-play-circle','bi-pause','bi-stop','bi-record',
+  'bi-lightning','bi-lightning-fill','bi-lightning-charge','bi-power','bi-toggle-on',
+  'bi-check-circle','bi-check-circle-fill','bi-x-circle','bi-x-circle-fill',
+  'bi-exclamation-triangle','bi-exclamation-triangle-fill','bi-info-circle','bi-question-circle',
+  'bi-star','bi-star-fill','bi-heart','bi-heart-fill','bi-bookmark','bi-bookmark-fill',
+  'bi-tag','bi-tags','bi-flag','bi-trophy','bi-award',
+  'bi-calendar','bi-calendar-fill','bi-clock','bi-clock-fill','bi-hourglass',
+  'bi-search','bi-zoom-in','bi-zoom-out','bi-binoculars','bi-eye','bi-eye-fill',
+  'bi-link','bi-link-45deg','bi-share','bi-qr-code','bi-upc',
+  'bi-bug','bi-bug-fill','bi-bandaid','bi-clipboard','bi-clipboard-fill',
+  'bi-pencil','bi-pencil-fill','bi-pen','bi-brush','bi-eraser',
+  'bi-trash','bi-trash-fill','bi-x','bi-x-lg','bi-plus','bi-plus-circle',
+  'bi-send','bi-send-fill','bi-cursor','bi-hand-index','bi-mouse',
+  'bi-robot','bi-braces','bi-braces-asterisk','bi-hash','bi-asterisk',
+  'bi-wordpress','bi-git','bi-github','bi-gitlab','bi-docker',
+  'bi-elephant',
+];
+
+function renderMetaIcons(list) {
+  document.getElementById('metaIconGrid').innerHTML = list.map(cls =>
+    `<button type="button" onclick="selectMetaIcon('${cls}')" title="${cls}"
+      style="width:38px;height:38px;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:rgba(20,184,166,.1);color:#5eead4;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;"
+      onmouseover="this.style.background='rgba(20,184,166,.25)'" onmouseout="this.style.background='rgba(20,184,166,.1)'">
+      <i class="bi ${cls}"></i>
+    </button>`
+  ).join('');
+}
+
+function filterMetaIcons(q) {
+  renderMetaIcons(q ? META_ICONS.filter(i => i.includes(q.toLowerCase())) : META_ICONS);
+}
+
+function selectMetaIcon(cls) {
+  document.getElementById('metaIcon').value = cls;
+  document.getElementById('metaIconPreviewIcon').className = 'bi ' + cls;
+  document.getElementById('metaPickerPanel').style.display = 'none';
+}
+
+function toggleMetaPicker() {
+  const p = document.getElementById('metaPickerPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  if (p.style.display === 'block') {
+    renderMetaIcons(META_ICONS);
+    document.getElementById('metaIconSearch').value = '';
+  }
+}
+
+function openMetaModal(id, name, desc, icon, category) {
+  document.getElementById('metaForm').action = '/update-stack-meta/' + id + '/';
+  document.getElementById('metaName').value = name;
+  document.getElementById('metaDescription').value = desc;
+  document.getElementById('metaCategory').value = category;
+  document.getElementById('metaIcon').value = icon;
+  document.getElementById('metaIconPreviewIcon').className = 'bi ' + icon;
+  document.getElementById('metaPickerPanel').style.display = 'none';
+  const modal = document.getElementById('metaModal');
+  modal.style.display = 'flex';
+}
+
+function closeMetaModal() {
+  document.getElementById('metaModal').style.display = 'none';
+}
+
+document.getElementById('metaModal').addEventListener('click', function(e) {
+  if (e.target === this) closeMetaModal();
+});
+</script>
 {% endblock %}

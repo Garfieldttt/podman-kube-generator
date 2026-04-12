@@ -1389,6 +1389,19 @@ def update_user_stack(request, stack_id):
     return redirect('my_stacks')
 
 
+@login_required(login_url='/login/')
+@require_POST
+def update_stack_meta(request, stack_id):
+    """Update name, description, icon, category only — does not reset approval."""
+    stack = get_object_or_404(UserStack, pk=stack_id, user=request.user)
+    stack.name = request.POST.get('name', '').strip()[:100] or stack.name
+    stack.description = request.POST.get('description', '').strip()[:300]
+    stack.icon = _clean_icon(request.POST.get('icon', 'bi-box'))
+    stack.category = request.POST.get('category', '').strip()[:50]
+    stack.save(update_fields=['name', 'description', 'icon', 'category'])
+    return redirect('my_stacks')
+
+
 def _extract_images(form_data):
     """Gibt normalisierte Image-Namen (ohne Tag) aus form_data zurück."""
     images = set()

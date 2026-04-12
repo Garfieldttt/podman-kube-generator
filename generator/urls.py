@@ -52,6 +52,7 @@ urlpatterns = [
     path('view-stack/<int:stack_id>/', views.view_user_stack, name='view_user_stack'),
     path('edit-stack/<int:stack_id>/', views.edit_user_stack, name='edit_user_stack'),
     path('update-stack/<int:stack_id>/', views.update_user_stack, name='update_user_stack'),
+    path('update-stack-meta/<int:stack_id>/', views.update_stack_meta, name='update_stack_meta'),
     path('community-stack/', views.community_stack_load, name='community_stack_load'),
     path('check-duplicate/', views.check_duplicate, name='check_duplicate'),
     # Profile
