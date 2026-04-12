@@ -1924,8 +1924,11 @@ def compose_import(request):
             # Check only the name segment (before the tag) for a dot → treat as registry
             name_part = img.split(':')[0]  # strip tag first
             first = name_part.split('/')[0]
-            if '.' in first:
+            if '.' in first or first == 'localhost':
                 return img  # already has registry (e.g. my.registry.com/img)
+            # host:port/image pattern (e.g. registry:5000/img) — colon in first path segment
+            if '/' in img and ':' in img.split('/')[0]:
+                return img
             # Official library image (no slash) → add docker.io/
             if '/' not in name_part:
                 return f'docker.io/{img}' if ':' in img else f'docker.io/{img}:latest'

@@ -120,7 +120,8 @@ def _parse_volumes(raw, global_counter, vol_map, env_raw=''):
             else:
                 new_vols.append({'name': vol_name, 'persistentVolumeClaim': {'claimName': claim_src}})
         mount = {'name': vol_name, 'mountPath': container_path}
-        if 'ro' in parts[2:]:
+        opts = {o.strip().lower() for p in parts[2:] for o in p.split(',')}
+        if 'ro' in opts:
             mount['readOnly'] = True
         mounts.append(mount)
     return mounts, new_vols, counter

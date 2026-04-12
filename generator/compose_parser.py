@@ -167,6 +167,9 @@ def _norm_image(img):
     first = name_part.split('/')[0]
     if '.' in first or first == 'localhost':
         return img
+    # host:port/image pattern (e.g. registry:5000/img) — colon in first path segment
+    if '/' in img and ':' in img.split('/')[0]:
+        return img
     if '/' not in name_part:
         return f'docker.io/{img}' if ':' in img else f'docker.io/{img}:latest'
     return f'docker.io/{img}'
