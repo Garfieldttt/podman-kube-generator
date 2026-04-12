@@ -363,7 +363,7 @@ class UserProfile(models.Model):
 
 
 class RegistrationSettings(models.Model):
-    registration_enabled = models.BooleanField(default=True, verbose_name='Registration enabled')
+    registration_enabled = models.BooleanField(default=False, verbose_name='Registration enabled')
     email_activation = models.BooleanField(
         default=False,
         verbose_name='Enable email activation',

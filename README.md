@@ -52,7 +52,7 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 - Public user profiles with avatar
 
 ### User Accounts
-- Optional registration (can be disabled by admin)
+- Registration disabled by default, can be enabled in admin
 - Email verification
 - TOTP 2FA
 - Password reset via email
