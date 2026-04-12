@@ -346,6 +346,21 @@ PRESETS = {
         "note": "Privacy-fokussierte Web-Analytics. Zusammen mit PostgreSQL deployen.",
     },
 
+    "heimdall": {
+        "ports": "8080:80\n8443:443",
+        "volumes": "heimdall-config:/config:Z",
+        "mode_hint": "rootless",
+        "note": "Application dashboard. Admin-UI direkt auf Port 8080.",
+    },
+    "authentik": {
+        "ports": "9000:9000\n9443:9443",
+        "env": "AUTHENTIK_REDIS__HOST=localhost\nAUTHENTIK_POSTGRESQL__HOST=localhost\nAUTHENTIK_POSTGRESQL__NAME=authentik\nAUTHENTIK_POSTGRESQL__USER=authentik\nAUTHENTIK_POSTGRESQL__PASSWORD=changeme\nAUTHENTIK_SECRET_KEY=changeme",
+        "volumes": "authentik-media:/media:Z\nauthentik-certs:/certs:Z",
+        "run_as_user": 1000,
+        "mode_hint": "rootless",
+        "note": "Server + Worker im selben Container möglich (args: server / worker). SECRET_KEY und DB-Passwort unbedingt ändern. Zusammen mit PostgreSQL + Redis deployen.",
+    },
+
     # ── Immich ────────────────────────────────────────────────────
     "immich-server": {
         "ports": "2283:2283",
@@ -442,8 +457,11 @@ def get_preset(image_full: str) -> dict:
 
 
 _SYSTEM_ENV_PREFIXES = ('PATH=', 'HOME=', 'LANG=', 'LC_', 'TERM=', 'HOSTNAME=',
-                        'container=', 'GPG_KEY=', 'PYTHON_', 'JAVA_', 'GOPATH=',
-                        'GOROOT=', 'NODE_VERSION=', 'YARN_VERSION=', 'npm_')
+                        'container=', 'GPG_KEY=', 'PYTHON_', 'PYTHONDONTWRITEBYTECODE=',
+                        'PYTHONUNBUFFERED=', 'JAVA_', 'GOPATH=', 'GOROOT=', 'GOFIPS=',
+                        'NODE_VERSION=', 'YARN_VERSION=', 'npm_',
+                        'SSL_CERT_', 'GIT_BUILD_', 'TMPDIR=', 'VENV_PATH=',
+                        'POETRY_VIRTUALENVS_', 'build_root=')
 
 
 def _fetch_registry_config(image_full: str) -> dict:
