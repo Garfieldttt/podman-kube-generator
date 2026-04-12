@@ -5,11 +5,11 @@
   <div class="submit-row">
     <form method="post" action="{{ test_mail_url }}" style="display:inline-flex;align-items:center;gap:.5rem;">
       {% csrf_token %}
-      <input type="email" name="recipient" placeholder="Empfänger (leer = Admin-E-Mail)"
+      <input type="email" name="recipient" placeholder="Recipient (empty = admin email)"
         style="padding:.3rem .6rem;border:1px solid #ccc;border-radius:3px;font-size:.85rem;width:260px;">
       <button type="submit"
         style="padding:.35rem .9rem;background:#417690;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:.85rem;">
-        Test-E-Mail senden
+        Send test email
       </button>
     </form>
   </div>

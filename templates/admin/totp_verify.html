@@ -1,12 +1,12 @@
 {% extends "admin/base_site.html" %}
-{% block title %}Zwei-Faktor-Authentifizierung{% endblock %}
+{% block title %}Two-Factor Authentication{% endblock %}
 
 {% block content %}
 <div style="max-width:400px; margin:2rem auto;">
-  <h1 style="font-size:1.4rem; margin-bottom:1rem;">Zwei-Faktor-Authentifizierung</h1>
+  <h1 style="font-size:1.4rem; margin-bottom:1rem;">Two-Factor Authentication</h1>
 
   <p style="color:#666; margin-bottom:1.5rem;">
-    Gib den aktuellen Code aus deiner Authenticator-App ein.
+    Enter the current code from your authenticator app.
   </p>
 
   {% if error %}
@@ -18,7 +18,7 @@
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">
-    <label style="display:block; font-weight:600; margin-bottom:.4rem;">Authenticator-Code</label>
+    <label style="display:block; font-weight:600; margin-bottom:.4rem;">Authenticator code</label>
     <input type="text" name="code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7"
            autocomplete="one-time-code" autofocus
            style="width:100%; padding:.6rem .75rem; font-size:1.2rem; letter-spacing:.25em;
@@ -27,7 +27,7 @@
     <button type="submit"
             style="width:100%; padding:.7rem; background:#417690; color:#fff;
                    border:none; border-radius:4px; font-size:1rem; cursor:pointer;">
-      Bestätigen
+      Confirm
     </button>
   </form>
 </div>
