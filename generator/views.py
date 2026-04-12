@@ -1085,13 +1085,15 @@ def image_tags(request):
     namespace = request.GET.get('namespace', 'library')
     name = request.GET.get('name', '')
     if not name or not _REGISTRY_NAME_RE.match(name) or not _REGISTRY_NAME_RE.match(namespace):
-        return HttpResponse('')
+        return HttpResponse('') if request.GET.get('format') != 'json' else JsonResponse({'tags': []})
     from concurrent.futures import ThreadPoolExecutor, wait as _wait
     ex = ThreadPoolExecutor(max_workers=1)
     f = ex.submit(get_tags, namespace, name)
     done, _ = _wait([f], timeout=5)
     ex.shutdown(wait=False)
     tags = f.result() if done else []
+    if request.GET.get('format') == 'json':
+        return JsonResponse({'tags': tags})
     return render(request, 'generator/partials/tag_results.html', {
         'tags': tags,
         'namespace': namespace,
