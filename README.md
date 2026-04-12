@@ -15,35 +15,44 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 - Generate Kubernetes YAML for `podman play kube`
 - Generate Quadlet `.container` / `.pod` / `.kube` files
 - Download `.env` file for secret variables
+- Rootless and rootful mode
+- Init containers support
+- Host network mode
+- Auto-generated secure passwords for `changeme` placeholders
+- Validation warnings (privileged ports in rootless mode, weak secrets, etc.)
 - Save config as a shareable link (no account required)
 - Version history per saved config
-- Organize saved configs in collections
+- Organize saved configs in collections (requires account)
 
 ### Import
-- **Docker Compose** → import `docker-compose.yml` / `podman-compose.yml` directly
-- **Existing Kubernetes YAML** → re-edit an existing pod YAML
+- **Docker Compose** → import `docker-compose.yml` / `podman-compose.yml`
+- **`docker run` / `podman run`** → paste a run command, get YAML
+- **Existing Kubernetes YAML** → re-edit an existing pod YAML in the visual builder
 
 ### Visual Pod Builder
 - Drag-and-drop canvas for building multi-container pods
 - Add, connect and configure containers visually
+- Import Compose / run commands directly into the builder
 
 ### Image Tools
 - Docker Hub image & tag search
 - Vulnerability scan info per image tag
-- Pre-configured environment variables for known images (e.g. MariaDB, PostgreSQL, Redis)
-- Connection hints between containers (e.g. which env vars to set for app ↔ database)
+- Pre-configured environment variables for 50+ known images (MariaDB, PostgreSQL, Redis, Nextcloud, …)
+- Connection hints between containers (which env vars to set for app ↔ database)
+- Image inspector: Hub metadata, tags, registry config, CVEs in one view
 
 ### Stack Templates
 - 47 ready-to-use templates (WordPress, Nextcloud, Gitea, Vaultwarden, Zabbix, and more)
 - DB variant switcher (MariaDB ↔ MySQL ↔ PostgreSQL where supported)
+- Auto-replaced passwords on each load — no hardcoded credentials
 
 ### Community
 - Share your stack publicly (requires account, approved by admin)
 - Like and comment on community stacks
-- Public user profiles
+- Public user profiles with avatar
 
 ### User Accounts
-- Optional registration (can be disabled)
+- Optional registration (can be disabled by admin)
 - Email verification
 - TOTP 2FA
 - Password reset via email
@@ -51,8 +60,9 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 ### Admin
 - Full Django admin interface
 - SEO, analytics, cookie banner, email, registration settings
-- Visitor analytics with IP blocking
+- Visitor analytics with bot filtering and IP blocking
 - Stack template management (upload Compose file, icon picker)
+- CSV export for visitor stats
 
 > **Note:** This tool generates configuration files only. Pulling container images from Docker Hub may be subject to [Docker's subscription requirements](https://www.docker.com/pricing/) for commercial use.
 
