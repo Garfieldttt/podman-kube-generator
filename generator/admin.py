@@ -118,6 +118,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ('Homepage', {'fields': ['home_heading', 'home_intro', 'home_heading_en', 'home_intro_en']}),
         ('Footer', {'fields': ['donation_url']}),
     ]
+    readonly_fields = ['donation_url']
 
     def has_add_permission(self, request):
         return not SiteSettings.objects.exists()
