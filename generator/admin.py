@@ -503,6 +503,15 @@ class SavedConfigAdmin(admin.ModelAdmin):
     readonly_fields = ['uuid', 'created_at']
     search_fields = ['name']
 
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['subtitle'] = (
+            'Anonymous pod configurations saved by visitors via the "Save" button on the generator. '
+            'Each entry gets a unique shareable link (/config/<uuid>/). '
+            'These are not deleted automatically — clean up old entries manually as needed.'
+        )
+        return super().changelist_view(request, extra_context=extra_context)
+
 
 @admin.register(UserStack)
 class UserStackAdmin(admin.ModelAdmin):
