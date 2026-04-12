@@ -12,7 +12,6 @@ class StackTemplate(models.Model):
     stack_data = models.JSONField(
         help_text='Stack configuration: pod_name, restart_policy, mode, host_network, containers, init_containers'
     )
-    yaml_content = models.TextField(blank=True, default='', verbose_name='YAML content (optional)')
     is_active = models.BooleanField(default=True)
     sort_order = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

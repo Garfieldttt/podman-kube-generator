@@ -47,7 +47,6 @@ class StackTemplateAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {'fields': ['key', 'label', 'description', 'icon', 'category', 'is_active', 'sort_order']}),
         ('Stack Configuration (JSON)', {'fields': ['stack_data']}),
-        ('YAML Content', {'fields': ['yaml_content']}),
         ('Meta', {'fields': ['created_at']}),
     ]
     readonly_fields = ['created_at']
