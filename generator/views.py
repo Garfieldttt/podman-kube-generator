@@ -734,6 +734,7 @@ def generate_view(request):
 
 
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
+@ratelimit(key='ip', rate='10/h', method='POST', block=True)
 def save_config(request):
     if request.method != 'POST':
         return redirect('index')
