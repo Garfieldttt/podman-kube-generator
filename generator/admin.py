@@ -44,10 +44,18 @@ class StackTemplateAdmin(admin.ModelAdmin):
     list_editable = ['is_active', 'sort_order']
     readonly_fields = ['created_at']
     fieldsets = [
-        (None, {'fields': ['key', 'label', 'description', 'icon', 'category', 'is_active', 'sort_order']}),
+        (None, {'fields': ['key', 'label', 'description', 'icon', 'category', 'is_active', 'sort_order', 'open_in_generator']}),
         ('Stack Configuration (JSON)', {'fields': ['stack_data']}),
         ('Meta', {'fields': ['created_at']}),
     ]
+    readonly_fields = ['created_at', 'open_in_generator']
+
+    def open_in_generator(self, obj):
+        from django.utils.html import format_html
+        if obj and obj.key:
+            return format_html('<a href="/?stack={}" target="_blank">Open in generator ↗</a>', obj.key)
+        return '—'
+    open_in_generator.short_description = 'Preview'
 
     def get_urls(self):
         urls = super().get_urls()
