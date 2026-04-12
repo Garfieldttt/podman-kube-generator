@@ -221,9 +221,6 @@ def _build_container(c, mounts):
         spec['imagePullPolicy'] = c['pull_policy']
     ports = _parse_ports(c.get('ports', ''))
     if ports:
-        if c.get('internal_only'):
-            # Strip hostPort — container accessible within pod only
-            ports = [{'containerPort': p['containerPort'], **({'protocol': p['protocol']} if 'protocol' in p else {})} for p in ports]
         spec['ports'] = ports
     env = _parse_env(c.get('env', ''))
     if env:

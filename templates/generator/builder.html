@@ -1731,7 +1731,6 @@ function mkC(d) {
     name: d.name || shortName(d.image),
     image: d.image || '',
     pull_policy:   d.pull_policy   || '',
-    internal_only: !!d.internal_only,
     ports:   d.ports   || [],
     volumes: d.volumes || [],
     env:     d.env     || [],
@@ -2072,14 +2071,7 @@ function tabGeneral(c) {
         <option value="Never"   ${c.pull_policy==='Never'?'selected':''}>Never pull</option>
       </select>
     </div>
-    <div class="cfg-section">
-      <div class="cfg-section-title"><i class="bi bi-diagram-3"></i>Networking</div>
-      <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;cursor:pointer;">
-        <input type="checkbox" ${c.internal_only?'checked':''} style="accent-color:var(--accent);width:15px;height:15px;"
-          onchange="cfgSet('internal_only',this.checked)">
-        Internal only — no host ports needed (e.g. DB backends, internal services)
-      </label>
-    </div>`;
+    `;
 }
 
 
@@ -2856,7 +2848,6 @@ function toFormData() {
       run_as_group: c.run_as_group!==''&&c.run_as_group!=null?parseInt(c.run_as_group):null,
       memory_limit:c.memory_limit||'', cpu_limit:c.cpu_limit||'',
       memory_request:c.memory_request||'', cpu_request:c.cpu_request||'',
-      internal_only:!!c.internal_only,
       read_only_root:!!c.read_only_root, privileged:!!c.privileged,
       cap_add:c.cap_add||'', cap_drop:c.cap_drop||'',
       userns:c.userns||'',
@@ -4083,8 +4074,8 @@ function _liveIssues(c) {
     issues.push({ level:'warn', msg:'No volumes or host paths configured — check image docs for data paths' });
   }
 
-  // Keine Ports obwohl Image welche hatte (nicht für DB-Images oder internal-only)
-  if (c._preset_had_ports && !c.ports.length && !_isDbImg(c.image) && !c.internal_only) {
+  // Keine Ports obwohl Image welche hatte (nicht für DB-Images)
+  if (c._preset_had_ports && !c.ports.length && !_isDbImg(c.image)) {
     issues.push({ level:'warn', msg:'No ports configured — service may not be accessible' });
   }
 
