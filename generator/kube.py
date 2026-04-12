@@ -149,9 +149,9 @@ def _build_security_context(c, skip_user=False):
     user_explicit = c.get('run_as_user') is not None and c.get('run_as_user') != ''
     if not skip_user or user_explicit:
         if user_explicit:
-            sc['runAsUser'] = c['run_as_user']
+            sc['runAsUser'] = int(c['run_as_user'])
         if c.get('run_as_group') is not None and c.get('run_as_group') != '':
-            sc['runAsGroup'] = c['run_as_group']
+            sc['runAsGroup'] = int(c['run_as_group'])
     if c.get('read_only_root'):
         sc['readOnlyRootFilesystem'] = True
     if c.get('privileged'):

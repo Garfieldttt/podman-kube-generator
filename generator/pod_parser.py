@@ -9,12 +9,16 @@ import yaml
 def _ports_from_container(c):
     lines = []
     for p in (c.get('ports') or []):
-        host = p.get('hostPort') or p.get('containerPort')
-        cont = p.get('containerPort') or host
-        if host and cont:
-            proto = (p.get('protocol') or 'TCP').upper()
-            suffix = f'/{proto}' if proto not in ('TCP', '') else ''
+        host = p.get('hostPort')
+        cont = p.get('containerPort')
+        if cont is None:
+            continue
+        proto = (p.get('protocol') or 'TCP').upper()
+        suffix = f'/{proto}' if proto not in ('TCP', '') else ''
+        if host is not None:
             lines.append(f'{host}:{cont}{suffix}')
+        else:
+            lines.append(f'{cont}{suffix}')
     return '\n'.join(lines)
 
 

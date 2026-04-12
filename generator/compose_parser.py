@@ -7,10 +7,21 @@ import yaml
 
 
 def _ports_to_str(ports):
-    """List of ports → multiline string."""
+    """List of ports → multiline string. Handles short (string) and long (dict) form."""
     out = []
     for p in (ports or []):
-        out.append(str(p).strip('"').strip("'"))
+        if isinstance(p, dict):
+            # Long form: {target: 80, published: 8080, protocol: tcp}
+            target = p.get('target', '')
+            published = p.get('published', '')
+            proto = str(p.get('protocol') or '').upper()
+            suffix = f'/{proto}' if proto and proto != 'TCP' else ''
+            if published:
+                out.append(f'{published}:{target}{suffix}')
+            else:
+                out.append(f'{target}{suffix}')
+        else:
+            out.append(str(p).strip('"').strip("'"))
     return '\n'.join(out)
 
 

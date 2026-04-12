@@ -98,7 +98,11 @@ def validate_form_data(form_data):
             line = line.strip()
             if ':' in line:
                 try:
-                    hp = int(line.split(':')[0].rsplit('.', 1)[-1])  # handle ip:port form
+                    # Strip protocol suffix, then extract host port
+                    # Formats: HOST:CONTAINER, IP:HOST:CONTAINER, HOST:CONTAINER/proto
+                    _base = line.split('/')[0]
+                    _segs = _base.split(':')
+                    hp = int(_segs[-2] if len(_segs) >= 3 else _segs[0])
                     if hp in host_ports:
                         warnings.append({
                             'level': 'error',
