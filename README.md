@@ -60,7 +60,7 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 ### Admin
 - Full Django admin interface
 - SEO, analytics, cookie banner, email, registration settings
-- Visitor analytics with bot filtering and IP blocking
+- Visitor analytics with bot filtering and IP exclusion
 - Stack template management (upload Compose file, icon picker)
 - CSV export for visitor stats
 
