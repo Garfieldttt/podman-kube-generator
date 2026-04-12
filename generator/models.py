@@ -75,7 +75,7 @@ class SeoSettings(models.Model):
 
 
 class AnalyticsSettings(models.Model):
-    enabled = models.BooleanField(default=True, verbose_name='Enable tracking')
+    enabled = models.BooleanField(default=False, verbose_name='Enable tracking')
     anonymize_ip = models.BooleanField(
         default=True,
         verbose_name='Anonymize IP',
