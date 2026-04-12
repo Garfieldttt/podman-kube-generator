@@ -300,6 +300,7 @@ class UserStack(models.Model):
     icon = models.CharField(max_length=60, default='bi-box', verbose_name='Icon', help_text='Bootstrap Icons class, e.g. bi-database')
     category = models.CharField(max_length=50, blank=True, default='', verbose_name='Category', help_text='e.g. Database, CMS, Monitoring')
     form_data = models.JSONField()
+    is_private = models.BooleanField(default=False, verbose_name='Private (not submitted to community)')
     is_approved = models.BooleanField(default=False, verbose_name='Approved')
     view_count = models.PositiveIntegerField(default=0, verbose_name='View count')
     created_at = models.DateTimeField(auto_now_add=True)

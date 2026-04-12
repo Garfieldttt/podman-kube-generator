@@ -344,7 +344,13 @@
                   <script>renderIconPicker('icon-grid-submit','icon-preview-submit','icon-input-submit');</script>
                 </div>
               </div>
-              <p class="small mb-0" style="color:var(--text-muted);">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" name="is_private" id="is-private-check" value="1">
+                <label class="form-check-label small" for="is-private-check" style="color:var(--text-dim);">
+                  <i class="bi bi-lock me-1"></i>Keep private — save to My Stacks only, do not submit for community review
+                </label>
+              </div>
+              <p class="small mb-0" id="submit-stack-hint" style="color:var(--text-muted);">
                 <i class="bi bi-info-circle me-1"></i>
                 The stack will be reviewed by an admin before appearing in the community.
               </p>
@@ -372,8 +378,11 @@
         .then(r => r.json())
         .then(d => {
           if (d.ok) {
+            const priv = document.getElementById('is-private-check').checked;
             msg.style.display = '';
-            msg.innerHTML = '<div class="alert alert-success py-2 mb-0 small"><i class="bi bi-check-circle me-1"></i>Stack submitted! It will appear after admin approval.</div>';
+            msg.innerHTML = priv
+              ? '<div class="alert alert-success py-2 mb-0 small"><i class="bi bi-lock me-1"></i>Stack saved privately to My Stacks.</div>'
+              : '<div class="alert alert-success py-2 mb-0 small"><i class="bi bi-check-circle me-1"></i>Stack submitted! It will appear after admin approval.</div>';
             btn.style.display = 'none';
           } else {
             msg.style.display = '';

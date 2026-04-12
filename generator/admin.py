@@ -516,9 +516,9 @@ class SavedConfigAdmin(admin.ModelAdmin):
 
 @admin.register(UserStack)
 class UserStackAdmin(admin.ModelAdmin):
-    list_display = ['name', 'user', 'description', 'is_approved', 'created_at']
+    list_display = ['name', 'user', 'description', 'is_private', 'is_approved', 'created_at']
     list_editable = ['is_approved']
-    list_filter = ['is_approved']
+    list_filter = ['is_approved', 'is_private']
     list_display_links = ['name']
     readonly_fields = ['user', 'name', 'description', 'form_data', 'created_at']
     search_fields = ['name', 'user__username']

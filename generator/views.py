@@ -1427,10 +1427,11 @@ def submit_stack(request):
         form_data = json.loads(form_data_json)
     except (json.JSONDecodeError, ValueError):
         return JsonResponse({'error': 'invalid'}, status=400)
+    is_private = request.POST.get('is_private') == '1'
     images = _extract_images(form_data)
-    if images:
+    if images and not is_private:
         # Eigener Stack mit identischen Images bereits vorhanden?
-        for existing in UserStack.objects.filter(user=request.user):
+        for existing in UserStack.objects.filter(user=request.user, is_private=False):
             if _extract_images(existing.form_data) == images:
                 return JsonResponse({'error': 'duplicate', 'message': 'You already submitted a stack with the same images.'}, status=409)
         # Approved Stack eines anderen Users mit exakt denselben Images?
@@ -1446,15 +1447,16 @@ def submit_stack(request):
         icon=_clean_icon(request.POST.get('icon', 'bi-box')),
         category=request.POST.get('category', '').strip()[:50],
         form_data=form_data,
+        is_private=is_private,
     )
-    # Admin-Benachrichtigung
-    from .models import EmailSettings
-    admin_email = EmailSettings.get_solo().admin_email
-    if admin_email:
-        site_url = getattr(settings, 'SITE_URL', '')
-        admin_url = f'{site_url}/admin/generator/userstack/{stack.pk}/change/'
-        subject, html = mail_new_stack(request.user.username, name, description, admin_url)
-        send_app_mail(subject=subject, body=html, recipient_list=[admin_email])
+    if not is_private:
+        from .models import EmailSettings
+        admin_email = EmailSettings.get_solo().admin_email
+        if admin_email:
+            site_url = getattr(settings, 'SITE_URL', '')
+            admin_url = f'{site_url}/admin/generator/userstack/{stack.pk}/change/'
+            subject, html = mail_new_stack(request.user.username, name, description, admin_url)
+            send_app_mail(subject=subject, body=html, recipient_list=[admin_email])
     return JsonResponse({'ok': True})
 
 
