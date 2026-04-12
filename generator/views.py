@@ -1286,10 +1286,16 @@ def logout_view(request):
 
 @login_required(login_url='/login/')
 def my_stacks(request):
-    qs = UserStack.objects.filter(user=request.user).order_by('-created_at')
-    paginator = Paginator(qs, 10)
-    page = paginator.get_page(request.GET.get('page'))
-    return render(request, 'generator/my_stacks.html', {'page_obj': page})
+    private_qs = UserStack.objects.filter(user=request.user, is_private=True).order_by('-created_at')
+    community_qs = UserStack.objects.filter(user=request.user, is_private=False).order_by('-created_at')
+    private_paginator = Paginator(private_qs, 10)
+    community_paginator = Paginator(community_qs, 10)
+    private_page = private_paginator.get_page(request.GET.get('private_page'))
+    community_page = community_paginator.get_page(request.GET.get('community_page'))
+    return render(request, 'generator/my_stacks.html', {
+        'private_page': private_page,
+        'community_page': community_page,
+    })
 
 
 @login_required(login_url='/login/')
@@ -1448,6 +1454,7 @@ def submit_stack(request):
         category=request.POST.get('category', '').strip()[:50],
         form_data=form_data,
         is_private=is_private,
+        is_approved=is_private,  # private stacks need no approval
     )
     if not is_private:
         from .models import EmailSettings

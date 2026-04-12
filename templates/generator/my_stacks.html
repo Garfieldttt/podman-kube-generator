@@ -27,10 +27,10 @@
       <div class="d-flex align-items-center gap-4 flex-wrap">
         <div class="flex-grow-1">
           <div class="fw-semibold mb-1" style="color:var(--text);font-size:1rem;">
-            <i class="bi bi-plus-circle me-2" style="color:var(--accent);"></i>Create new stack
+            <i class="bi bi-plus-circle me-2" style="color:var(--accent);"></i>Create a new stack
           </div>
           <p class="small mb-0" style="color:var(--text-dim);">
-            Set up a stack in the Pod Generator, generate YAML and submit it as a Community Stack — it becomes publicly visible after admin approval.
+            Build a pod in the generator, then save it privately or submit it to the community.
           </p>
         </div>
         <a href="/" class="btn btn-primary">
@@ -39,29 +39,105 @@
       </div>
     </div>
 
-    <!-- Community Stacks -->
+    <!-- ── My Stacks (private) ──────────────────────────────────── -->
     <div class="d-flex align-items-center justify-content-between mb-3">
       <h2 class="h5 mb-0">
-        <i class="bi bi-collection me-2" style="color:var(--accent);"></i>My Community Stacks
+        <i class="bi bi-lock me-2" style="color:var(--accent);"></i>My Stacks
       </h2>
       <span class="badge" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);">
-        {{ page_obj.paginator.count }} Stack{{ page_obj.paginator.count|pluralize:"s" }}
+        {{ private_page.paginator.count }} Stack{{ private_page.paginator.count|pluralize:"s" }}
       </span>
     </div>
 
     <p class="small mb-3" style="color:var(--text-dim);">
       <i class="bi bi-info-circle me-1"></i>
-      Submitted stacks are shown in the dropdown under your username after admin approval.
+      Private stacks are only visible to you. No approval needed.
     </p>
 
-    {% if page_obj.object_list %}
-    <div class="d-flex flex-column gap-3">
-      {% for s in page_obj %}
+    {% if private_page.object_list %}
+    <div class="d-flex flex-column gap-3 mb-2">
+      {% for s in private_page %}
       <div class="card p-3 d-flex flex-row align-items-center gap-3">
         <div style="width:36px;height:36px;border-radius:8px;background:rgba(20,184,166,.1);
                     border:1px solid rgba(20,184,166,.2);display:flex;align-items:center;
                     justify-content:center;flex-shrink:0;">
-          <i class="bi bi-box" style="color:#5eead4;font-size:.9rem;"></i>
+          <i class="bi {{ s.icon|default:'bi-box' }}" style="color:#5eead4;font-size:.9rem;"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="fw-semibold" style="color:var(--text);">{{ s.name }}</div>
+          {% if s.description %}<div class="small" style="color:var(--text-dim);">{{ s.description }}</div>{% endif %}
+          <div class="small mt-1" style="color:var(--text-muted);">
+            {{ s.created_at|date:"d.m.Y H:i" }} —
+            <span style="color:#94a3b8;"><i class="bi bi-lock me-1"></i>Private</span>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/view-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Show YAML">
+            <i class="bi bi-code-square"></i>
+          </a>
+          <a href="/edit-stack/{{ s.pk }}/" class="btn btn-sm btn-outline-secondary" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </a>
+          <form method="post" action="/delete-stack/{{ s.pk }}/" onsubmit="return confirm('Delete stack?')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if private_page.has_other_pages %}
+    <nav class="mt-2 mb-4 d-flex justify-content-center gap-2">
+      {% if private_page.has_previous %}
+      <a href="?private_page={{ private_page.previous_page_number }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-left"></i></a>
+      {% endif %}
+      {% for num in private_page.paginator.page_range %}
+      <a href="?private_page={{ num }}" class="btn btn-sm {% if num == private_page.number %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ num }}</a>
+      {% endfor %}
+      {% if private_page.has_next %}
+      <a href="?private_page={{ private_page.next_page_number }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-right"></i></a>
+      {% endif %}
+    </nav>
+    {% else %}
+    <div class="mb-4"></div>
+    {% endif %}
+
+    {% else %}
+    <div class="card p-4 text-center mb-4" style="border-style:dashed;">
+      <i class="bi bi-lock" style="font-size:2rem;color:var(--text-muted);"></i>
+      <p class="mt-2 mb-3 small" style="color:var(--text-dim);">
+        No private stacks yet.<br>
+        Use <strong>"Save to My Stacks"</strong> in the generator.
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- ── Community Stacks ─────────────────────────────────────── -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="h5 mb-0">
+        <i class="bi bi-collection me-2" style="color:var(--accent);"></i>My Community Stacks
+      </h2>
+      <span class="badge" style="background:rgba(20,184,166,.15);color:#5eead4;border:1px solid rgba(20,184,166,.25);">
+        {{ community_page.paginator.count }} Stack{{ community_page.paginator.count|pluralize:"s" }}
+      </span>
+    </div>
+
+    <p class="small mb-3" style="color:var(--text-dim);">
+      <i class="bi bi-info-circle me-1"></i>
+      Community stacks are publicly visible after admin approval.
+    </p>
+
+    {% if community_page.object_list %}
+    <div class="d-flex flex-column gap-3 mb-2">
+      {% for s in community_page %}
+      <div class="card p-3 d-flex flex-row align-items-center gap-3">
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(20,184,166,.1);
+                    border:1px solid rgba(20,184,166,.2);display:flex;align-items:center;
+                    justify-content:center;flex-shrink:0;">
+          <i class="bi {{ s.icon|default:'bi-box' }}" style="color:#5eead4;font-size:.9rem;"></i>
         </div>
         <div class="flex-grow-1">
           <div class="fw-semibold" style="color:var(--text);">{{ s.name }}</div>
@@ -93,24 +169,16 @@
       {% endfor %}
     </div>
 
-    <!-- Pagination -->
-    {% if page_obj.has_other_pages %}
-    <nav class="mt-4 d-flex justify-content-center gap-2">
-      {% if page_obj.has_previous %}
-      <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-chevron-left"></i>
-      </a>
+    {% if community_page.has_other_pages %}
+    <nav class="mt-2 d-flex justify-content-center gap-2">
+      {% if community_page.has_previous %}
+      <a href="?community_page={{ community_page.previous_page_number }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-left"></i></a>
       {% endif %}
-      {% for num in page_obj.paginator.page_range %}
-      <a href="?page={{ num }}"
-        class="btn btn-sm {% if num == page_obj.number %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-        {{ num }}
-      </a>
+      {% for num in community_page.paginator.page_range %}
+      <a href="?community_page={{ num }}" class="btn btn-sm {% if num == community_page.number %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ num }}</a>
       {% endfor %}
-      {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-chevron-right"></i>
-      </a>
+      {% if community_page.has_next %}
+      <a href="?community_page={{ community_page.next_page_number }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-right"></i></a>
       {% endif %}
     </nav>
     {% endif %}
@@ -119,12 +187,9 @@
     <div class="card p-4 text-center" style="border-style:dashed;">
       <i class="bi bi-inbox" style="font-size:2rem;color:var(--text-muted);"></i>
       <p class="mt-2 mb-3 small" style="color:var(--text-dim);">
-        No stacks submitted yet.<br>
-        Generate a pod and click <strong>"Submit as Community Stack"</strong>.
+        No community stacks submitted yet.<br>
+        Use <strong>"Submit to Community"</strong> in the generator.
       </p>
-      <a href="/" class="btn btn-primary btn-sm" style="width:fit-content;margin:0 auto;">
-        <i class="bi bi-plus-lg me-1"></i>Create first stack
-      </a>
     </div>
     {% endif %}
 
