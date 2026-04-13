@@ -4185,25 +4185,48 @@ function _fmtNum(n) {
 }
 
 // ══ Version Picker ════════════════════════════════════════════════
+// Curated fallback — used when Docker Hub returns no clean version tags
 const _IMG_VERSIONS = {
-  mysql:      ['8.4', '8.0', '5.7'],
-  mariadb:    ['11.4', '10.11', '10.6'],
-  postgres:   ['17', '16', '15', '14'],
-  redis:      ['7.4', '7.2', '6.2'],
-  mongodb:    ['8.0', '7.0', '6.0'],
-  nginx:      ['1.27', 'alpine', '1.26'],
-  caddy:      ['2.9', 'alpine', '2.8'],
-  traefik:    ['v3.3', 'v3.2', 'v2.11'],
-  grafana:    ['11.4', '11.3', '10.4'],
-  influxdb:   ['2.7', '1.8'],
-  prometheus: ['v3.1', 'v2.55', 'v2.54'],
-  keycloak:   ['26.1', '25.0', '24.0'],
-  nextcloud:  ['31', '30', '29'],
-  wordpress:  ['6.7', '6.6', 'php8.3-apache'],
-  gitea:      ['1.22', '1.21'],
-  minio:      ['latest', 'RELEASE.2024-01-31T20-20-33Z'],
-  vaultwarden:['testing', '1.32'],
-  headscale:  ['0.23', '0.22'],
+  mysql:       ['9', '8.4', '8.0'],
+  mariadb:     ['12', '11', '10.11'],
+  postgres:    ['18', '17', '16', '15'],
+  redis:       ['8', '7', '6'],
+  mongodb:     ['8', '7', '6'],
+  nginx:       ['latest', '1.29', '1.28'],
+  caddy:       ['latest', '2.11', '2.10'],
+  traefik:     ['latest', 'v3', 'v2'],
+  grafana:     ['latest', '12.4', '12.3'],
+  influxdb:    ['latest', '2', '1'],
+  prometheus:  ['latest', 'v3', 'v2'],
+  keycloak:    ['latest', '26', '25'],
+  nextcloud:   ['latest', '33', '32', '31'],
+  wordpress:   ['latest', '6.8', '6.7', '6.6'],
+  gitea:       ['latest', '1.25', '1.24'],
+  minio:       ['latest'],
+  vaultwarden: ['latest', '1.33', '1.32'],
+  headscale:   ['latest', '0.23', '0.22'],
+  php:         ['latest', '8.4', '8.3', '8.2'],
+  python:      ['latest', '3.13', '3.12', '3.11'],
+  node:        ['lts', 'latest', '24', '22', '20'],
+  golang:      ['latest', '1.24', '1.23'],
+  ruby:        ['latest', '3.4', '3.3', '3.2'],
+  openjdk:     ['latest', '23', '21', '17'],
+  dotnet:      ['latest', '9', '8'],
+  rust:        ['latest', '1.87', '1.86'],
+  alpine:      ['latest', '3.21', '3.20', '3.19'],
+  ubuntu:      ['latest', '24.04', '22.04', '20.04'],
+  debian:      ['latest', '12', '11'],
+  haproxy:     ['latest', 'lts', '3.3', '3.2'],
+  rabbitmq:    ['latest', '4', '3'],
+  memcached:   ['latest', '1.6', '1'],
+  varnish:     ['latest', '9', '8'],
+  sonarqube:   ['latest', 'community', 'developer'],
+  jenkins:     ['latest', 'lts'],
+  gitlab:      ['latest', '17.0', '16.11'],
+  elasticsearch: ['latest', '8', '7'],
+  kibana:      ['latest', '8', '7'],
+  logstash:    ['latest', '8', '7'],
+  zabbix:      ['latest', '7.0', '6.4'],
 };
 
 // Cache for auto-discovered tags
@@ -4312,15 +4335,21 @@ function renderVersionPicker(imageVal) {
       if (!c) return;
       const curBase = c.image.split(':')[0].split('/').pop().toLowerCase();
       if (curBase !== base) return;
+      const cur = c.image.split(':')[1] || '';
       const versions = _filterTags(_tagCache[base]);
-      if (versions.length) {
+      // Only use fetched tags if they contain at least one clean version (tier 0-3)
+      // Otherwise keep the curated fallback list already shown
+      const hasClean = versions.some(t =>
+        /^(latest|stable|lts|edge|testing)$/i.test(t) ||
+        /^v?\d+(\.\d+(\.\d+)?)?$/.test(t)
+      );
+      if (hasClean) {
         wrap.style.display = '';
-        _renderVerBtns(versions, c.image.split(':')[1] || '');
-      } else {
-        wrap.style.display = 'none';
+        _renderVerBtns(versions, cur);
       }
+      // else: keep whatever is already shown (hardcoded fallback)
     })
-    .catch(() => { delete _tagCache[base]; wrap.style.display = 'none'; });
+    .catch(() => { delete _tagCache[base]; });
 }
 
 function setImageVersion(ver) {
