@@ -4239,8 +4239,8 @@ function renderVersionPicker(imageVal) {
     wrap.style.display = 'none'; return;
   }
 
-  // Already fetched — render immediately
-  if (_tagCache[base]) {
+  // Already fetched — render immediately (null = not yet fetched, [] = fetched but empty)
+  if (_tagCache[base] != null) {
     const versions = _filterTags(_tagCache[base]);
     if (versions.length) { wrap.style.display = ''; _renderVerBtns(versions, current); }
     else wrap.style.display = 'none';
@@ -4257,8 +4257,11 @@ function renderVersionPicker(imageVal) {
   }
 
   // Always fetch live tags from Docker Hub
-  const parts = imagePath.split('/');
-  const namespace = parts.length >= 2 ? parts[parts.length - 2] : 'library';
+  // Strip registry prefix (docker.io/) before splitting namespace/name
+  let imgPathNorm = imagePath;
+  if (imgPathNorm.startsWith('docker.io/')) imgPathNorm = imgPathNorm.slice(10);
+  const parts = imgPathNorm.split('/');
+  const namespace = parts.length >= 2 ? parts[0] : 'library';
   const name      = parts[parts.length - 1];
 
   fetch(`/image-tags/?namespace=${encodeURIComponent(namespace)}&name=${encodeURIComponent(name)}&format=json`)
@@ -4278,7 +4281,7 @@ function renderVersionPicker(imageVal) {
         wrap.style.display = 'none';
       }
     })
-    .catch(() => { wrap.style.display = 'none'; });
+    .catch(() => { delete _tagCache[base]; wrap.style.display = 'none'; });
 }
 
 function setImageVersion(ver) {
