@@ -36,7 +36,7 @@ def site(request):
         'brand_icon': s.brand_icon,
         'home_heading': s.home_heading_en or s.home_heading,
         'home_intro': s.home_intro_en or s.home_intro,
-        'donation_url': 'https://www.paypal.me/opengamepoint',
+        'donation_url': s.donation_url,
         'canvas_enabled': s.canvas_enabled,
     }
     return {'site': type('Site', (), resolved)()}
