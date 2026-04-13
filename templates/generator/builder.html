@@ -1713,8 +1713,7 @@ function addFromCatalog(key, image) {
       if (p.run_as_group != null) c.run_as_group = p.run_as_group;
       if (p.memory_limit) c.memory_limit = p.memory_limit;
       syncDbCredentials();
-      if (_isDb(c.image)) checkDbConflict(c);
-      else suggestDbForContainer(c);
+      if (!_isDb(c.image)) suggestDbForContainer(c);
       setLoading(false);
       renderNodes(); refreshBadges(id);
     })
@@ -2986,41 +2985,6 @@ function suggestDbForContainer(c) {
   }
 }
 
-// Map: which DB image types satisfy which app env key groups
-const _DB_TYPE_MAP = {
-  mysql:      'mysql',
-  mariadb:    'mariadb',
-  postgres:   'postgres',
-  postgresql: 'postgres',
-};
-const _DETECT_TYPE = {
-  mysql:    'mysql',
-  mariadb:  'mariadb',
-  postgres: 'postgres',
-};
-
-function checkDbConflict(dbC) {
-  const dbType = _DB_TYPE_MAP[_imgBase(dbC.image)];
-  if (!dbType) return;
-  const appCs = state.containers.filter(c => !_isDb(c.image));
-  for (const app of appCs) {
-    const envKeys = new Set(app.env.map(e => e.key));
-    for (const [dtype, cfg] of Object.entries(_DB_DETECT)) {
-      if (cfg.keys.some(k => envKeys.has(k)) && dtype !== dbType) {
-        // Mismatch: app needs dtype but we added dbType
-        const hintEl = document.getElementById('cv-db-hint');
-        hintEl.classList.add('show', 'warn');
-        document.getElementById('cv-db-hint-msg').innerHTML =
-          `<i class="bi bi-exclamation-triangle me-1"></i>${shortName(app.image)} expects <strong>${cfg.label}</strong> but ${shortName(dbC.image)} was added.`;
-        _suggestedDbImage = cfg.image;
-        document.getElementById('cv-db-hint-btn').textContent = `Switch to ${cfg.label}`;
-        return;
-      }
-    }
-  }
-  dismissDbHint();
-}
-
 function dismissDbHint() {
   _suggestedDbImage = null;
   document.getElementById('cv-db-hint').classList.remove('show', 'warn');
@@ -3040,35 +3004,10 @@ function addSuggestedDb() {
   addFromCatalog(shortName(img), img);
 }
 
-function _detectDbConflict() {
-  const dbCs  = state.containers.filter(c => _isDb(c.image));
-  const appCs = state.containers.filter(c => !_isDb(c.image));
-  for (const dbC of dbCs) {
-    const dbType = _DB_TYPE_MAP[_imgBase(dbC.image)];
-    if (!dbType) continue;
-    for (const app of appCs) {
-      const envKeys = new Set(app.env.map(e => e.key));
-      for (const [dtype, cfg] of Object.entries(_DB_DETECT)) {
-        if (cfg.keys.some(k => envKeys.has(k)) && dtype !== dbType) {
-          return { app: shortName(app.image), expected: cfg.label, got: shortName(dbC.image) };
-        }
-      }
-    }
-  }
-  return null;
-}
-
 function generateYaml() {
   if (!state.containers.length) { alert('Add at least one container first.'); return; }
   scanForTips();
   syncDbCredentials();
-  const conflict = _detectDbConflict();
-  if (conflict) {
-    const ok = confirm(
-      `DB type mismatch: ${conflict.app} expects ${conflict.expected} but ${conflict.got} is configured.\n\nGenerate anyway?`
-    );
-    if (!ok) return;
-  }
   if (_activeTips.length) {
     const warnModal = document.getElementById('warnings-modal');
     warnModal.querySelector('.modal-title').innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Warnings before generating';
@@ -4069,16 +4008,6 @@ function _liveIssues(c) {
     }
   }
 
-  // Keine Volumes/Paths bei unbekannten Images
-  if (c._no_registry_volumes && !c.volumes.length && !_isDbImg(c.image)) {
-    issues.push({ level:'warn', msg:'No volumes or host paths configured — check image docs for data paths' });
-  }
-
-  // Keine Ports obwohl Image welche hatte (nicht für DB-Images)
-  if (c._preset_had_ports && !c.ports.length && !_isDbImg(c.image)) {
-    issues.push({ level:'warn', msg:'No ports configured — service may not be accessible' });
-  }
-
   // Privileged
   if (c.privileged) {
     issues.push({ level:'warn', msg:'Privileged mode enabled — container has full host access' });
@@ -4272,7 +4201,7 @@ const _tagCache = {};
 // Filter raw Docker Hub tags to only show useful version tags
 function _filterTags(tags) {
   const skip = /sha256|windows|debian\d+|bullseye|bookworm|buster|stretch|bionic|focal|jammy|noble|ubi\d|nanoserver|ltsc/i;
-  return tags.filter(t => t && !skip.test(t)).slice(0, 10);
+  return tags.filter(t => t && !skip.test(t)).slice(0, 5);
 }
 
 function _renderVerBtns(versions, current) {
@@ -4312,7 +4241,8 @@ function renderVersionPicker(imageVal) {
     wrap.style.display = '';
     _renderVerBtns(_IMG_VERSIONS[base], current);
   } else {
-    wrap.style.display = 'none';
+    wrap.style.display = '';
+    btns.innerHTML = '<span style="font-size:.65rem;color:var(--text-muted);">Loading...</span>';
   }
 
   // Always fetch live tags from Docker Hub
@@ -4337,7 +4267,7 @@ function renderVersionPicker(imageVal) {
         wrap.style.display = 'none';
       }
     })
-    .catch(() => {});
+    .catch(() => { wrap.style.display = 'none'; });
 }
 
 function setImageVersion(ver) {

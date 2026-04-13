@@ -165,35 +165,9 @@ def validate_form_data(form_data):
                     'suggestion': _userns_hint,
                 })
 
-    # 3. DB type mismatch → connection fails at runtime
-    _DB_IMAGE_SUGGEST = {
-        'mysql':    'docker.io/mysql:latest',
-        'mariadb':  'docker.io/mariadb:latest',
-        'postgres': 'docker.io/postgres:latest',
-    }
+    # 3. DB container without volume → data loss on restart
     db_cs  = [c for c in containers if is_db(c.get('image', ''))]
     app_cs = [c for c in containers if not is_db(c.get('image', ''))]
-
-    for db_c in db_cs:
-        db_type = _img_base(db_c.get('image', ''))
-        for app_c in app_cs:
-            env_keys = set(_parse_env_str(app_c.get('env', '')).keys())
-            for dtype, keys in _DB_ENV_KEYS.items():
-                if any(k in env_keys for k in keys) and dtype != db_type:
-                    # mysql ↔ mariadb are fully compatible (same env vars, wire-compatible)
-                    if {dtype, db_type} <= {'mysql', 'mariadb'}:
-                        continue
-                    correct_img = _DB_IMAGE_SUGGEST.get(dtype, dtype)
-                    warnings.append({
-                        'level': 'error',
-                        'msg': f'<code>{app_c.get("name")}</code> expects '
-                               f'<strong>{dtype}</strong> but <code>{db_c.get("name")}</code> '
-                               f'is <strong>{db_type}</strong> — connection will fail',
-                        'hint': f'image: docker.io/{db_type}',
-                        'suggestion': f'Replace the DB image with:\n  image: {correct_img}',
-                    })
-
-    # 4. DB container without volume → data loss on restart
     for c in db_cs:
         vols = (c.get('volumes') or '').strip()
         if not vols:
