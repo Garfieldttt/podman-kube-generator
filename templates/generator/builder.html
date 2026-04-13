@@ -4151,7 +4151,7 @@ function _renderInspect(d, image) {
     html += `<div class="insp-section">
       <div class="insp-section-title"><i class="bi bi-tags me-1"></i>Available Tags <span class="insp-stat">(click to apply)</span></div>
       <div class="insp-tag-list">`;
-    d.tags.forEach(t => {
+    _filterTags(d.tags).forEach(t => {
       html += `<span class="insp-tag ${t===currentTag?'current':''}" onclick="_inspApplyTag('${esc(t)}')">${esc(t)}</span>`;
     });
     html += `</div></div>`;

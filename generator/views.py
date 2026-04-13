@@ -1115,7 +1115,7 @@ def image_inspect(request):
     ex = ThreadPoolExecutor(max_workers=4)
     if is_dockerhub:
         tasks['hub']   = ex.submit(get_hub_info, namespace, name)
-        tasks['tags']  = ex.submit(get_tags, namespace, name, 15)
+        tasks['tags']  = ex.submit(get_tags, namespace, name, 50)
         tasks['vulns'] = ex.submit(get_tag_vulns, namespace, name, tag)
     tasks['reg'] = ex.submit(fetch_registry_all, image)
     _wait(list(tasks.values()), timeout=9)
