@@ -4211,29 +4211,44 @@ const _tagCache = {};
 
 // Filter and sort Docker Hub tags: simple version tags first, newest first
 function _filterTags(tags) {
-  const skip = /sha256|windows|debian\d+|bullseye|bookworm|buster|stretch|trixie|bionic|focal|jammy|noble|ubi\d|nanoserver|ltsc|alpine\d|oracle|innovation|rc\d|beta|alpha/i;
+  const skip = /sha256|windows|debian\d+|bullseye|bookworm|buster|stretch|trixie|bionic|focal|jammy|noble|ubi\d|nanoserver|ltsc|alpine\d|oracle|innovation|\brc\b|beta|alpha|ppc64|s390|armv|aarch64|linux-/i;
   const filtered = tags.filter(t => t && !skip.test(t));
 
-  // Tier 0 = latest/stable/lts  Tier 1 = pure major (17, v3)
-  // Tier 2 = major.minor (17.2)  Tier 3 = major+variant (17-alpine, 33-fpm)  Tier 4 = rest
+  // Tier 0: latest/stable/lts/edge/testing
+  // Tier 1: pure major          17   v3
+  // Tier 2: major.minor         17.2  v3.6
+  // Tier 3: major.minor.patch   2.40.0
+  // Tier 4: major+variant       17-alpine  33-fpm
+  // Tier 5: major.minor+variant 8.4-fpm  17.2-alpine
+  // Tier 6: major.minor.patch+variant  2.40.0-alpine
+  // Tier 7: everything else     php8.5-fpm
   const tier = t => {
     if (/^(latest|stable|lts|edge|testing)$/i.test(t)) return 0;
-    if (/^v?\d+$/.test(t)) return 1;
-    if (/^v?\d+\.\d+$/.test(t)) return 2;
-    if (/^v?\d+(-[a-z]+)+$/.test(t)) return 3;
-    if (/^v?\d+\.\d+(-[a-z]+)+$/.test(t)) return 4;
-    return 5;
+    if (/^v?\d+$/.test(t))                              return 1;
+    if (/^v?\d+\.\d+$/.test(t))                         return 2;
+    if (/^v?\d+\.\d+\.\d+$/.test(t))                    return 3;
+    if (/^v?\d+(-[a-z][a-z0-9]*)+$/.test(t))            return 4;
+    if (/^v?\d+\.\d+(-[a-z][a-z0-9]*)+$/.test(t))       return 5;
+    if (/^v?\d+\.\d+\.\d+(-[a-z][a-z0-9]*)+$/.test(t)) return 6;
+    return 7;
   };
-  const numVer = t => parseFloat((t.match(/\d+(\.\d+)?/) || ['0'])[0]);
 
-  const sorted = [...filtered].sort((a, b) => (tier(a) - tier(b)) || (numVer(b) - numVer(a)));
-  const seen = new Set();
-  const result = [];
+  const numVer  = t => parseFloat((t.match(/\d+(\.\d+)?/) || ['0'])[0]);
+  const varSegs = t => (t.match(/-/g) || []).length;
+
+  const sorted = [...filtered].sort((a, b) =>
+    (tier(a) - tier(b)) || (numVer(b) - numVer(a)) || (varSegs(a) - varSegs(b))
+  );
+
+  // Dedup key: strip v-prefix for tier 1-3 to collapse v3.6 and 3.6
+  const key = (t, t0) => (t0 >= 1 && t0 <= 3) ? t.replace(/^v/, '') : t;
+
+  const seen = new Set(); const result = [];
   for (const t of sorted) {
     const t0 = tier(t);
-    // Within tier 0/1, deduplicate by major version to avoid '16' and '16-alpine' both showing
-    const key = t0 === 1 ? String(Math.floor(numVer(t))) : t;
-    if (!seen.has(key)) { seen.add(key); result.push(t); }
+    // Tier 1: also dedup by integer major (17-alpine and 17 share major 17)
+    const k = t0 === 1 ? String(Math.floor(numVer(t))) : key(t, t0);
+    if (!seen.has(k)) { seen.add(k); result.push(t); }
     if (result.length >= 5) break;
   }
   return result;
