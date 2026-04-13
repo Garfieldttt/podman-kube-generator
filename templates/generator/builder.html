@@ -1713,7 +1713,7 @@ function addFromCatalog(key, image) {
       if (p.run_as_group != null) c.run_as_group = p.run_as_group;
       if (p.memory_limit) c.memory_limit = p.memory_limit;
       syncDbCredentials();
-      if (!_isDb(c.image)) suggestDbForContainer(c);
+      updateDbHint();
       setLoading(false);
       renderNodes(); refreshBadges(id);
     })
