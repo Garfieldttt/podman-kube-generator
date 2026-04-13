@@ -1281,7 +1281,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
       </div>
       <div class="modal-footer" style="border-color:var(--border);">
         <a id="insp-scout-link" href="#" target="_blank" rel="noopener" class="insp-scout-link me-auto">
-          <i class="bi bi-box-arrow-up-right me-1"></i>View on Docker Scout
+          <i class="bi bi-box-arrow-up-right me-1"></i>View on Docker Hub
         </a>
         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
       </div>
@@ -4094,7 +4094,7 @@ function _renderInspect(d, image) {
     const total = (v.critical||0) + (v.high||0) + (v.medium||0) + (v.low||0);
     if (total === 0 && Object.keys(v).length === 0) {
       html += `<div class="insp-stat" style="margin-top:.2rem;"><i class="bi bi-info-circle me-1"></i>No scan data available for this image/tag.
-        <a href="${esc(d.scout_url)}" target="_blank" rel="noopener" class="insp-scout-link ms-1">View on Docker Scout</a></div>`;
+        <a href="${esc(d.scout_url)}" target="_blank" rel="noopener" class="insp-scout-link ms-1">View on Docker Hub</a></div>`;
     } else if (total === 0) {
       html += `<div class="insp-vuln-none"><i class="bi bi-shield-check me-1"></i>No known vulnerabilities found.</div>`;
     } else {
@@ -4105,7 +4105,7 @@ function _renderInspect(d, image) {
       if (v.low)      html += `<span class="insp-vuln-pill low">${v.low} Low</span>`;
       html += `</div>
       <div class="mt-1"><a href="${esc(d.scout_url)}" target="_blank" rel="noopener" class="insp-scout-link">
-        <i class="bi bi-box-arrow-up-right me-1"></i>Full report on Docker Scout</a></div>`;
+        <i class="bi bi-box-arrow-up-right me-1"></i>View tag on Docker Hub</a></div>`;
     }
     html += `</div>`;
   }

@@ -1133,12 +1133,11 @@ def image_inspect(request):
             k, _, v = line.partition('=')
             env_entries.append({'key': k.strip(), 'value': v.strip()})
 
-    # Docker Scout URL — format: /reports/images/<url-encoded image ref>
+    # Docker Hub URL (public, no login required)
     if namespace == 'library':
-        _ref = f"docker.io/library/{name}:{tag}"
+        scout_url = f"https://hub.docker.com/_/{name}/tags?name={tag}"
     else:
-        _ref = f"docker.io/{namespace}/{name}:{tag}"
-    scout_url = "https://scout.docker.com/reports/images/" + _ref.replace('/', '%2F').replace(':', '%3A')
+        scout_url = f"https://hub.docker.com/r/{namespace}/{name}/tags?name={tag}"
 
     return JsonResponse({
         'hub':             hub,
