@@ -155,7 +155,7 @@ def search_images(query, limit=10, registry='all'):
     return result
 
 
-def get_tags(namespace, name, limit=20):
+def get_tags(namespace, name, limit=50):
     """
     Gibt Liste der Tag-Strings zurück: ['latest', '1.25', '1.24', ...]
     """

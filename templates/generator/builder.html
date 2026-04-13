@@ -4209,10 +4209,31 @@ const _IMG_VERSIONS = {
 // Cache for auto-discovered tags
 const _tagCache = {};
 
-// Filter raw Docker Hub tags to only show useful version tags
+// Filter and sort Docker Hub tags: simple version tags first, newest first
 function _filterTags(tags) {
-  const skip = /sha256|windows|debian\d+|bullseye|bookworm|buster|stretch|bionic|focal|jammy|noble|ubi\d|nanoserver|ltsc/i;
-  return tags.filter(t => t && !skip.test(t)).slice(0, 5);
+  const skip = /sha256|windows|debian\d+|bullseye|bookworm|buster|stretch|trixie|bionic|focal|jammy|noble|ubi\d|nanoserver|ltsc|alpine\d|oracle|innovation|rc\d|beta|alpha/i;
+  const filtered = tags.filter(t => t && !skip.test(t));
+
+  // Tier 0 = latest/stable/lts, Tier 1 = pure major (17, v3), Tier 2 = major.minor (17.2), Tier 3 = rest
+  const tier = t => {
+    if (/^(latest|stable|lts|edge|testing)$/i.test(t)) return 0;
+    if (/^v?\d+(-[a-z]+)?$/.test(t)) return 1;
+    if (/^v?\d+\.\d+(-[a-z]+)?$/.test(t)) return 2;
+    return 3;
+  };
+  const numVer = t => parseFloat((t.match(/\d+(\.\d+)?/) || ['0'])[0]);
+
+  const sorted = [...filtered].sort((a, b) => (tier(a) - tier(b)) || (numVer(b) - numVer(a)));
+  const seen = new Set();
+  const result = [];
+  for (const t of sorted) {
+    const t0 = tier(t);
+    // Within tier 0/1, deduplicate by major version to avoid '16' and '16-alpine' both showing
+    const key = t0 <= 1 ? String(Math.floor(numVer(t))) : t;
+    if (!seen.has(key)) { seen.add(key); result.push(t); }
+    if (result.length >= 5) break;
+  }
+  return result;
 }
 
 function _renderVerBtns(versions, current) {
