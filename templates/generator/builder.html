@@ -1803,6 +1803,7 @@ function renderAll() {
   renderNodes(); renderSvg(); updateCounter();
   document.getElementById('cv-hint').style.display = state.containers.length ? 'none' : '';
   scanForTips();
+  updateDbHint();
 }
 
 function renderNodes() {
@@ -2952,37 +2953,47 @@ const _DB_DETECT = {
 };
 
 function suggestDbForContainer(c) {
-  // Don't suggest if a DB container already exists
-  if (state.containers.some(x => _isDb(x.image))) return;
-  const envKeys = new Set(c.env.map(e => e.key));
+  updateDbHint();
+}
 
-  // ZBX_DB_TYPE → suggest matching DB
-  const zbxDbType = (c.env.find(e => e.key === 'ZBX_DB_TYPE')?.value || '').toLowerCase();
-  if (zbxDbType === 'mysql' || zbxDbType === 'mariadb') {
-    _suggestedDbImage = 'docker.io/mysql:latest';
-    document.getElementById('cv-db-hint-msg').textContent = `${shortName(c.image)} needs a MySQL database (ZBX_DB_TYPE=${zbxDbType}).`;
-    document.getElementById('cv-db-hint-btn').textContent = 'Add MySQL';
-    document.getElementById('cv-db-hint').classList.add('show');
-    return;
-  }
-  if (zbxDbType === 'postgresql') {
-    _suggestedDbImage = 'docker.io/postgres:latest';
-    document.getElementById('cv-db-hint-msg').textContent = `${shortName(c.image)} needs a PostgreSQL database (ZBX_DB_TYPE=postgresql).`;
-    document.getElementById('cv-db-hint-btn').textContent = 'Add PostgreSQL';
-    document.getElementById('cv-db-hint').classList.add('show');
-    return;
-  }
+// Re-evaluate DB suggestion from scratch — called from renderAll() and suggestDbForContainer()
+function updateDbHint() {
+  // Dismiss if a DB container already exists
+  if (state.containers.some(x => _isDb(x.image))) { dismissDbHint(); return; }
 
-  for (const [type, cfg] of Object.entries(_DB_DETECT)) {
-    if (cfg.keys.some(k => envKeys.has(k))) {
-      _suggestedDbImage = cfg.image;
-      document.getElementById('cv-db-hint-msg').textContent =
-        `${shortName(c.image)} needs a ${cfg.label} database.`;
-      document.getElementById('cv-db-hint-btn').textContent = `Add ${cfg.label}`;
+  const appCs = state.containers.filter(x => !_isDb(x.image));
+  for (const c of appCs) {
+    const envKeys = new Set(c.env.map(e => e.key));
+
+    // ZBX_DB_TYPE → suggest matching DB
+    const zbxDbType = (c.env.find(e => e.key === 'ZBX_DB_TYPE')?.value || '').toLowerCase();
+    if (zbxDbType === 'mysql' || zbxDbType === 'mariadb') {
+      _suggestedDbImage = 'docker.io/mysql:latest';
+      document.getElementById('cv-db-hint-msg').textContent = `${shortName(c.image)} needs a MySQL database (ZBX_DB_TYPE=${zbxDbType}).`;
+      document.getElementById('cv-db-hint-btn').textContent = 'Add MySQL';
       document.getElementById('cv-db-hint').classList.add('show');
       return;
     }
+    if (zbxDbType === 'postgresql') {
+      _suggestedDbImage = 'docker.io/postgres:latest';
+      document.getElementById('cv-db-hint-msg').textContent = `${shortName(c.image)} needs a PostgreSQL database (ZBX_DB_TYPE=postgresql).`;
+      document.getElementById('cv-db-hint-btn').textContent = 'Add PostgreSQL';
+      document.getElementById('cv-db-hint').classList.add('show');
+      return;
+    }
+
+    for (const [type, cfg] of Object.entries(_DB_DETECT)) {
+      if (cfg.keys.some(k => envKeys.has(k))) {
+        _suggestedDbImage = cfg.image;
+        document.getElementById('cv-db-hint-msg').textContent =
+          `${shortName(c.image)} needs a ${cfg.label} database.`;
+        document.getElementById('cv-db-hint-btn').textContent = `Add ${cfg.label}`;
+        document.getElementById('cv-db-hint').classList.add('show');
+        return;
+      }
+    }
   }
+  dismissDbHint();
 }
 
 function dismissDbHint() {
@@ -3984,14 +3995,14 @@ function doPodYamlImport() {
 const _DB_NAMES = new Set(['mysql','mariadb','postgres','postgresql','mongodb','mongo','redis']);
 function _isDbImg(img) { return _DB_NAMES.has((img||'').split(':')[0].split('/').pop().toLowerCase()); }
 
+// Only relational DBs require a password and persistent volume
 const _DB_PWD_KEYS = {
   mysql:      'MYSQL_ROOT_PASSWORD',
   mariadb:    'MARIADB_ROOT_PASSWORD',
   postgres:   'POSTGRES_PASSWORD',
   postgresql: 'POSTGRES_PASSWORD',
-  mongodb:    'MONGO_INITDB_ROOT_PASSWORD',
-  mongo:      'MONGO_INITDB_ROOT_PASSWORD',
 };
+const _DB_NEEDS_VOLUME = new Set(['mysql','mariadb','postgres','postgresql','mongodb','mongo']);
 
 function _liveIssues(c) {
   const issues = [];
@@ -4001,7 +4012,7 @@ function _liveIssues(c) {
   // DB-spezifisch
   if (_isDbImg(c.image)) {
     if (tag === 'latest') issues.push({ level:'warn', msg:'Using :latest on a DB image — pin a version' });
-    if (!c.volumes.length) issues.push({ level:'error', msg:'No volume — DB data will be lost on restart' });
+    if (_DB_NEEDS_VOLUME.has(base) && !c.volumes.length) issues.push({ level:'error', msg:'No volume — DB data will be lost on restart' });
     const pwdKey = _DB_PWD_KEYS[base];
     if (pwdKey && !c.env.find(e => e.key === pwdKey && e.value)) {
       issues.push({ level:'error', msg:`${pwdKey} not set — DB will likely fail to start` });
