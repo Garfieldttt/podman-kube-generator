@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 
 # Simple in-memory cache: key → (timestamp, result)
 _CACHE: dict = {}
-_CACHE_TTL = 120  # seconds
+_CACHE_TTL = 3600  # seconds (1h — tags change rarely, avoids Docker Hub rate limits)
 
 
 def _cache_get(key):
