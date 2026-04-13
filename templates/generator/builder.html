@@ -4337,12 +4337,9 @@ function renderVersionPicker(imageVal) {
       if (curBase !== base) return;
       const cur = c.image.split(':')[1] || '';
       const versions = _filterTags(_tagCache[base]);
-      // Only use fetched tags if they contain at least one clean version (tier 0-3)
-      // Otherwise keep the curated fallback list already shown
-      const hasClean = versions.some(t =>
-        /^(latest|stable|lts|edge|testing)$/i.test(t) ||
-        /^v?\d+(\.\d+(\.\d+)?)?$/.test(t)
-      );
+      // Only use fetched tags if they contain at least one real numeric version (tier 1-3)
+      // latest/stable alone is not enough — keeps curated fallback for images like WordPress
+      const hasClean = versions.some(t => /^v?\d+(\.\d+(\.\d+)?)?$/.test(t));
       if (hasClean) {
         wrap.style.display = '';
         _renderVerBtns(versions, cur);
