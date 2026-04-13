@@ -4,6 +4,7 @@ Registry API – Image-Suche und Tag-Abruf (Docker Hub, ghcr.io, quay.io).
 import urllib.request
 import urllib.parse
 import json
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 
@@ -155,24 +156,63 @@ def search_images(query, limit=10, registry='all'):
     return result
 
 
+_CLEAN_VER_RE     = re.compile(r'^v?\d+(\.\d+(\.\d+)?)?$')
+_VARIANT_PREFIX_RE = re.compile(r'^(v?\d+(?:\.\d+(?:\.\d+)?)?)(?=-[a-zA-Z])')
+
+
+def _fetch_tags_page(namespace, name, page=1, page_size=100):
+    url = (f"https://hub.docker.com/v2/repositories/{namespace}/{name}/tags/"
+           f"?page_size={page_size}&ordering=last_updated&page={page}")
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'podman-kube-gen/1.0'})
+        with urllib.request.urlopen(req, timeout=5) as r:
+            data = json.loads(r.read())
+        return [t['name'] for t in data.get('results', [])]
+    except Exception:
+        return []
+
+
 def get_tags(namespace, name, limit=100):
     """
     Gibt Liste der Tag-Strings zurück: ['latest', '1.25', '1.24', ...]
+
+    Für Images mit vielen Variant-Tags (z.B. wordpress:6.9.4-php8.5-fpm)
+    werden auch Version-Präfixe aus Variant-Tags synthetisch extrahiert
+    und ggf. eine zweite Seite geholt, damit clean tags nicht fehlen.
     """
     cache_key = f'tags:{namespace}/{name}'
     cached = _cache_get(cache_key)
     if cached is not None:
         return cached
-    url = f"https://hub.docker.com/v2/repositories/{namespace}/{name}/tags/?page_size={limit}&ordering=last_updated"
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'podman-kube-gen/1.0'})
-        with urllib.request.urlopen(req, timeout=5) as r:
-            data = json.loads(r.read())
-        result = [t['name'] for t in data.get('results', [])]
-        _cache_set(cache_key, result)
-        return result
-    except Exception:
+
+    page1 = _fetch_tags_page(namespace, name, page=1, page_size=100)
+    if not page1:
         return []
+
+    def _add_synthetic(raw_tags):
+        """Extrahiere Versions-Präfixe aus Variant-Tags und füge sie hinzu falls noch nicht vorhanden.
+        z.B. '6.9.4-php8.5-fpm' → '6.9.4' (damit version picker saubere Tags sieht)
+        """
+        existing = set(raw_tags)
+        result = list(raw_tags)
+        for t in raw_tags:
+            m = _VARIANT_PREFIX_RE.match(t)
+            if m and m.group(1) not in existing:
+                result.append(m.group(1))
+                existing.add(m.group(1))
+        return result
+
+    combined = _add_synthetic(page1)
+
+    # Prüfe ob genug saubere Versions-Tags vorhanden (mind. 2 reine Zahl-Tags, nicht nur 'latest')
+    numeric_count = sum(1 for t in combined if _CLEAN_VER_RE.match(t))
+    if numeric_count < 2 and len(page1) == 100:
+        page2 = _fetch_tags_page(namespace, name, page=2, page_size=100)
+        combined = _add_synthetic(page1 + page2)
+
+    result = combined  # Kein Limit — version picker braucht alle sauberen Tags
+    _cache_set(cache_key, result)
+    return result
 
 
 def get_hub_info(namespace, name):
