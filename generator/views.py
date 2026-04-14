@@ -750,7 +750,6 @@ def generate_view(request):
         'tip_container_names': tip_container_names,
         'tip_named_volumes': tip_named_volumes,
         'tip_host_paths': tip_host_paths,
-        'tip_has_sudo_paths': tip_has_sudo_paths,
     })
 
 
@@ -1349,7 +1348,6 @@ def view_user_stack(request, stack_id):
         'tip_container_names': tip_container_names,
         'tip_named_volumes': tip_named_volumes,
         'tip_host_paths': tip_host_paths,
-        'tip_has_sudo_paths': tip_has_sudo_paths,
     })
 
 
@@ -1877,7 +1875,6 @@ def builder_generate(request):
             'tip_container_names': tip_container_names,
             'tip_named_volumes': tip_named_volumes,
             'tip_host_paths': tip_host_paths,
-        'tip_has_sudo_paths': tip_has_sudo_paths,
         })
 
 
