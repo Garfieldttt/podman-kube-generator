@@ -43,6 +43,33 @@ def _img_base(img):
     return (img or '').lower().split(':')[0].split('/')[-1]
 
 
+def _tip_vars(form_data):
+    """Extrahiert Container-Namen, named Volumes und Host-Paths für Tips/Cleanup."""
+    container_names = [
+        c['name'].strip().lower().replace(' ', '-')
+        for c in form_data.get('containers', []) if c.get('name')
+    ]
+    named_volumes, host_paths = [], []
+    seen_vols, seen_paths = set(), set()
+    for c in form_data.get('containers', []):
+        for line in (c.get('volumes') or '').splitlines():
+            line = line.strip()
+            if not line or ':' not in line:
+                continue
+            src = line.split(':')[0].strip()
+            if not src:
+                continue
+            if src.startswith('/') or src.startswith('~'):
+                if src not in seen_paths:
+                    host_paths.append(src)
+                    seen_paths.add(src)
+            elif not src.startswith('./') and not src.startswith('../') \
+                    and src not in seen_vols:
+                named_volumes.append(src)
+                seen_vols.add(src)
+    return container_names, named_volumes, host_paths
+
+
 def generate_env_file(form_data):
     """Collects all env vars from all containers and returns a .env file string."""
     pod_name = (form_data.get('pod_name') or 'pod').strip()
@@ -703,31 +730,7 @@ def generate_view(request):
     editing_stack_icon = request.POST.get('editing_stack_icon', 'bi-box').strip()
     editing_stack_category = request.POST.get('editing_stack_category', '').strip()
 
-    # Container names and named volumes for tips/cleanup section
-    tip_container_names = [
-        c['name'].strip().lower().replace(' ', '-')
-        for c in form_data.get('containers', []) if c.get('name')
-    ]
-    tip_named_volumes = []
-    tip_host_paths = []
-    seen_vols = set()
-    seen_paths = set()
-    for c in form_data.get('containers', []):
-        for line in (c.get('volumes') or '').splitlines():
-            line = line.strip()
-            if not line or ':' not in line:
-                continue
-            src = line.split(':')[0].strip()
-            if not src:
-                continue
-            if src.startswith('/') or src.startswith('~'):
-                if src not in seen_paths:
-                    tip_host_paths.append(src)
-                    seen_paths.add(src)
-            elif not src.startswith('./') and not src.startswith('../') \
-                    and src not in seen_vols:
-                tip_named_volumes.append(src)
-                seen_vols.add(src)
+    tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
 
     return render(request, 'generator/result.html', {
         'yaml_content': yaml_content,
@@ -1328,6 +1331,7 @@ def view_user_stack(request, stack_id):
         if ports:
             net_info.append({'name': c['name'], 'ports': ports})
     validation_warnings = validate_form_data(form_data)
+    tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
     return render(request, 'generator/result.html', {
         'yaml_content': yaml_content,
         'shell_content': shell_content,
@@ -1341,6 +1345,9 @@ def view_user_stack(request, stack_id):
         'editing_stack_description': stack.description or '',
         'editing_stack_icon': stack.icon or 'bi-box',
         'editing_stack_category': stack.category or '',
+        'tip_container_names': tip_container_names,
+        'tip_named_volumes': tip_named_volumes,
+        'tip_host_paths': tip_host_paths,
     })
 
 
@@ -1849,6 +1856,7 @@ def builder_generate(request):
             if ports:
                 net_info.append({'name': c.get('name', ''), 'ports': ports})
 
+        tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
         return render(request, 'generator/result.html', {
             'yaml_content': yaml_content,
             'shell_content': shell_content,
@@ -1864,6 +1872,9 @@ def builder_generate(request):
             'editing_stack_description': '',
             'editing_stack_icon': 'bi-box',
             'editing_stack_category': '',
+            'tip_container_names': tip_container_names,
+            'tip_named_volumes': tip_named_volumes,
+            'tip_host_paths': tip_host_paths,
         })
 
 
