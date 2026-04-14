@@ -178,7 +178,11 @@
     </div>
     {% endif %}
 
-    {% if error %}
+    {% if generate_error %}
+    <div class="alert alert-danger border-danger" style="background:#1a0a0a;">
+      <i class="bi bi-exclamation-triangle me-2"></i>Generation failed: {{ generate_error }}
+    </div>
+    {% elif error %}
     <div class="alert alert-danger border-danger" style="background:#1a0a0a;">
       <i class="bi bi-exclamation-triangle me-2"></i>Please fill in all required fields.
     </div>

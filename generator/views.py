@@ -649,10 +649,19 @@ def generate_view(request):
         'init_containers': [f.cleaned_data for f in init_forms],
     }
 
-    yaml_content = generate(form_data)
-    shell_content = generate_shell(form_data)
-    quadlet_content = generate_quadlet(form_data)
-    env_file_content = generate_env_file(form_data)
+    try:
+        yaml_content = generate(form_data)
+        shell_content = generate_shell(form_data)
+        quadlet_content = generate_quadlet(form_data)
+        env_file_content = generate_env_file(form_data)
+    except Exception as e:
+        return render(request, 'generator/index.html', {
+            'pod_form': pod_form,
+            'container_forms': container_forms,
+            'init_forms': init_forms,
+            'error': True,
+            'generate_error': str(e),
+        })
     pod_name = form_data['pod_name'].strip().lower().replace(' ', '-')
     validation_warnings = validate_form_data(form_data)
 
