@@ -2611,6 +2611,8 @@ def compose_import(request):
         })
     except TimeoutError:
         return JsonResponse({'error': f'Import timed out ({_timeout}s)'}, status=408)
+    except Exception as e:
+        return JsonResponse({'error': f'Import failed: {e}'}, status=400)
     finally:
         if _timeout > 0:
             signal.alarm(0)
