@@ -13,6 +13,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import models
+from django.db.models import Count
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -1586,7 +1587,7 @@ def delete_account(request):
 def profile_public(request, username):
     user = get_object_or_404(User, username=username, is_active=True)
     profile, _ = UserProfile.objects.get_or_create(user=user)
-    qs = UserStack.objects.filter(user=user, is_approved=True).order_by('-created_at')
+    qs = UserStack.objects.filter(user=user, is_approved=True).annotate(like_count=Count('likes')).order_by('-created_at')
     paginator = Paginator(qs, 10)
     page = paginator.get_page(request.GET.get('page'))
     return render(request, 'generator/profile_public.html', {
@@ -1636,7 +1637,7 @@ def stack_like(request, stack_id):
 def stack_comment(request, stack_id):
     if request.method != 'POST':
         return JsonResponse({'error': 'method'}, status=405)
-    stack = get_object_or_404(UserStack, pk=stack_id, is_approved=True)
+    stack = get_object_or_404(UserStack.objects.select_related('user'), pk=stack_id, is_approved=True)
     body = request.POST.get('body', '').strip()
     if not body:
         return JsonResponse({'error': 'empty'}, status=400)
@@ -1712,11 +1713,11 @@ def community(request):
     )
 
     # Stacks filtern + sortieren
-    stacks_qs = UserStack.objects.filter(is_approved=True).select_related('user', 'user__profile')
+    stacks_qs = UserStack.objects.filter(is_approved=True).select_related('user', 'user__profile').annotate(like_count=Count('likes'))
     if active_category and active_category in categories:
         stacks_qs = stacks_qs.filter(category=active_category)
     if active_sort == 'likes':
-        stacks_qs = stacks_qs.annotate(like_count=Count('likes')).order_by('-like_count', '-created_at')
+        stacks_qs = stacks_qs.order_by('-like_count', '-created_at')
     elif active_sort == 'views':
         stacks_qs = stacks_qs.order_by('-view_count', '-created_at')
     else:
