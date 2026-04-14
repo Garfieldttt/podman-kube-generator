@@ -61,13 +61,15 @@ def _tip_vars(form_data):
                 continue
             if src.startswith('/') or src.startswith('~'):
                 if src not in seen_paths:
-                    host_paths.append(src)
+                    needs_sudo = src.startswith('/') and not src.startswith('/home/') and not src.startswith('/root')
+                    host_paths.append({'path': src, 'sudo': needs_sudo})
                     seen_paths.add(src)
             elif not src.startswith('./') and not src.startswith('../') \
                     and src not in seen_vols:
                 named_volumes.append(src)
                 seen_vols.add(src)
-    return container_names, named_volumes, host_paths
+    has_sudo_paths = any(hp['sudo'] for hp in host_paths)
+    return container_names, named_volumes, host_paths, has_sudo_paths
 
 
 def generate_env_file(form_data):
@@ -730,7 +732,7 @@ def generate_view(request):
     editing_stack_icon = request.POST.get('editing_stack_icon', 'bi-box').strip()
     editing_stack_category = request.POST.get('editing_stack_category', '').strip()
 
-    tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
+    tip_container_names, tip_named_volumes, tip_host_paths, tip_has_sudo_paths = _tip_vars(form_data)
 
     return render(request, 'generator/result.html', {
         'yaml_content': yaml_content,
@@ -750,6 +752,7 @@ def generate_view(request):
         'tip_container_names': tip_container_names,
         'tip_named_volumes': tip_named_volumes,
         'tip_host_paths': tip_host_paths,
+        'tip_has_sudo_paths': tip_has_sudo_paths,
     })
 
 
@@ -1331,7 +1334,7 @@ def view_user_stack(request, stack_id):
         if ports:
             net_info.append({'name': c['name'], 'ports': ports})
     validation_warnings = validate_form_data(form_data)
-    tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
+    tip_container_names, tip_named_volumes, tip_host_paths, tip_has_sudo_paths = _tip_vars(form_data)
     return render(request, 'generator/result.html', {
         'yaml_content': yaml_content,
         'shell_content': shell_content,
@@ -1348,6 +1351,7 @@ def view_user_stack(request, stack_id):
         'tip_container_names': tip_container_names,
         'tip_named_volumes': tip_named_volumes,
         'tip_host_paths': tip_host_paths,
+        'tip_has_sudo_paths': tip_has_sudo_paths,
     })
 
 
@@ -1856,7 +1860,7 @@ def builder_generate(request):
             if ports:
                 net_info.append({'name': c.get('name', ''), 'ports': ports})
 
-        tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
+        tip_container_names, tip_named_volumes, tip_host_paths, tip_has_sudo_paths = _tip_vars(form_data)
         return render(request, 'generator/result.html', {
             'yaml_content': yaml_content,
             'shell_content': shell_content,
@@ -1875,6 +1879,7 @@ def builder_generate(request):
             'tip_container_names': tip_container_names,
             'tip_named_volumes': tip_named_volumes,
             'tip_host_paths': tip_host_paths,
+        'tip_has_sudo_paths': tip_has_sudo_paths,
         })
 
 

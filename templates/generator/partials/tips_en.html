@@ -305,10 +305,11 @@ podman volume rm {{ vol }}{% endfor %}{% endif %}</pre>
             <div class="col-md-6">
               <p class="small mb-1" style="color:var(--text-dim);">Remove host paths</p>
               <div class="pre-wrap">
-                <pre id="tip-danger-hostpaths" style="font-size:.77rem;">{% for path in tip_host_paths %}rm -rf {{ path }}
+                <pre id="tip-danger-hostpaths" style="font-size:.77rem;">{% for hp in tip_host_paths %}{% if hp.sudo %}sudo rm -rf {{ hp.path }}{% else %}rm -rf {{ hp.path }}{% endif %}
 {% endfor %}</pre>
                 <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-danger-hostpaths')"><i class="bi bi-clipboard"></i></button>
               </div>
+              {% if tip_has_sudo_paths %}<p class="small mt-1 mb-0" style="color:var(--text-muted);font-size:.7rem;"><i class="bi bi-info-circle me-1"></i>System paths outside /home require sudo — rootless user has no write permission.</p>{% endif %}
             </div>
             {% endif %}
           </div>
