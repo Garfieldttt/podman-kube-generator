@@ -186,19 +186,45 @@ def _split(s):
 
 _SHELL_OPS = re.compile(r'[|&;<>]|\$\(|\bif\b|\bwhile\b|\bfor\b')
 
-def _build_probe(c):
-    cmd = (c.get('liveness_probe_cmd') or '').strip()
-    if not cmd:
-        return None
-    if _SHELL_OPS.search(cmd):
-        command = ['/bin/sh', '-c', cmd]
-    else:
-        command = _split(cmd)
-    return {
-        'exec': {'command': command},
-        'initialDelaySeconds': int(c['liveness_initial_delay']) if c.get('liveness_initial_delay') not in (None, '') else 30,
-        'periodSeconds': int(c['liveness_period']) if c.get('liveness_period') not in (None, '') else 10,
+def _build_probe(c, prefix='liveness'):
+    probe_type = (c.get(f'{prefix}_probe_type') or 'exec').strip()
+    delay_val = c.get(f'{prefix}_initial_delay')
+    period_val = c.get(f'{prefix}_period')
+    default_delay = 30 if prefix == 'liveness' else 10
+    delay = int(delay_val) if delay_val not in (None, '') else default_delay
+    period = int(period_val) if period_val not in (None, '') else 10
+
+    probe = {
+        'initialDelaySeconds': delay,
+        'periodSeconds': period,
     }
+    failure = c.get(f'{prefix}_failure_threshold')
+    if failure not in (None, ''):
+        probe['failureThreshold'] = int(failure)
+
+    if probe_type == 'httpGet':
+        path = (c.get(f'{prefix}_http_path') or '/').strip() or '/'
+        port = c.get(f'{prefix}_http_port')
+        if not port:
+            return None
+        probe['httpGet'] = {'path': path, 'port': int(port)}
+        return probe
+    elif probe_type == 'tcpSocket':
+        port = c.get(f'{prefix}_tcp_port')
+        if not port:
+            return None
+        probe['tcpSocket'] = {'port': int(port)}
+        return probe
+    else:  # exec
+        cmd = (c.get(f'{prefix}_probe_cmd') or '').strip()
+        if not cmd:
+            return None
+        if _SHELL_OPS.search(cmd):
+            command = ['/bin/sh', '-c', cmd]
+        else:
+            command = _split(cmd)
+        probe['exec'] = {'command': command}
+        return probe
 
 
 def _build_resources(c):
@@ -247,9 +273,12 @@ def _build_container(c, mounts):
     sc = _build_security_context(c, skip_user=is_db)
     if sc:
         spec['securityContext'] = sc
-    probe = _build_probe(c)
+    probe = _build_probe(c, 'liveness')
     if probe:
         spec['livenessProbe'] = probe
+    readiness = _build_probe(c, 'readiness')
+    if readiness:
+        spec['readinessProbe'] = readiness
     res = _build_resources(c)
     if res:
         spec['resources'] = res
@@ -315,6 +344,12 @@ def generate(form_data):
 
     if all_volumes:
         pod_spec['volumes'] = all_volumes
+
+    pod_security_context = {}
+    if form_data.get('fs_group') not in (None, ''):
+        pod_security_context['fsGroup'] = int(form_data['fs_group'])
+    if pod_security_context:
+        pod_spec['securityContext'] = pod_security_context
 
     pod = {
         'apiVersion': 'v1',

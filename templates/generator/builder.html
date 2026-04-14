@@ -726,6 +726,26 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         </div>
       </details>
 
+      {# Pod Security #}
+      <details class="cvs-net-details" id="cvs-pod-security-details">
+        <summary class="cvs-net-summary">
+          <i class="bi bi-person-lock me-1" style="color:var(--accent)"></i>
+          <span>Pod Security</span>
+          <i class="bi bi-chevron-right cvs-net-chev"></i>
+        </summary>
+        <div class="cvs-net-body">
+          <div class="cvs-field">
+            <label class="cvs-field-label">fsGroup (volume ownership GID)
+              <i class="bi bi-info-circle ms-1" style="color:var(--text-muted);font-size:.65rem;"
+                data-bs-toggle="tooltip"
+                title="Sets pod-level securityContext.fsGroup — volumes will be owned by this GID. Fixes permission issues for databases running as non-root without runAsUser:0."></i>
+            </label>
+            <input type="number" id="cv-fs-group" class="cv-ctrl" placeholder="e.g. 999" min="0"
+              oninput="state.fs_group=this.value!==''?parseInt(this.value):null">
+          </div>
+        </div>
+      </details>
+
       {# Images — header + always-visible pills + collapsible body #}
       <div class="cvs-collapse" id="cvs-images-pane">
         <div class="cvs-collapse-hd" onclick="togglePane('images')">
@@ -1442,6 +1462,7 @@ const state = {
   pod_name: 'mypod', restart_policy: 'Always', mode: 'rootless',
   host_network: false, host_pid: false, host_ipc: false,
   hostname: '', host_aliases: '', dns: '', network: '',
+  fs_group: null,
   quadlet_auto_update: '', quadlet_log_driver: '', quadlet_exit_code_propagation: '',
   quadlet_kube_down_force: false, quadlet_timeout_start: null,
   containers: [], connections: [],
@@ -1713,6 +1734,15 @@ function addFromCatalog(key, image) {
       if (p.run_as_user  != null) c.run_as_user  = p.run_as_user;
       if (p.run_as_group != null) c.run_as_group = p.run_as_group;
       if (p.memory_limit) c.memory_limit = p.memory_limit;
+      if (p.probe) {
+        c.liveness_probe_type    = p.probe.type || 'exec';
+        c.liveness_probe_cmd     = p.probe.cmd  || '';
+        c.liveness_http_path     = p.probe.http_path || '/health';
+        c.liveness_http_port     = p.probe.http_port || null;
+        c.liveness_tcp_port      = p.probe.tcp_port  || null;
+        c.liveness_initial_delay = p.probe.initial_delay ?? 30;
+        c.liveness_period        = p.probe.period ?? 10;
+      }
       syncDbCredentials();
       updateDbHint();
       setLoading(false);
@@ -1748,9 +1778,22 @@ function mkC(d) {
     cap_add:  d.cap_add  || '',
     cap_drop: d.cap_drop || '',
     userns:   d.userns   || '',
+    liveness_probe_type:    d.liveness_probe_type    || 'exec',
     liveness_probe_cmd:     d.liveness_probe_cmd     || '',
+    liveness_http_path:     d.liveness_http_path     || '/health',
+    liveness_http_port:     d.liveness_http_port     || null,
+    liveness_tcp_port:      d.liveness_tcp_port      || null,
     liveness_initial_delay: d.liveness_initial_delay ?? 30,
     liveness_period:        d.liveness_period        ?? 10,
+    liveness_failure_threshold: d.liveness_failure_threshold ?? null,
+    readiness_probe_type:   d.readiness_probe_type   || 'exec',
+    readiness_probe_cmd:    d.readiness_probe_cmd    || '',
+    readiness_http_path:    d.readiness_http_path    || '/health',
+    readiness_http_port:    d.readiness_http_port    || null,
+    readiness_tcp_port:     d.readiness_tcp_port     || null,
+    readiness_initial_delay:d.readiness_initial_delay ?? 10,
+    readiness_period:       d.readiness_period       ?? 10,
+    readiness_failure_threshold: d.readiness_failure_threshold ?? null,
   };
 }
 const getC = id => state.containers.find(c => c.id === id);
@@ -2733,12 +2776,111 @@ function tabResources(c) {
         <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.working_dir)}"
           placeholder="/app" oninput="cfgSet('working_dir',this.value)">
       </div>
-    </div>`;
+    </div>
+
+    ${renderProbeSection(c)}`;
+
 }
 
 // Generic setter for simple fields
 function cfgSet(field, value) {
   const c = getC(selectedId); if (c) { c[field] = value; refreshBadges(selectedId); }
+}
+
+// ── Probe Section ────────────────────────────────────────────────
+function _probeFields(c, prefix, label, suggestBtn) {
+  const ptype = c[prefix + '_probe_type'] || 'exec';
+  const isHttp = ptype === 'httpGet';
+  const isTcp  = ptype === 'tcpSocket';
+  const isExec = !isHttp && !isTcp;
+  return `
+    <div class="cfg-section">
+      <div class="cfg-section-title" style="justify-content:space-between;">
+        <span><i class="bi bi-heart-pulse"></i>${label}</span>
+        ${suggestBtn}
+      </div>
+      <div class="cfg-res-grid">
+        <div class="cfg-res-field">
+          <label>Type</label>
+          <select class="cfg-inp cfg-inp-full" onchange="cfgSet('${prefix}_probe_type',this.value);renderCfgTab()">
+            <option value="exec" ${isExec?'selected':''}>exec (command)</option>
+            <option value="httpGet" ${isHttp?'selected':''}>HTTP GET</option>
+            <option value="tcpSocket" ${isTcp?'selected':''}>TCP Socket</option>
+          </select>
+        </div>
+        ${isExec ? `
+        <div class="cfg-res-field" style="grid-column:span 2">
+          <label>Command</label>
+          <input type="text" class="cfg-inp cfg-inp-full" style="font-family:monospace;font-size:.8rem;"
+            value="${esc(c[prefix + '_probe_cmd'] || '')}"
+            placeholder="pg_isready -U postgres"
+            oninput="cfgSet('${prefix}_probe_cmd',this.value)">
+        </div>` : ''}
+        ${isHttp ? `
+        <div class="cfg-res-field">
+          <label>HTTP Path</label>
+          <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c[prefix + '_http_path'] || '/health')}"
+            placeholder="/health" oninput="cfgSet('${prefix}_http_path',this.value)">
+        </div>
+        <div class="cfg-res-field">
+          <label>Port</label>
+          <input type="number" class="cfg-inp cfg-inp-full" value="${c[prefix + '_http_port'] ?? ''}"
+            placeholder="8080" min="1" max="65535" oninput="cfgSet('${prefix}_http_port',this.value?parseInt(this.value):null)">
+        </div>` : ''}
+        ${isTcp ? `
+        <div class="cfg-res-field" style="grid-column:span 2">
+          <label>TCP Port</label>
+          <input type="number" class="cfg-inp cfg-inp-full" value="${c[prefix + '_tcp_port'] ?? ''}"
+            placeholder="5432" min="1" max="65535" oninput="cfgSet('${prefix}_tcp_port',this.value?parseInt(this.value):null)">
+        </div>` : ''}
+      </div>
+      <div class="cfg-res-grid" style="margin-top:.5rem;">
+        <div class="cfg-res-field">
+          <label>Initial delay (s)</label>
+          <input type="number" class="cfg-inp cfg-inp-full" value="${c[prefix + '_initial_delay'] ?? (prefix==='liveness'?30:10)}"
+            min="0" oninput="cfgSet('${prefix}_initial_delay',this.value!==''?parseInt(this.value):null)">
+        </div>
+        <div class="cfg-res-field">
+          <label>Period (s)</label>
+          <input type="number" class="cfg-inp cfg-inp-full" value="${c[prefix + '_period'] ?? 10}"
+            min="1" oninput="cfgSet('${prefix}_period',this.value!==''?parseInt(this.value):null)">
+        </div>
+        <div class="cfg-res-field">
+          <label>Failure threshold</label>
+          <input type="number" class="cfg-inp cfg-inp-full" value="${c[prefix + '_failure_threshold'] ?? ''}"
+            min="1" placeholder="3" oninput="cfgSet('${prefix}_failure_threshold',this.value?parseInt(this.value):null)">
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderProbeSection(c) {
+  const suggestBtn = `<button class="btn btn-sm" style="font-size:.68rem;padding:.1rem .45rem;border:1px solid var(--accent);color:var(--accent);background:transparent;"
+    onclick="loadProbeSuggestion()" title="Fill from image preset">
+    <i class="bi bi-magic me-1"></i>Suggest
+  </button>`;
+  return _probeFields(c, 'liveness', 'Liveness Probe', suggestBtn) +
+         _probeFields(c, 'readiness', 'Readiness Probe', '');
+}
+
+function loadProbeSuggestion() {
+  const c = getC(selectedId); if (!c || !c.image) return;
+  fetch(`/image-preset/?image=${encodeURIComponent(c.image)}`)
+    .then(r => r.json())
+    .then(p => {
+      if (!p.probe) { showToast('No probe suggestion for this image', 'secondary'); return; }
+      const pr = p.probe;
+      c.liveness_probe_type    = pr.type || 'exec';
+      c.liveness_probe_cmd     = pr.cmd  || '';
+      c.liveness_http_path     = pr.http_path || '/health';
+      c.liveness_http_port     = pr.http_port || null;
+      c.liveness_tcp_port      = pr.tcp_port  || null;
+      c.liveness_initial_delay = pr.initial_delay ?? 30;
+      c.liveness_period        = pr.period ?? 10;
+      renderCfgTab();
+      showToast('Probe suggestion applied', 'success');
+    })
+    .catch(() => showToast('Could not load suggestion', 'danger'));
 }
 
 function qualifyImage(img) {
@@ -2787,9 +2929,22 @@ function _applyStackData(d) {
       read_only_root:!!raw.read_only_root, privileged:!!raw.privileged,
       cap_add:raw.cap_add||'', cap_drop:raw.cap_drop||'',
       userns:raw.userns||'',
+      liveness_probe_type:raw.liveness_probe_type||'exec',
       liveness_probe_cmd:raw.liveness_probe_cmd||'',
+      liveness_http_path:raw.liveness_http_path||'/health',
+      liveness_http_port:raw.liveness_http_port||null,
+      liveness_tcp_port:raw.liveness_tcp_port||null,
       liveness_initial_delay:raw.liveness_initial_delay??30,
       liveness_period:raw.liveness_period??10,
+      liveness_failure_threshold:raw.liveness_failure_threshold??null,
+      readiness_probe_type:raw.readiness_probe_type||'exec',
+      readiness_probe_cmd:raw.readiness_probe_cmd||'',
+      readiness_http_path:raw.readiness_http_path||'/health',
+      readiness_http_port:raw.readiness_http_port||null,
+      readiness_tcp_port:raw.readiness_tcp_port||null,
+      readiness_initial_delay:raw.readiness_initial_delay??10,
+      readiness_period:raw.readiness_period??10,
+      readiness_failure_threshold:raw.readiness_failure_threshold??null,
     }));
     addedIds.push(id);
   });
@@ -2831,6 +2986,7 @@ function toFormData() {
     host_pid:!!state.host_pid, host_ipc:!!state.host_ipc,
     hostname:state.hostname||'', host_aliases:state.host_aliases||'',
     userns:'', dns:state.dns||'', network:state.network||'',
+    fs_group:state.fs_group!=null&&state.fs_group!==''?parseInt(state.fs_group):null,
     quadlet_auto_update:state.quadlet_auto_update||'',
     quadlet_log_driver:state.quadlet_log_driver||'',
     quadlet_exit_code_propagation:state.quadlet_exit_code_propagation||'',
@@ -2852,9 +3008,22 @@ function toFormData() {
       read_only_root:!!c.read_only_root, privileged:!!c.privileged,
       cap_add:c.cap_add||'', cap_drop:c.cap_drop||'',
       userns:c.userns||'',
+      liveness_probe_type:c.liveness_probe_type||'exec',
       liveness_probe_cmd:c.liveness_probe_cmd||'',
+      liveness_http_path:c.liveness_http_path||'',
+      liveness_http_port:c.liveness_http_port||null,
+      liveness_tcp_port:c.liveness_tcp_port||null,
       liveness_initial_delay:c.liveness_initial_delay||null,
       liveness_period:c.liveness_period||null,
+      liveness_failure_threshold:c.liveness_failure_threshold||null,
+      readiness_probe_type:c.readiness_probe_type||'exec',
+      readiness_probe_cmd:c.readiness_probe_cmd||'',
+      readiness_http_path:c.readiness_http_path||'',
+      readiness_http_port:c.readiness_http_port||null,
+      readiness_tcp_port:c.readiness_tcp_port||null,
+      readiness_initial_delay:c.readiness_initial_delay||null,
+      readiness_period:c.readiness_period||null,
+      readiness_failure_threshold:c.readiness_failure_threshold||null,
     })),
   };
 }
@@ -3565,6 +3734,8 @@ function loadConfig(input) {
       if (mo) mo.value = state.mode || 'rootless';
       const us = document.getElementById('cv-userns');
       if (us) us.value = state.userns || '';
+      const fg = document.getElementById('cv-fs-group');
+      if (fg) fg.value = state.fs_group != null ? state.fs_group : '';
       renderAll();
       updateNetworkState();
       scanForTips();

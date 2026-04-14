@@ -11,23 +11,27 @@ PRESETS = {
         "run_as_user": None,
         "mode_hint": "rootless",
         "note": "Port 80 nur rootful oder sysctl. Empfohlen: 8080→80.",
+        "probe": {"type": "tcpSocket", "tcp_port": 80, "initial_delay": 5, "period": 10},
     },
     "caddy": {
         "ports": "8080:80\n8443:443",
         "volumes": "caddy-data:/data:Z\ncaddy-config:/config:Z",
         "mode_hint": "rootless",
         "note": "Caddy verwaltet TLS automatisch.",
+        "probe": {"type": "tcpSocket", "tcp_port": 80, "initial_delay": 5, "period": 10},
     },
     "traefik": {
         "ports": "80:80\n443:443\n8080:8080",
         "mode_hint": "rootful",
         "note": "Ports 80/443 → rootful. Traefik benötigt Socket-Zugriff (nicht mit podman play kube kompatibel).",
+        "probe": {"type": "httpGet", "http_path": "/ping", "http_port": 8080, "initial_delay": 10, "period": 10},
     },
     "httpd": {
         "ports": "8080:80",
         "volumes": "apache-html:/usr/local/apache2/htdocs:Z\napache-conf:/usr/local/apache2/conf:Z",
         "mode_hint": "rootless",
         "note": "Apache HTTP Server. Port 80 nur rootful.",
+        "probe": {"type": "tcpSocket", "tcp_port": 80, "initial_delay": 5, "period": 10},
     },
 
     # ── Datenbanken ───────────────────────────────────────────────
@@ -36,18 +40,21 @@ PRESETS = {
         "env": "POSTGRES_USER=appuser\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=appdb",
         "volumes": "postgres-data:/var/lib/postgresql/data:Z",
         "mode_hint": "rootless",
+        "probe": {"type": "exec", "cmd": "pg_isready -U postgres", "initial_delay": 30, "period": 10},
     },
     "mariadb": {
         "ports": "3306:3306",
         "env": "MARIADB_ROOT_PASSWORD=changeme\nMARIADB_USER=appuser\nMARIADB_PASSWORD=changeme\nMARIADB_DATABASE=appdb",
         "volumes": "mariadb-data:/var/lib/mysql:Z",
         "mode_hint": "rootless",
+        "probe": {"type": "exec", "cmd": "healthcheck.sh --connect --innodb_initialized", "initial_delay": 30, "period": 10},
     },
     "mysql": {
         "ports": "3306:3306",
         "env": "MYSQL_ROOT_PASSWORD=changeme\nMYSQL_USER=appuser\nMYSQL_PASSWORD=changeme\nMYSQL_DATABASE=appdb",
         "volumes": "mysql-data:/var/lib/mysql:Z",
         "mode_hint": "rootless",
+        "probe": {"type": "exec", "cmd": "mysqladmin ping -h 127.0.0.1 --silent", "initial_delay": 30, "period": 10},
     },
     "redis": {
         "ports": "6379:6379",
@@ -55,6 +62,7 @@ PRESETS = {
         "command": "redis-server --appendonly yes",
         "mode_hint": "rootless",
         "note": "appendonly yes = persistente Daten.",
+        "probe": {"type": "exec", "cmd": "redis-cli ping", "initial_delay": 10, "period": 10},
     },
     "valkey": {
         "ports": "6379:6379",
@@ -62,12 +70,14 @@ PRESETS = {
         "command": "valkey-server --appendonly yes",
         "mode_hint": "rootless",
         "note": "Redis-Fork, drop-in Ersatz.",
+        "probe": {"type": "exec", "cmd": "valkey-cli ping", "initial_delay": 10, "period": 10},
     },
     "mongodb": {
         "ports": "27017:27017",
         "env": "MONGO_INITDB_ROOT_USERNAME=admin\nMONGO_INITDB_ROOT_PASSWORD=changeme",
         "volumes": "mongodb-data:/data/db:Z",
         "mode_hint": "rootless",
+        "probe": {"type": "exec", "cmd": "mongosh --eval \"db.adminCommand('ping')\" --quiet", "initial_delay": 30, "period": 10},
     },
     "mongo": "mongodb",  # alias
 
@@ -110,18 +120,21 @@ PRESETS = {
         "env": "GF_SECURITY_ADMIN_PASSWORD=changeme",
         "volumes": "grafana-data:/var/lib/grafana:Z",
         "mode_hint": "rootless",
+        "probe": {"type": "httpGet", "http_path": "/api/health", "http_port": 3000, "initial_delay": 15, "period": 10},
     },
     "prometheus": {
         "ports": "9090:9090",
         "volumes": "prometheus-config:/etc/prometheus:Z\nprometheus-data:/prometheus:Z",
         "command": "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus",
         "mode_hint": "rootless",
+        "probe": {"type": "httpGet", "http_path": "/-/healthy", "http_port": 9090, "initial_delay": 15, "period": 15},
     },
     "influxdb": {
         "ports": "8086:8086",
         "env": "DOCKER_INFLUXDB_INIT_MODE=setup\nDOCKER_INFLUXDB_INIT_USERNAME=admin\nDOCKER_INFLUXDB_INIT_PASSWORD=changeme\nDOCKER_INFLUXDB_INIT_ORG=myorg\nDOCKER_INFLUXDB_INIT_BUCKET=mybucket",
         "volumes": "influxdb-data:/var/lib/influxdb2:Z\ninfluxdb-config:/etc/influxdb2:Z",
         "mode_hint": "rootless",
+        "probe": {"type": "httpGet", "http_path": "/health", "http_port": 8086, "initial_delay": 20, "period": 15},
     },
     "keycloak": {
         "ports": "8080:8080",

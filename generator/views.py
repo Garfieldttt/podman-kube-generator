@@ -645,6 +645,7 @@ def generate_view(request):
         'userns': pd.get('userns', ''),
         'dns': pd.get('dns', ''),
         'network': pd.get('network', ''),
+        'fs_group': pd.get('fs_group'),
         'containers': [f.cleaned_data for f in container_forms],
         'init_containers': [f.cleaned_data for f in init_forms],
     }

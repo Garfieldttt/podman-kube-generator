@@ -133,19 +133,99 @@
         </div>
 
         <!-- Liveness Probe -->
-        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">LIVENESS PROBE (exec) <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Podman periodically runs this command inside the container. If it fails, the container is restarted. Leave empty to disable."></i></span></div>
-        <div class="col-md-6">
+        <div class="col-12 mt-2">
+          <span class="text-secondary small fw-semibold">LIVENESS PROBE
+            <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip"
+              title="If this probe fails repeatedly, the container is restarted. Leave type blank (exec) and command empty to disable."></i>
+          </span>
+        </div>
+        <div class="col-md-2">
+          <label>{{ form.liveness_probe_type.label }}</label>
+          {{ form.liveness_probe_type }}
+        </div>
+        <div class="col-md-4 probe-exec-{{ index }}">
           <label>{{ form.liveness_probe_cmd.label }}</label>
           {{ form.liveness_probe_cmd }}
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2 probe-http-{{ index }}" style="display:none">
+          <label>{{ form.liveness_http_path.label }}</label>
+          {{ form.liveness_http_path }}
+        </div>
+        <div class="col-md-2 probe-http-{{ index }}" style="display:none">
+          <label>{{ form.liveness_http_port.label }}</label>
+          {{ form.liveness_http_port }}
+        </div>
+        <div class="col-md-3 probe-tcp-{{ index }}" style="display:none">
+          <label>{{ form.liveness_tcp_port.label }}</label>
+          {{ form.liveness_tcp_port }}
+        </div>
+        <div class="col-md-2">
           <label>{{ form.liveness_initial_delay.label }}</label>
           {{ form.liveness_initial_delay }}
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
           <label>{{ form.liveness_period.label }}</label>
           {{ form.liveness_period }}
         </div>
+        <div class="col-md-2">
+          <label>{{ form.liveness_failure_threshold.label }}</label>
+          {{ form.liveness_failure_threshold }}
+        </div>
+
+        <!-- Readiness Probe -->
+        <div class="col-12 mt-2">
+          <span class="text-secondary small fw-semibold">READINESS PROBE
+            <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip"
+              title="If this probe fails, the container is removed from load balancers but not restarted. Useful for multi-container pods."></i>
+          </span>
+        </div>
+        <div class="col-md-2">
+          <label>{{ form.readiness_probe_type.label }}</label>
+          {{ form.readiness_probe_type }}
+        </div>
+        <div class="col-md-4 rprobe-exec-{{ index }}">
+          <label>{{ form.readiness_probe_cmd.label }}</label>
+          {{ form.readiness_probe_cmd }}
+        </div>
+        <div class="col-md-2 rprobe-http-{{ index }}" style="display:none">
+          <label>{{ form.readiness_http_path.label }}</label>
+          {{ form.readiness_http_path }}
+        </div>
+        <div class="col-md-2 rprobe-http-{{ index }}" style="display:none">
+          <label>{{ form.readiness_http_port.label }}</label>
+          {{ form.readiness_http_port }}
+        </div>
+        <div class="col-md-3 rprobe-tcp-{{ index }}" style="display:none">
+          <label>{{ form.readiness_tcp_port.label }}</label>
+          {{ form.readiness_tcp_port }}
+        </div>
+        <div class="col-md-2">
+          <label>{{ form.readiness_initial_delay.label }}</label>
+          {{ form.readiness_initial_delay }}
+        </div>
+        <div class="col-md-2">
+          <label>{{ form.readiness_period.label }}</label>
+          {{ form.readiness_period }}
+        </div>
+        <div class="col-md-2">
+          <label>{{ form.readiness_failure_threshold.label }}</label>
+          {{ form.readiness_failure_threshold }}
+        </div>
+        <script>
+        (function() {
+          var idx = {{ index }};
+          function toggleProbeFields(v, isReadiness) {
+            var pre = isReadiness ? 'rprobe' : 'probe';
+            document.querySelectorAll('.' + pre + '-exec-' + idx).forEach(function(el) { el.style.display = (v !== 'httpGet' && v !== 'tcpSocket') ? '' : 'none'; });
+            document.querySelectorAll('.' + pre + '-http-' + idx).forEach(function(el) { el.style.display = v === 'httpGet' ? '' : 'none'; });
+            document.querySelectorAll('.' + pre + '-tcp-' + idx).forEach(function(el)  { el.style.display = v === 'tcpSocket' ? '' : 'none'; });
+          }
+          var lSel = document.querySelector('[name="c{{ index }}-liveness_probe_type"]');
+          var rSel = document.querySelector('[name="c{{ index }}-readiness_probe_type"]');
+          if (lSel) lSel.addEventListener('change', function() { toggleProbeFields(this.value, false); });
+          if (rSel) rSel.addEventListener('change', function() { toggleProbeFields(this.value, true); });
+        })();
+        </script>
       </div>
     </div>
   </div>

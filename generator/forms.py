@@ -159,6 +159,19 @@ class PodForm(forms.Form):
         min_value=1,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 120'}),
     )
+    fs_group = forms.IntegerField(
+        label='fsGroup (volume ownership GID)',
+        required=False,
+        min_value=0,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 999'}),
+    )
+
+
+PROBE_TYPE_CHOICES = [
+    ('exec', 'exec (command)'),
+    ('httpGet', 'HTTP GET'),
+    ('tcpSocket', 'TCP Socket'),
+]
 
 
 class ContainerForm(forms.Form):
@@ -284,28 +297,109 @@ class ContainerForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
     )
-    # Health Check
+    # Liveness Probe
+    liveness_probe_type = forms.ChoiceField(
+        label='Type',
+        choices=PROBE_TYPE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
+    )
     liveness_probe_cmd = forms.CharField(
-        label='Liveness Probe (exec command)',
+        label='Command',
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'form-control font-monospace',
-            'placeholder': '/bin/sh -c "exit 0"',
+            'class': 'form-control form-control-sm font-monospace',
+            'placeholder': 'pg_isready -U postgres',
         }),
+    )
+    liveness_http_path = forms.CharField(
+        label='HTTP Path',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '/health'}),
+    )
+    liveness_http_port = forms.IntegerField(
+        label='Port',
+        required=False,
+        min_value=1, max_value=65535,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '8080'}),
+    )
+    liveness_tcp_port = forms.IntegerField(
+        label='TCP Port',
+        required=False,
+        min_value=1, max_value=65535,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '5432'}),
     )
     liveness_initial_delay = forms.IntegerField(
         label='Initial Delay (s)',
         required=False,
         min_value=0,
         initial=30,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '30'}),
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '30'}),
     )
     liveness_period = forms.IntegerField(
         label='Period (s)',
         required=False,
         min_value=1,
         initial=10,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '10'}),
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '10'}),
+    )
+    liveness_failure_threshold = forms.IntegerField(
+        label='Failure Threshold',
+        required=False,
+        min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '3'}),
+    )
+    # Readiness Probe
+    readiness_probe_type = forms.ChoiceField(
+        label='Type',
+        choices=PROBE_TYPE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
+    )
+    readiness_probe_cmd = forms.CharField(
+        label='Command',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-sm font-monospace',
+            'placeholder': 'pg_isready -U postgres',
+        }),
+    )
+    readiness_http_path = forms.CharField(
+        label='HTTP Path',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '/health'}),
+    )
+    readiness_http_port = forms.IntegerField(
+        label='Port',
+        required=False,
+        min_value=1, max_value=65535,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '8080'}),
+    )
+    readiness_tcp_port = forms.IntegerField(
+        label='TCP Port',
+        required=False,
+        min_value=1, max_value=65535,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '5432'}),
+    )
+    readiness_initial_delay = forms.IntegerField(
+        label='Initial Delay (s)',
+        required=False,
+        min_value=0,
+        initial=10,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '10'}),
+    )
+    readiness_period = forms.IntegerField(
+        label='Period (s)',
+        required=False,
+        min_value=1,
+        initial=10,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '10'}),
+    )
+    readiness_failure_threshold = forms.IntegerField(
+        label='Failure Threshold',
+        required=False,
+        min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'placeholder': '3'}),
     )
     # Working Dir
     working_dir = forms.CharField(
