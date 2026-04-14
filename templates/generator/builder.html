@@ -1457,6 +1457,7 @@ let cfgModalInst = null;
 // ══ Utilities ════════════════════════════════════════════════════
 const uid = () => 'c' + Math.random().toString(36).slice(2,11);
 const esc = v => String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const jsesc = v => String(v??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 const csrf = () => '{{ csrf_token }}';
 
 function iconFor(image) {
@@ -1491,7 +1492,7 @@ function renderCatalog() {
   );
   const el = document.getElementById('cv-catalog');
   el.innerHTML = items.length ? items.map(c => `
-    <div class="cv-cat-card" onclick="addFromCatalog('${esc(c.key)}','${esc(c.image)}')" title="${esc(c.desc)}">
+    <div class="cv-cat-card" onclick="addFromCatalog('${jsesc(c.key)}','${jsesc(c.image)}')" title="${esc(c.desc)}">
       <div class="cv-cat-card-icon"><i class="bi ${c.icon}"></i></div>
       <div class="cv-cat-card-name">${esc(c.label)}</div>
       <div class="cv-cat-card-desc">${esc(c.desc)}</div>
@@ -1607,7 +1608,7 @@ function _hubChipHTML(it) {
       : it.full.startsWith('quay.io')
         ? '<span class="cv-hub-official" style="background:rgba(200,100,50,.15);color:#e07040;">quay.io</span>'
         : '';
-  return `<div class="cv-hub-chip" onclick="addHubImage('${esc(it.full)}')" title="${esc(it.desc)}">
+  return `<div class="cv-hub-chip" onclick="addHubImage('${jsesc(it.full)}')" title="${esc(it.desc)}">
     <div class="cv-hub-chip-top">${badge}<span class="cv-hub-name">${esc(it.full)}</span></div>
     ${it.desc ? `<div class="cv-hub-desc">${esc(it.desc)}</div>` : ''}
   </div>`;
@@ -2312,12 +2313,12 @@ function tabEnv(c) {
             ${def.pw ? `
               <div class="cfg-pw-wrap">
                 <input type="password" id="${fieldId}" class="cfg-inp cfg-inp-full" value="${esc(val)}"
-                  placeholder="${esc(def.ph||'')}" oninput="setEnvByKey('${esc(def.key)}',this.value)">
-                <button class="cfg-pw-gen" type="button" onclick="genPw('${esc(def.key)}','${fieldId}')" title="Generate password"><i class="bi bi-shuffle"></i></button>
+                  placeholder="${esc(def.ph||'')}" oninput="setEnvByKey('${jsesc(def.key)}',this.value)">
+                <button class="cfg-pw-gen" type="button" onclick="genPw('${jsesc(def.key)}','${fieldId}')" title="Generate password"><i class="bi bi-shuffle"></i></button>
                 <button class="cfg-pw-toggle" type="button" onclick="togglePw(this)" title="Show/hide"><i class="bi bi-eye"></i></button>
               </div>` : `
               <input type="text" id="${fieldId}" class="cfg-inp cfg-inp-full" value="${esc(val)}"
-                placeholder="${esc(def.ph||'')}" oninput="setEnvByKey('${esc(def.key)}',this.value)">`}
+                placeholder="${esc(def.ph||'')}" oninput="setEnvByKey('${jsesc(def.key)}',this.value)">`}
           </div>`;
       }).join('')}
     </div>`;
@@ -2491,7 +2492,7 @@ function loadEnvPreset() {
           <i class="bi bi-lightbulb me-1" style="color:var(--accent);"></i>Suggestions (click to apply)
         </div>`;
         html += newOnes.map(s => `
-          <div class="cfg-preset-chip" onclick="applyEnvSuggestion('${esc(s.key)}','${esc(s.value)}',this)"
+          <div class="cfg-preset-chip" onclick="applyEnvSuggestion('${jsesc(s.key)}','${jsesc(s.value)}',this)"
                title="${esc(s.key)}=${esc(s.value)}">
             <span class="cfg-preset-key">${esc(s.key)}</span>
             <span class="cfg-preset-val">${esc(s.value) || '<em style="opacity:.5">empty</em>'}</span>
@@ -4152,7 +4153,7 @@ function _renderInspect(d, image) {
       <div class="insp-section-title"><i class="bi bi-tags me-1"></i>Available Tags <span class="insp-stat">(click to apply)</span></div>
       <div class="insp-tag-list">`;
     _filterTags(d.tags).forEach(t => {
-      html += `<span class="insp-tag ${t===currentTag?'current':''}" onclick="_inspApplyTag('${esc(t)}')">${esc(t)}</span>`;
+      html += `<span class="insp-tag ${t===currentTag?'current':''}" onclick="_inspApplyTag('${jsesc(t)}')">${esc(t)}</span>`;
     });
     html += `</div></div>`;
   }
@@ -4281,7 +4282,7 @@ function _renderVerBtns(versions, current) {
   const btns = document.getElementById('cfg-ver-btns');
   if (!btns) return;
   btns.innerHTML = versions.map(v =>
-    `<button class="cfg-ver-btn ${current===v?'active':''}" onclick="setImageVersion('${esc(v)}')">${esc(v)}</button>`
+    `<button class="cfg-ver-btn ${current===v?'active':''}" onclick="setImageVersion('${jsesc(v)}')">${esc(v)}</button>`
   ).join('');
 }
 

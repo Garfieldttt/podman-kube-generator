@@ -156,6 +156,7 @@ class PodForm(forms.Form):
     quadlet_timeout_start = forms.IntegerField(
         label='Timeout Start (seconds)',
         required=False,
+        min_value=1,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 120'}),
     )
 
@@ -242,11 +243,13 @@ class ContainerForm(forms.Form):
     run_as_user = forms.IntegerField(
         label='Run as UID',
         required=False,
+        min_value=0,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 999'}),
     )
     run_as_group = forms.IntegerField(
         label='runAsGroup',
         required=False,
+        min_value=0,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '1000'}),
     )
     read_only_root = forms.BooleanField(
@@ -293,12 +296,14 @@ class ContainerForm(forms.Form):
     liveness_initial_delay = forms.IntegerField(
         label='Initial Delay (s)',
         required=False,
+        min_value=0,
         initial=30,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '30'}),
     )
     liveness_period = forms.IntegerField(
         label='Period (s)',
         required=False,
+        min_value=1,
         initial=10,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '10'}),
     )

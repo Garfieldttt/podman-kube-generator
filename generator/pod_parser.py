@@ -26,9 +26,9 @@ def _env_from_container(c):
     lines = []
     for e in (c.get('env') or []):
         key = e.get('name', '')
-        val = e.get('value', '')
+        val = e.get('value')
         if key:
-            lines.append(f'{key}={val}' if val is not None else key)
+            lines.append(f'{key}={val if val is not None else ""}')
     return '\n'.join(lines)
 
 
