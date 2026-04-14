@@ -51,7 +51,9 @@ def _parse_env(raw):
     for line in _parse_lines(raw):
         if '=' in line:
             key, _, val = line.partition('=')
-            result.append({'name': key.strip(), 'value': val.strip()})
+            key = key.strip()
+            if key:
+                result.append({'name': key, 'value': val.strip()})
     return result
 
 
@@ -110,7 +112,10 @@ def _parse_volumes(raw, global_counter, vol_map, env_raw=''):
             vol_map[claim_src] = vol_name
             if is_absolute:
                 last_seg = src.rstrip('/').rsplit('/', 1)[-1]
+                _KNOWN_FILES_NO_EXT = {'Dockerfile', 'Makefile', 'Procfile', 'Vagrantfile', 'Jenkinsfile'}
                 if src in _KNOWN_FILE_PATHS:
+                    htype = 'FileOrCreate'
+                elif last_seg in _KNOWN_FILES_NO_EXT:
                     htype = 'FileOrCreate'
                 elif '.' in last_seg and not src.endswith('/'):
                     htype = 'FileOrCreate'
@@ -140,7 +145,11 @@ _DB_IMAGES = ('postgres', 'postgresql', 'mariadb', 'mysql', 'mongo', 'mongodb', 
 
 
 def _is_db_image(image):
-    base = (image or '').strip().lower().split(':')[0].split('/')[-1]
+    # Strip tag first, then registry/repo prefix
+    # Handles: postgres:15, registry.io:5000/postgres:15, myrepo/postgres
+    name = (image or '').strip().lower()
+    name = name.rsplit(':', 1)[0] if ':' in name.split('/')[-1] else name
+    base = name.split('/')[-1]
     return any(k in base for k in _DB_IMAGES)
 
 
@@ -265,7 +274,8 @@ def generate(form_data):
         ic_mounts, ic_vols, vol_counter = _parse_volumes(ic.get('volumes', ''), vol_counter, vol_map, ic.get('env', ''))
         all_volumes.extend(ic_vols)
         if ic.get('run_always'):
-            annotations['io.podman.annotations.init.container.type'] = 'always'
+            cname = re.sub(r'[^a-z0-9-]', '', (ic.get('name') or 'init').strip().lower())
+            annotations[f'io.podman.annotations.init.container.type/{cname}'] = 'always'
         if ic.get('userns'):
             cname = re.sub(r'[^a-z0-9-]', '', (ic.get('name') or 'init').strip().lower())
             annotations[f'io.podman.annotations.userns/{cname}'] = ic['userns']
