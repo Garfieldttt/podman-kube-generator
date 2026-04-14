@@ -1429,7 +1429,7 @@ def submit_stack(request):
             if _extract_images(existing.form_data) == images:
                 return JsonResponse({'error': 'duplicate', 'message': 'You already submitted a stack with the same images.'}, status=409)
         # Approved Stack eines anderen Users mit exakt denselben Images?
-        for existing in UserStack.objects.filter(is_approved=True).exclude(user=request.user):
+        for existing in UserStack.objects.filter(is_approved=True).exclude(user=request.user).select_related('user'):
             if _extract_images(existing.form_data) == images:
                 return JsonResponse({'error': 'duplicate', 'message': f'An identical stack already exists in the community ("{existing.name}" by {existing.user.username}).'}, status=409)
 
@@ -1597,7 +1597,7 @@ def profile_public(request, username):
 
 
 def community_stack_detail(request, stack_id):
-    stack = get_object_or_404(UserStack, pk=stack_id, is_approved=True)
+    stack = get_object_or_404(UserStack.objects.select_related('user', 'user__profile'), pk=stack_id, is_approved=True)
     # View-Counter erhöhen (einfach, ohne Deduplizierung)
     UserStack.objects.filter(pk=stack_id).update(view_count=models.F('view_count') + 1)
     stack.refresh_from_db(fields=['view_count'])
