@@ -236,11 +236,7 @@
                   <label>{{ pod_form.userns.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="keep-id: maps your host UID into the container — useful for volume permissions in rootless Podman."></i></label>
                   {{ pod_form.userns }}
                 </div>
-                <div class="col-md-2">
-                  <label>{{ pod_form.fs_group.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Sets pod-level securityContext.fsGroup — all volumes will be owned by this GID. Useful for databases running as non-root."></i></label>
-                  {{ pod_form.fs_group }}
-                </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                   <label>{{ pod_form.dns.label }}</label>
                   {{ pod_form.dns }}
                 </div>

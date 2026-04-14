@@ -726,26 +726,6 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         </div>
       </details>
 
-      {# Pod Security #}
-      <details class="cvs-net-details" id="cvs-pod-security-details">
-        <summary class="cvs-net-summary">
-          <i class="bi bi-person-lock me-1" style="color:var(--accent)"></i>
-          <span>Pod Security</span>
-          <i class="bi bi-chevron-right cvs-net-chev"></i>
-        </summary>
-        <div class="cvs-net-body">
-          <div class="cvs-field">
-            <label class="cvs-field-label">fsGroup (volume ownership GID)
-              <i class="bi bi-info-circle ms-1" style="color:var(--text-muted);font-size:.65rem;"
-                data-bs-toggle="tooltip"
-                title="Sets pod-level securityContext.fsGroup — volumes will be owned by this GID. Fixes permission issues for databases running as non-root without runAsUser:0."></i>
-            </label>
-            <input type="number" id="cv-fs-group" class="cv-ctrl" placeholder="e.g. 999" min="0"
-              oninput="state.fs_group=this.value!==''?parseInt(this.value):null">
-          </div>
-        </div>
-      </details>
-
       {# Images — header + always-visible pills + collapsible body #}
       <div class="cvs-collapse" id="cvs-images-pane">
         <div class="cvs-collapse-hd" onclick="togglePane('images')">
@@ -1462,7 +1442,6 @@ const state = {
   pod_name: 'mypod', restart_policy: 'Always', mode: 'rootless',
   host_network: false, host_pid: false, host_ipc: false,
   hostname: '', host_aliases: '', dns: '', network: '',
-  fs_group: null,
   quadlet_auto_update: '', quadlet_log_driver: '', quadlet_exit_code_propagation: '',
   quadlet_kube_down_force: false, quadlet_timeout_start: null,
   containers: [], connections: [],
@@ -2986,7 +2965,6 @@ function toFormData() {
     host_pid:!!state.host_pid, host_ipc:!!state.host_ipc,
     hostname:state.hostname||'', host_aliases:state.host_aliases||'',
     userns:'', dns:state.dns||'', network:state.network||'',
-    fs_group:state.fs_group!=null&&state.fs_group!==''?parseInt(state.fs_group):null,
     quadlet_auto_update:state.quadlet_auto_update||'',
     quadlet_log_driver:state.quadlet_log_driver||'',
     quadlet_exit_code_propagation:state.quadlet_exit_code_propagation||'',
@@ -3734,8 +3712,6 @@ function loadConfig(input) {
       if (mo) mo.value = state.mode || 'rootless';
       const us = document.getElementById('cv-userns');
       if (us) us.value = state.userns || '';
-      const fg = document.getElementById('cv-fs-group');
-      if (fg) fg.value = state.fs_group != null ? state.fs_group : '';
       renderAll();
       updateNetworkState();
       scanForTips();

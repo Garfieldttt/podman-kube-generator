@@ -345,12 +345,6 @@ def generate(form_data):
     if all_volumes:
         pod_spec['volumes'] = all_volumes
 
-    pod_security_context = {}
-    if form_data.get('fs_group') not in (None, ''):
-        pod_security_context['fsGroup'] = int(form_data['fs_group'])
-    if pod_security_context:
-        pod_spec['securityContext'] = pod_security_context
-
     pod = {
         'apiVersion': 'v1',
         'kind': 'Pod',

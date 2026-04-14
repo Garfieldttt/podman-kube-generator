@@ -159,12 +159,6 @@ class PodForm(forms.Form):
         min_value=1,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 120'}),
     )
-    fs_group = forms.IntegerField(
-        label='fsGroup (volume ownership GID)',
-        required=False,
-        min_value=0,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 999'}),
-    )
 
 
 PROBE_TYPE_CHOICES = [
