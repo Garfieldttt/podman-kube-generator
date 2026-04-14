@@ -703,6 +703,26 @@ def generate_view(request):
     editing_stack_icon = request.POST.get('editing_stack_icon', 'bi-box').strip()
     editing_stack_category = request.POST.get('editing_stack_category', '').strip()
 
+    # Container names and named volumes for tips/cleanup section
+    tip_container_names = [
+        c['name'].strip().lower().replace(' ', '-')
+        for c in form_data.get('containers', []) if c.get('name')
+    ]
+    tip_named_volumes = []
+    seen_vols = set()
+    for c in form_data.get('containers', []):
+        for line in (c.get('volumes') or '').splitlines():
+            line = line.strip()
+            if not line or ':' not in line:
+                continue
+            src = line.split(':')[0].strip()
+            # Named volume = doesn't start with / ~ ./ ../
+            if src and not src.startswith('/') and not src.startswith('~') \
+                    and not src.startswith('./') and not src.startswith('../') \
+                    and src not in seen_vols:
+                tip_named_volumes.append(src)
+                seen_vols.add(src)
+
     return render(request, 'generator/result.html', {
         'yaml_content': yaml_content,
         'shell_content': shell_content,
@@ -718,6 +738,8 @@ def generate_view(request):
         'editing_stack_description': editing_stack_description,
         'editing_stack_icon': editing_stack_icon,
         'editing_stack_category': editing_stack_category,
+        'tip_container_names': tip_container_names,
+        'tip_named_volumes': tip_named_volumes,
     })
 
 

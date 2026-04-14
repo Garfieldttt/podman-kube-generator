@@ -23,6 +23,11 @@
       <i class="bi bi-terminal me-1"></i>Debugging
     </button>
   </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tips-cleanup" type="button">
+      <i class="bi bi-trash me-1"></i>Cleanup
+    </button>
+  </li>
 </ul>
 
 <div class="tab-content" style="border:1px solid var(--border);border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg);background:var(--surface);padding:1.25rem;">
@@ -237,6 +242,44 @@ podman stats {{ pod_name }}-pod</pre>
 # or via systemd:
 systemctl --user restart {{ pod_name }}.service</pre>
             <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-restart')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cleanup -->
+  <div class="tab-pane fade" id="tips-cleanup" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="step-block h-100 mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Stop &amp; remove pod</p>
+          <div class="pre-wrap">
+            <pre id="tip-cleanup-pod" style="font-size:.77rem;">podman pod stop {{ pod_name }}-pod
+podman pod rm {{ pod_name }}-pod</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-cleanup-pod')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      {% if tip_named_volumes %}
+      <div class="col-12">
+        <div class="step-block mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Remove volumes <span class="text-warning small">(deletes all data!)</span></p>
+          <div class="pre-wrap">
+            <pre id="tip-cleanup-volumes" style="font-size:.77rem;">{% for vol in tip_named_volumes %}podman volume rm {{ vol }}
+{% endfor %}</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-cleanup-volumes')"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      <div class="col-12">
+        <div class="step-block mb-0">
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">All in one</p>
+          <div class="pre-wrap">
+            <pre id="tip-cleanup-all" style="font-size:.77rem;">podman pod stop {{ pod_name }}-pod && podman pod rm {{ pod_name }}-pod{% if tip_named_volumes %}{% for vol in tip_named_volumes %} && \
+podman volume rm {{ vol }}{% endfor %}{% endif %}</pre>
+            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-cleanup-all')"><i class="bi bi-clipboard"></i></button>
           </div>
         </div>
       </div>

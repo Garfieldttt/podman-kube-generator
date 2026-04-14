@@ -383,7 +383,7 @@ launchctl start com.podman.{{ pod_name }}</pre>
 
 </div>
 
-{% include "generator/partials/tips_en.html" with pod_name=pod_name %}
+{% include "generator/partials/tips_en.html" with pod_name=pod_name tip_container_names=tip_container_names tip_named_volumes=tip_named_volumes %}
 
 <script>
 function rlenOS(os) {
