@@ -283,6 +283,38 @@ podman volume rm {{ vol }}{% endfor %}{% endif %}</pre>
           </div>
         </div>
       </div>
+
+      {% if tip_named_volumes or tip_host_paths %}
+      <div class="col-12">
+        <div style="border:1px solid #dc3545;border-radius:var(--r-lg);padding:1rem;background:rgba(220,53,69,.06);">
+          <p class="small fw-semibold mb-3" style="color:#dc3545;">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>Danger Zone — permanently deletes data
+          </p>
+          <div class="row g-3">
+            {% if tip_named_volumes %}
+            <div class="col-md-6">
+              <p class="small mb-1" style="color:var(--text-dim);">Remove named volumes</p>
+              <div class="pre-wrap">
+                <pre id="tip-danger-volumes" style="font-size:.77rem;">{% for vol in tip_named_volumes %}podman volume rm {{ vol }}
+{% endfor %}</pre>
+                <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-danger-volumes')"><i class="bi bi-clipboard"></i></button>
+              </div>
+            </div>
+            {% endif %}
+            {% if tip_host_paths %}
+            <div class="col-md-6">
+              <p class="small mb-1" style="color:var(--text-dim);">Remove host paths</p>
+              <div class="pre-wrap">
+                <pre id="tip-danger-hostpaths" style="font-size:.77rem;">{% for path in tip_host_paths %}rm -rf {{ path }}
+{% endfor %}</pre>
+                <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-danger-hostpaths')"><i class="bi bi-clipboard"></i></button>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 

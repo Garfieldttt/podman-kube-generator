@@ -709,16 +709,22 @@ def generate_view(request):
         for c in form_data.get('containers', []) if c.get('name')
     ]
     tip_named_volumes = []
+    tip_host_paths = []
     seen_vols = set()
+    seen_paths = set()
     for c in form_data.get('containers', []):
         for line in (c.get('volumes') or '').splitlines():
             line = line.strip()
             if not line or ':' not in line:
                 continue
             src = line.split(':')[0].strip()
-            # Named volume = doesn't start with / ~ ./ ../
-            if src and not src.startswith('/') and not src.startswith('~') \
-                    and not src.startswith('./') and not src.startswith('../') \
+            if not src:
+                continue
+            if src.startswith('/') or src.startswith('~'):
+                if src not in seen_paths:
+                    tip_host_paths.append(src)
+                    seen_paths.add(src)
+            elif not src.startswith('./') and not src.startswith('../') \
                     and src not in seen_vols:
                 tip_named_volumes.append(src)
                 seen_vols.add(src)
@@ -740,6 +746,7 @@ def generate_view(request):
         'editing_stack_category': editing_stack_category,
         'tip_container_names': tip_container_names,
         'tip_named_volumes': tip_named_volumes,
+        'tip_host_paths': tip_host_paths,
     })
 
 
