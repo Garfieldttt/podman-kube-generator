@@ -992,6 +992,15 @@ def datenschutz(request):
     })
 
 
+def donated(request):
+    response = redirect('/')
+    ua = request.META.get('HTTP_USER_AGENT', '').lower()
+    bot_signals = ('bot', 'spider', 'crawl', 'slurp', 'mediapartners', 'facebookexternalhit')
+    if ua and not any(s in ua for s in bot_signals):
+        response.set_cookie('donated', '1', max_age=365 * 24 * 60 * 60, samesite='Lax')
+    return response
+
+
 @ratelimit(key='ip', rate='20/m', block=True)
 def image_preset(request):
     """JSON: gibt Preset-Einstellungen für ein bekanntes Image zurück.

@@ -666,6 +666,72 @@
 
 {% include "generator/partials/cookie_banner.html" %}
 
+{% if site.donation_url %}
+<!-- Donation Reminder Toast -->
+<div id="donate-reminder" style="display:none;position:fixed;bottom:1.5rem;right:1.5rem;z-index:9990;width:300px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.45);padding:1.1rem 1.1rem .9rem;">
+  <button onclick="dismissDonateReminder()" style="position:absolute;top:.5rem;right:.7rem;background:none;border:none;color:var(--text-dim);font-size:1.2rem;line-height:1;cursor:pointer;padding:0;">×</button>
+  <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="#5eead4"><path d="M20.067 8.478c.492.88.556 2.014.3 3.327-.74 3.806-3.276 5.12-6.514 5.12h-.5a.805.805 0 0 0-.794.68l-.04.22-.63 3.993-.032.17a.804.804 0 0 1-.794.679H7.72a.483.483 0 0 1-.477-.558L7.418 21h1.518l.95-6.02h1.385c4.678 0 7.432-2.394 8.297-7.147a5.9 5.9 0 0 0 .499.645zM4.187 6.482C4.678 4.2 6.437 2.7 8.977 2.7h6.384c.83 0 1.572.2 2.196.57a4.87 4.87 0 0 0-4.198-2.2H6.976C4.437.07 2.677 1.57 2.187 3.852L.02 16.33a.696.696 0 0 0 .686.82h2.8L4.187 6.482z"/></svg>
+    <span style="font-size:.82rem;font-weight:600;color:#e8edf4;">Support this project</span>
+  </div>
+  <p style="font-size:.78rem;color:#8897ae;margin:0 0 .85rem;">If this tool saved you time, consider buying me a coffee.</p>
+  <div style="display:flex;flex-direction:column;gap:.4rem;">
+    <button onclick="openDonateFromReminder()" class="btn btn-sm" style="background:var(--accent);color:#0a0f1a;font-weight:600;border:none;font-size:.8rem;">
+      Donate via PayPal
+    </button>
+    <button onclick="markAsDonated()" class="btn btn-sm" style="background:rgba(255,255,255,.05);color:#8897ae;border:1px solid var(--border);font-size:.75rem;">
+      I've already donated
+    </button>
+  </div>
+</div>
+<script>
+(function () {
+  function getDonatedCookie() {
+    return document.cookie.split('; ').find(r => r.startsWith('donated='))?.split('=')[1];
+  }
+  function setDonatedCookie() {
+    document.cookie = 'donated=1; max-age=31536000; path=/; SameSite=Lax';
+  }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch(e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch(e) {} }
+
+  const COUNT_KEY = 'donate_visit_count';
+  const DISMISSED_KEY = 'donate_dismissed_at';
+
+  // Always define handlers so onclick attributes never throw ReferenceError
+  window.dismissDonateReminder = function () {
+    document.getElementById('donate-reminder').style.display = 'none';
+    lsSet(DISMISSED_KEY, Date.now());
+  };
+  window.markAsDonated = function () {
+    setDonatedCookie();
+    document.getElementById('donate-reminder').style.display = 'none';
+  };
+  window.openDonateFromReminder = function () {
+    document.getElementById('donate-reminder').style.display = 'none';
+    lsSet(DISMISSED_KEY, Date.now());
+    new bootstrap.Modal(document.getElementById('donate-modal')).show();
+  };
+
+  if (getDonatedCookie() === '1') return;
+
+  const count = (parseInt(lsGet(COUNT_KEY) || '0') || 0) + 1;
+  lsSet(COUNT_KEY, count);
+
+  const dismissedAt = parseInt(lsGet(DISMISSED_KEY) || '0') || 0;
+  const daysSince = dismissedAt ? (Date.now() - dismissedAt) / 86400000 : Infinity;
+
+  if (count >= 5 && daysSince >= 1) {
+    setTimeout(() => {
+      if (getDonatedCookie() !== '1') {
+        document.getElementById('donate-reminder').style.display = 'block';
+      }
+    }, 3000);
+  }
+})();
+</script>
+{% endif %}
+
 <script src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'vendor/htmx.min.js' %}"></script>
 <script>

@@ -14,6 +14,7 @@ urlpatterns = [
     path('connection-hints/', views.connection_hints, name='connection_hints'),
     path('image-tags/', views.image_tags, name='image_tags'),
     path('save/', views.save_config, name='save_config'),
+    path('donated/', views.donated, name='donated'),
     path('impressum/', views.impressum, name='impressum'),
     path('datenschutz/', views.datenschutz, name='datenschutz'),
     path('stack/<slug:key>/', views.stack_detail, name='stack_detail'),
