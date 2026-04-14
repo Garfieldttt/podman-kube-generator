@@ -4,12 +4,11 @@ from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.views.static import serve
-from generator.sitemaps import StaticSitemap, SavedConfigSitemap, StackSitemap, CommunityStackSitemap
+from generator.sitemaps import StaticSitemap, StackSitemap, CommunityStackSitemap
 from generator.totp_views import totp_setup, totp_verify
 
 sitemaps = {
     'static': StaticSitemap,
-    'saved': SavedConfigSitemap,
     'stacks': StackSitemap,
     'community': CommunityStackSitemap,
 }

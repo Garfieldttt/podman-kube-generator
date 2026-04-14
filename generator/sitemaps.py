@@ -1,6 +1,6 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
-from .models import SavedConfig, StackTemplate, UserStack
+from .models import StackTemplate, UserStack
 
 
 class StaticSitemap(Sitemap):
@@ -9,25 +9,10 @@ class StaticSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        return ['index', 'builder', 'community']
+        return ['index', 'community']
 
     def location(self, item):
         return reverse(item)
-
-
-class SavedConfigSitemap(Sitemap):
-    changefreq = 'never'
-    priority = 0.4
-    protocol = 'https'
-
-    def items(self):
-        return SavedConfig.objects.all()
-
-    def location(self, obj):
-        return reverse('saved_detail', kwargs={'uuid': obj.uuid})
-
-    def lastmod(self, obj):
-        return obj.created_at
 
 
 class StackSitemap(Sitemap):
