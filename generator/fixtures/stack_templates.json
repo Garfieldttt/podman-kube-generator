@@ -1855,33 +1855,5 @@
       "sort_order": 45,
       "created_at": "2026-04-05T04:19:09.107Z"
     }
-  },
-  {
-    "model": "generator.stacktemplate",
-    "pk": 50,
-    "fields": {
-      "key": "nextcloud-aio",
-      "label": "Nextcloud AIO",
-      "icon": "bi-cloud-fill",
-      "category": "Cloud",
-      "description": "Nextcloud All-in-One: mastercontainer manages NC, DB, Redis, Collabora, Talk via Podman socket",
-      "stack_data": {
-        "pod_name": "nextcloud-aio",
-        "restart_policy": "Always",
-        "mode": "rootful",
-        "containers": [
-          {
-            "name": "nextcloud-aio-mastercontainer",
-            "image": "docker.io/nextcloud/all-in-one:latest",
-            "ports": "8080:8080",
-            "env": "DOCKER_SOCKET_PATH=/var/run/docker.sock\nDOCKER_API_VERSION=1.44\nNCO_UPDATER_ENABLED=false\nNEXTCLOUD_DATADIR=/mnt/ncdata",
-            "volumes": "/run/podman/podman.sock:/var/run/docker.sock:Z\naio-mastercontainer:/mnt/docker-aio-config:Z\n/mnt/ncdata:/mnt/ncdata:Z"
-          }
-        ]
-      },
-      "is_active": true,
-      "sort_order": 46,
-      "created_at": "2026-04-15T00:00:00.000Z"
-    }
   }
 ]
