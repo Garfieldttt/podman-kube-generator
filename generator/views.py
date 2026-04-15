@@ -2050,6 +2050,9 @@ def compose_import(request):
             # Nur bei Keys die auf Hostname/Verbindung hindeuten (nicht DB-Name, User, Passwort etc.)
             _HOST_KEY_RE     = re.compile(r'HOST|ADDR|SERVER|ENDPOINT|DSN|CONN|URI|URL', re.IGNORECASE)
             _NON_HOST_KEY_RE = re.compile(r'PASSWORD|PASSWD|SECRET|TOKEN|KEY|USER|DATABASE|DB_NAME|DBNAME|_NAME$|_DB$', re.IGNORECASE)
+            # Keys ending with a host suffix are always host keys regardless of prefix
+            # (e.g. DATABASE_HOST, REDIS_SERVER — despite DATABASE/REDIS in _NON_HOST_KEY_RE)
+            _HOST_SUFFIX_RE  = re.compile(r'(_HOST|_ADDR|_SERVER|_ENDPOINT)$', re.IGNORECASE)
             # Connection-string keys ending in _URL/_URI/_DSN/_CONN are always host keys
             # even if they contain DATABASE (e.g. DATABASE_URL)
             _CONN_KEY_RE     = re.compile(r'_URL$|_URI$|_DSN$|_CONN$', re.IGNORECASE)
@@ -2057,7 +2060,8 @@ def compose_import(request):
             for line in env_lines:
                 if '=' in line:
                     ek, ev = line.split('=', 1)
-                    is_host_key = (bool(_HOST_KEY_RE.search(ek)) and not bool(_NON_HOST_KEY_RE.search(ek))) \
+                    is_host_key = bool(_HOST_SUFFIX_RE.search(ek)) \
+                                  or (bool(_HOST_KEY_RE.search(ek)) and not bool(_NON_HOST_KEY_RE.search(ek))) \
                                   or bool(_CONN_KEY_RE.search(ek))
                     if ev.strip() in all_service_names and is_host_key:
                         # Ganzer Wert ist ein Service-Name (z.B. PAPERLESS_DBHOST=db)
