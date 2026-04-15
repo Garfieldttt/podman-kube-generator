@@ -286,7 +286,7 @@ def _build_container(c, mounts):
 
 
 def generate(form_data):
-    pod_name = re.sub(r'[^a-z0-9-]', '', (form_data.get('pod_name') or 'pod').strip().lower().replace(' ', '-')) or 'pod'
+    pod_name = re.sub(r'[^a-z0-9-]', '', (form_data.get('pod_name') or 'pod').strip().lower().replace(' ', '-')).strip('-') or 'pod'
     containers_spec = []
     init_containers_spec = []
     all_volumes = []

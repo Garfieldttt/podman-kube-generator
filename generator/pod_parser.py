@@ -76,14 +76,54 @@ def _resources(c):
     )
 
 
-def _liveness(c):
-    probe = c.get('livenessProbe') or {}
+def _parse_probe(probe):
+    """Returns dict with all probe fields for builder state."""
+    if not probe:
+        return {
+            'probe_type': 'exec', 'probe_cmd': '',
+            'http_path': '/health', 'http_port': None, 'tcp_port': None,
+            'initial_delay': None, 'period': None, 'failure_threshold': None,
+        }
+    delay = probe.get('initialDelaySeconds')
+    period = probe.get('periodSeconds')
+    failure = probe.get('failureThreshold')
+    if probe.get('httpGet'):
+        hg = probe['httpGet']
+        return {
+            'probe_type': 'httpGet',
+            'probe_cmd': '',
+            'http_path': hg.get('path') or '/',
+            'http_port': hg.get('port'),
+            'tcp_port': None,
+            'initial_delay': delay,
+            'period': period,
+            'failure_threshold': failure,
+        }
+    if probe.get('tcpSocket'):
+        ts = probe['tcpSocket']
+        return {
+            'probe_type': 'tcpSocket',
+            'probe_cmd': '',
+            'http_path': '/health',
+            'http_port': None,
+            'tcp_port': ts.get('port'),
+            'initial_delay': delay,
+            'period': period,
+            'failure_threshold': failure,
+        }
     exec_probe = probe.get('exec') or {}
     cmd_list = exec_probe.get('command') or []
     cmd = ' '.join(str(x) for x in cmd_list) if cmd_list else ''
-    delay = probe.get('initialDelaySeconds')
-    period = probe.get('periodSeconds')
-    return cmd, delay, period
+    return {
+        'probe_type': 'exec',
+        'probe_cmd': cmd,
+        'http_path': '/health',
+        'http_port': None,
+        'tcp_port': None,
+        'initial_delay': delay,
+        'period': period,
+        'failure_threshold': failure,
+    }
 
 
 def _pull_policy(c):
@@ -183,7 +223,8 @@ def parse_pod_yaml(content: str) -> dict:
 
         mem_limit, cpu_limit, mem_req, cpu_req = _resources(c)
         command, args = _cmd_args(c)
-        liveness_cmd, liveness_delay, liveness_period = _liveness(c)
+        lp = _parse_probe(c.get('livenessProbe'))
+        rp = _parse_probe(c.get('readinessProbe'))
 
         containers.append({
             'id': f'c{len(containers)+1}',
@@ -206,9 +247,22 @@ def parse_pod_yaml(content: str) -> dict:
             'memory_request': mem_req,
             'cpu_request': cpu_req,
             'working_dir': c.get('workingDir') or '',
-            'liveness_probe_cmd': liveness_cmd,
-            'liveness_initial_delay': liveness_delay,
-            'liveness_period': liveness_period,
+            'liveness_probe_type': lp['probe_type'],
+            'liveness_probe_cmd': lp['probe_cmd'],
+            'liveness_http_path': lp['http_path'],
+            'liveness_http_port': lp['http_port'],
+            'liveness_tcp_port': lp['tcp_port'],
+            'liveness_initial_delay': lp['initial_delay'],
+            'liveness_period': lp['period'],
+            'liveness_failure_threshold': lp['failure_threshold'],
+            'readiness_probe_type': rp['probe_type'],
+            'readiness_probe_cmd': rp['probe_cmd'],
+            'readiness_http_path': rp['http_path'],
+            'readiness_http_port': rp['http_port'],
+            'readiness_tcp_port': rp['tcp_port'],
+            'readiness_initial_delay': rp['initial_delay'],
+            'readiness_period': rp['period'],
+            'readiness_failure_threshold': rp['failure_threshold'],
             'pull_policy': _pull_policy(c),
         })
         x += 220

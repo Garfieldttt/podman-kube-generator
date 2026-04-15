@@ -17,7 +17,7 @@ _RESTART_MAP = {
 
 
 def generate_quadlet(form_data, yaml_filename=None):
-    pod_name = re.sub(r'[^a-z0-9-]', '', (form_data.get('pod_name') or 'pod').strip().lower().replace(' ', '-')) or 'pod'
+    pod_name = re.sub(r'[^a-z0-9-]', '', (form_data.get('pod_name') or 'pod').strip().lower().replace(' ', '-')).strip('-') or 'pod'
     mode = form_data.get('mode', 'rootless')
     rootless = mode != 'rootful'
 
