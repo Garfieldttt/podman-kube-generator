@@ -158,9 +158,15 @@ def _build_security_context(c, skip_user=False):
     user_explicit = c.get('run_as_user') is not None and c.get('run_as_user') != ''
     if not skip_user or user_explicit:
         if user_explicit:
-            sc['runAsUser'] = int(c['run_as_user'])
+            try:
+                sc['runAsUser'] = int(c['run_as_user'])
+            except (ValueError, TypeError):
+                pass  # non-numeric username — K8s requires UID, skip
         if c.get('run_as_group') is not None and c.get('run_as_group') != '':
-            sc['runAsGroup'] = int(c['run_as_group'])
+            try:
+                sc['runAsGroup'] = int(c['run_as_group'])
+            except (ValueError, TypeError):
+                pass
     if c.get('read_only_root'):
         sc['readOnlyRootFilesystem'] = True
     if c.get('privileged'):

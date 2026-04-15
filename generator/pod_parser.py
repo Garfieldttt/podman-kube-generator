@@ -172,7 +172,7 @@ def parse_pod_yaml(content: str) -> dict:
     metadata = data.get('metadata') or {}
     spec = data.get('spec') or {}
 
-    pod_name = re.sub(r'[^a-z0-9-]', '', str(metadata.get('name') or 'pod').lower()) or 'pod'
+    pod_name = re.sub(r'[^a-z0-9-]', '', str(metadata.get('name') or 'pod').lower()).strip('-') or 'pod'
 
     restart_raw = str(spec.get('restartPolicy') or 'Always')
     restart_map = {'Always': 'Always', 'OnFailure': 'OnFailure', 'Never': 'Never'}
@@ -190,8 +190,9 @@ def parse_pod_yaml(content: str) -> dict:
     host_aliases_lines = []
     for ha in (spec.get('hostAliases') or []):
         ip = ha.get('ip', '')
-        for h in (ha.get('hostnames') or []):
-            host_aliases_lines.append(f'{ip} {h}')
+        hostnames = [str(h) for h in (ha.get('hostnames') or []) if h]
+        if ip and hostnames:
+            host_aliases_lines.append(f'{ip} {" ".join(hostnames)}')
 
     volume_map = _build_volume_map(spec)
 
