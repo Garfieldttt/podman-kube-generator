@@ -304,6 +304,11 @@ def generate(form_data):
     if form_data.get('userns'):
         annotations['io.podman.annotations.userns'] = form_data['userns']
 
+    # Netzwerk-Annotation
+    network = (form_data.get('network') or '').strip()
+    if network:
+        annotations['io.podman.annotations.network'] = network
+
     # Init-Container
     for ic in form_data.get('init_containers', []):
         ic_mounts, ic_vols, vol_counter = _parse_volumes(ic.get('volumes', ''), vol_counter, vol_map, ic.get('env', ''))
