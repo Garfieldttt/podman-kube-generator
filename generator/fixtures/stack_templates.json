@@ -1874,7 +1874,7 @@
             "name": "nextcloud-aio-mastercontainer",
             "image": "docker.io/nextcloud/all-in-one:latest",
             "ports": "8080:8080",
-            "env": "DOCKER_SOCKET_PATH=/var/run/docker.sock\nNCO_UPDATER_ENABLED=false\nNEXTCLOUD_DATADIR=/mnt/ncdata",
+            "env": "DOCKER_SOCKET_PATH=/var/run/docker.sock\nDOCKER_API_VERSION=1.44\nNCO_UPDATER_ENABLED=false\nNEXTCLOUD_DATADIR=/mnt/ncdata",
             "volumes": "/run/podman/podman.sock:/var/run/docker.sock:Z\naio-mastercontainer:/mnt/docker-aio-config:Z\n/mnt/ncdata:/mnt/ncdata:Z"
           }
         ]
