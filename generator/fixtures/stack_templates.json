@@ -1876,16 +1876,14 @@
             "ports": "8052:8052",
             "env": "DATABASE_USER=awx\nDATABASE_PASSWORD=changeme\nDATABASE_NAME=awx\nDATABASE_HOST=127.0.0.1\nDATABASE_PORT=5432\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nSECRET_KEY=changeme_replace_with_50_char_random_string\nAWX_ADMIN_USER=admin\nAWX_ADMIN_PASSWORD=changeme",
             "volumes": "awx-projects:/var/lib/awx/projects:Z",
-            "command": "/usr/bin/launch_awx.sh",
-            "run_as_user": 0
+            "command": "/usr/bin/launch_awx_web.sh"
           },
           {
             "name": "awx-task",
             "image": "quay.io/ansible/awx:latest",
             "env": "DATABASE_USER=awx\nDATABASE_PASSWORD=changeme\nDATABASE_NAME=awx\nDATABASE_HOST=127.0.0.1\nDATABASE_PORT=5432\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nSECRET_KEY=changeme_replace_with_50_char_random_string\nAWX_ADMIN_USER=admin\nAWX_ADMIN_PASSWORD=changeme",
             "volumes": "awx-projects:/var/lib/awx/projects:Z",
-            "command": "/usr/bin/launch_awx_task.sh",
-            "run_as_user": 0
+            "command": "/usr/bin/launch_awx_task.sh"
           },
           {
             "name": "postgres",
