@@ -19,6 +19,7 @@ LOG="$BACKUP_DIR/update.log"
 
 _PKGS_UPDATED=0
 _DB_MIGRATED=0
+_SKIP_PKG_UPDATE=0
 
 # ── Colors ─────────────────────────────────────────────────────
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'
@@ -140,10 +141,9 @@ show_outdated() {
     outdated=$("$PIP" list --outdated --format=columns 2>/dev/null | tail -n +3 || true)
 
     if [[ -z "$outdated" ]]; then
-        ok "All packages are up to date."
-        echo ""
-        echo -e "${GREEN}Nothing to do.${NC}"
-        exit 0
+        ok "All packages are up to date — skipping package update."
+        _SKIP_PKG_UPDATE=1
+        return
     fi
 
     echo ""
@@ -157,6 +157,8 @@ show_outdated() {
 
 # ── Compatibility check (dry-run) ──────────────────────────────
 dryrun() {
+    [[ $_SKIP_PKG_UPDATE -eq 1 ]] && return
+
     step "── Compatibility check (dry-run) ───────────────────────"
 
     info "Simulating update..."
@@ -180,6 +182,8 @@ dryrun() {
 
 # ── Confirm ────────────────────────────────────────────────────
 confirm() {
+    [[ $_SKIP_PKG_UPDATE -eq 1 ]] && return
+
     echo ""
     read -rp "$(echo -e "${YELLOW}  Proceed with update? [y/N]:${NC} ")" yn
     yn="${yn:-N}"
@@ -191,6 +195,8 @@ confirm() {
 
 # ── Update packages ────────────────────────────────────────────
 update_packages() {
+    [[ $_SKIP_PKG_UPDATE -eq 1 ]] && return
+
     step "── Updating packages ───────────────────────────────────"
 
     info "Upgrading to latest allowed versions..."

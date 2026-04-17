@@ -4,7 +4,9 @@ cd "$(dirname "$0")"
 
 if [[ ! -f .env ]]; then
     cp .env.example .env
-    echo "==> .env created — please set SECRET_KEY!"
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
+    sed -i "s|DJANGO_SECRET_KEY=.*|DJANGO_SECRET_KEY=${SECRET_KEY}|" .env
+    echo "==> .env created with generated SECRET_KEY (edit DJANGO_ALLOWED_HOSTS / SITE_URL as needed)"
 fi
 
 if [[ ! -d venv ]]; then
