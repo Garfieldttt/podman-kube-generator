@@ -44,7 +44,13 @@
     <div class="d-flex align-items-start justify-content-between gap-3 mb-4 flex-wrap">
       <div>
         <h1 class="mb-1" style="font-size:1.5rem;font-weight:700;letter-spacing:-.02em;">{{ site.home_heading }}</h1>
-        <p class="mb-0" style="color:var(--text-dim);">{{ site.home_intro }}</p>
+        <p class="mb-0" style="color:var(--text-dim);">{{ site.home_intro }}
+          <i class="bi bi-question-circle ms-1"
+             style="color:var(--text-muted);font-size:.85rem;cursor:help;vertical-align:middle;"
+             data-bs-toggle="tooltip"
+             data-bs-placement="bottom"
+             title="Generate Kubernetes YAML for 'podman play kube'. Define your pod with multiple containers, ports, volumes and env vars — get a ready-to-run YAML file plus a systemd Quadlet .kube unit in seconds. No account required."></i>
+        </p>
       </div>
       <div class="d-flex gap-2 flex-shrink-0">
         {% if site.canvas_enabled %}
@@ -63,6 +69,11 @@
       <div class="card-header d-flex align-items-center justify-content-between" style="background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.25);">
         <span class="fw-semibold" style="color:#5eead4;font-size:.85rem;">
           <i class="bi bi-collection me-2"></i>Quick Start — Predefined Stacks
+          <i class="bi bi-info-circle ms-2"
+             style="color:rgba(94,234,212,.5);font-size:.8rem;cursor:help;"
+             data-bs-toggle="tooltip"
+             data-bs-placement="right"
+             title="Choose a pre-configured stack (WordPress, Nextcloud, Gitea …) to auto-fill all fields below. You can customize everything before generating."></i>
         </span>
         <span class="small" style="color:var(--text-muted);">Pre-fills the form below — customize before generating</span>
       </div>
@@ -203,7 +214,13 @@
       <!-- Pod-Einstellungen -->
       <div class="card mb-4">
         <div class="card-header py-2 px-3">
-          <span class="fw-semibold" style="color:var(--text);"><i class="bi bi-layers me-2"></i>Pod Settings</span>
+          <span class="fw-semibold" style="color:var(--text);"><i class="bi bi-layers me-2"></i>Pod Settings
+            <i class="bi bi-info-circle ms-2 text-secondary"
+               style="font-size:.8rem;cursor:help;"
+               data-bs-toggle="tooltip"
+               data-bs-placement="right"
+               title="A pod groups all containers into one shared network namespace — they communicate via localhost. Set the pod name, restart policy and run mode here."></i>
+          </span>
         </div>
         <div class="card-body">
           <div class="row g-3">
@@ -273,6 +290,11 @@
         <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
           <span class="fw-semibold" style="color:#5eead4;">
             <i class="bi bi-arrow-clockwise me-2"></i>Init Containers
+            <i class="bi bi-info-circle ms-1 text-secondary"
+               style="font-size:.75rem;cursor:help;"
+               data-bs-toggle="tooltip"
+               data-bs-placement="right"
+               title="Init containers run to completion before main containers start. Use them for setup tasks like DB migrations, permission fixes or config generation."></i>
             <span class="text-secondary small fw-normal ms-2">run before main containers</span>
           </span>
           <button type="button" class="btn btn-sm btn-outline-secondary"

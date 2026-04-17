@@ -48,7 +48,7 @@
 
     <!-- Ports / Env / Volumes -->
     <div class="col-md-4">
-      <label>{{ form.ports.label }}</label>
+      <label>{{ form.ports.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="One mapping per line. Format: HOST:CONTAINER or just CONTAINER (pod-only). Protocol suffix optional: 53:53/udp. Rootless: host ports below 1024 require extra config."></i></label>
       {{ form.ports }}
     </div>
     <div class="col-md-4">
@@ -56,7 +56,7 @@
       {{ form.env }}
     </div>
     <div class="col-md-4">
-      <label>{{ form.volumes.label }}</label>
+      <label>{{ form.volumes.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="One volume per line. Format: SOURCE:TARGET[:ro]. Named volume: mydata:/data. Host path: /mnt/data:/data. Append :ro for read-only."></i></label>
       {{ form.volumes }}
     </div>
 
@@ -86,19 +86,19 @@
         <!-- Resources -->
         <div class="col-12"><span class="text-secondary small fw-semibold">RESOURCES</span></div>
         <div class="col-md-3">
-          <label>{{ form.memory_limit.label }}</label>
+          <label>{{ form.memory_limit.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Hard cap — container is killed (OOMKilled) if exceeded. e.g. 256Mi, 512Mi, 1Gi"></i></label>
           {{ form.memory_limit }}
         </div>
         <div class="col-md-3">
-          <label>{{ form.cpu_limit.label }}</label>
+          <label>{{ form.cpu_limit.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container is throttled if exceeded. 1.0 = one full core, 0.5 = half a core."></i></label>
           {{ form.cpu_limit }}
         </div>
         <div class="col-md-3">
-          <label>{{ form.memory_request.label }}</label>
+          <label>{{ form.memory_request.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Minimum memory guaranteed. Should be ≤ limit. Leave empty if no limit is set."></i></label>
           {{ form.memory_request }}
         </div>
         <div class="col-md-3">
-          <label>{{ form.cpu_request.label }}</label>
+          <label>{{ form.cpu_request.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Minimum CPU guaranteed. Should be ≤ limit. Leave empty if no limit is set."></i></label>
           {{ form.cpu_request }}
         </div>
 

@@ -2048,6 +2048,16 @@ function switchTab(tab, btn) {
   renderCfgTab();
 }
 
+function tip(text) {
+  return `<i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="${text}"></i>`;
+}
+
+function initCfgTooltips() {
+  document.querySelectorAll('#cfg-body [data-bs-toggle="tooltip"]').forEach(el => {
+    bootstrap.Tooltip.getOrCreateInstance(el, {trigger: 'hover focus'});
+  });
+}
+
 function renderCfgTab() {
   const c = getC(selectedId); if (!c) return;
   const body = document.getElementById('cfg-body');
@@ -2058,6 +2068,7 @@ function renderCfgTab() {
     case 'env':      body.innerHTML = tabEnv(c);      break;
     case 'resources':body.innerHTML = tabResources(c);break;
   }
+  initCfgTooltips();
 }
 
 
@@ -2087,7 +2098,7 @@ function tabGeneral(c) {
       </div>
     </div>
     <div class="cfg-section">
-      <div class="cfg-section-title"><i class="bi bi-arrow-repeat"></i>Image pull policy</div>
+      <div class="cfg-section-title"><i class="bi bi-arrow-repeat"></i>Image pull policy ${tip('Default: pulls only if the image is not already cached locally. Always: re-pulls on every container start. Never: only uses the local cache — fails if the image is not present.')}</div>
       <select class="cfg-inp cfg-inp-full" onchange="cfgSet('pull_policy',this.value)">
         <option value=""        ${!c.pull_policy?'selected':''}>Default (IfNotPresent)</option>
         <option value="Always"  ${c.pull_policy==='Always'?'selected':''}>Always pull</option>
@@ -2662,7 +2673,7 @@ function tabResources(c) {
       <div class="cfg-section-title"><i class="bi bi-memory"></i>Memory & CPU</div>
       <div class="cfg-res-grid">
         <div class="cfg-res-field">
-          <label>Memory limit</label>
+          <label>Memory limit ${tip('Hard cap: container is killed (OOMKilled) if it exceeds this. e.g. 256Mi, 512Mi, 1Gi, 2Gi')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" id="mem-limit-inp" value="${esc(c.memory_limit)}"
             placeholder="512Mi" oninput="cfgSet('memory_limit',this.value)">
           <div class="cfg-res-quickbtns">
@@ -2672,19 +2683,19 @@ function tabResources(c) {
           </div>
         </div>
         <div class="cfg-res-field">
-          <label>CPU limit</label>
+          <label>CPU limit ${tip('Container is throttled when it exceeds this. 1.0 = one full core, 0.5 = half a core, 2 = two cores.')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.cpu_limit)}"
             placeholder="0.5" oninput="cfgSet('cpu_limit',this.value)">
           <div class="cfg-res-hint">e.g. 0.5, 1.0, 2 (number of cores)</div>
         </div>
         <div class="cfg-res-field">
-          <label>Memory request</label>
+          <label>Memory request ${tip('Minimum memory guaranteed to this container. Should be &lt;= limit. Leave empty if no limit is set.')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.memory_request)}"
             placeholder="128Mi" oninput="cfgSet('memory_request',this.value)">
           <div class="cfg-res-hint">Minimum guaranteed</div>
         </div>
         <div class="cfg-res-field">
-          <label>CPU request</label>
+          <label>CPU request ${tip('Minimum CPU guaranteed to this container. Should be &lt;= limit. Leave empty if no limit is set.')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.cpu_request)}"
             placeholder="0.1" oninput="cfgSet('cpu_request',this.value)">
           <div class="cfg-res-hint">Minimum guaranteed</div>
@@ -2695,7 +2706,7 @@ function tabResources(c) {
     <div class="cfg-section">
       <div class="cfg-section-title"><i class="bi bi-person-lock"></i>Security Context</div>
       <div class="cfg-res-field mt-0 mb-2">
-        <label>User Namespace <span class="cfg-res-hint">(--userns / io.podman.annotations.userns)</span></label>
+        <label>User Namespace <span class="cfg-res-hint">(--userns / io.podman.annotations.userns)</span>${tip('keep-id: maps your host UID/GID into the container (rootless, recommended for volume access). auto: assigns a random sub-UID mapping. host: no user namespace isolation.')}</label>
         <select class="cfg-inp cfg-inp-full" id="sel-userns"
           onchange="cfgSet('userns',this.value); updateUsernsState(this.value)">
           <option value="" ${!c.userns?'selected':''}>— none —</option>
@@ -2719,12 +2730,12 @@ function tabResources(c) {
       </div>
       <div class="cfg-checkbox-row">
         <input type="checkbox" id="chk-priv" ${c.privileged?'checked':''} onchange="cfgSet('privileged',this.checked)">
-        <label for="chk-priv">Privileged mode</label>
+        <label for="chk-priv">Privileged mode${tip('Gives the container full access to all host devices (equivalent to root on the host). Only needed for very specific cases like FUSE mounts or KVM. Requires rootful mode.')}</label>
         <span class="cfg-res-hint ms-2">Full host access — only if absolutely needed</span>
       </div>
       <div class="cfg-checkbox-row">
         <input type="checkbox" id="chk-ro" ${c.read_only_root?'checked':''} onchange="cfgSet('read_only_root',this.checked)">
-        <label for="chk-ro">Read-only root filesystem</label>
+        <label for="chk-ro">Read-only root filesystem${tip('Mounts the container root filesystem as read-only. Named volumes and tmpfs mounts remain writable. Hardens the container against runtime modifications.')}</label>
       </div>
       <div class="cfg-res-row mt-2">
         <div class="cfg-res-field">
@@ -2741,17 +2752,17 @@ function tabResources(c) {
     <div class="cfg-section">
       <div class="cfg-section-title"><i class="bi bi-terminal"></i>Command Override</div>
       <div class="cfg-res-field mb-2">
-        <label>Command (overrides ENTRYPOINT)</label>
+        <label>Command (overrides ENTRYPOINT)${tip('Replaces the image ENTRYPOINT — the main executable. e.g. /bin/sh or python3. Leave empty to use the image default.')}</label>
         <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.command)}"
           placeholder="leave empty to use image default" oninput="cfgSet('command',this.value)">
       </div>
       <div class="cfg-res-field mb-2">
-        <label>Args (overrides CMD)</label>
+        <label>Args (overrides CMD)${tip('Replaces the image CMD — the default arguments passed to the ENTRYPOINT. e.g. server --port 8080. Leave empty to use the image default.')}</label>
         <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.args)}"
           placeholder="leave empty to use image default" oninput="cfgSet('args',this.value)">
       </div>
       <div class="cfg-res-field">
-        <label>Working directory</label>
+        <label>Working directory${tip('Sets the working directory inside the container for the process. Leave empty to use the image default (usually / or /app).')}</label>
         <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.working_dir)}"
           placeholder="/app" oninput="cfgSet('working_dir',this.value)">
       </div>
@@ -2815,17 +2826,17 @@ function _probeFields(c, prefix, label, suggestBtn) {
       </div>
       <div class="cfg-res-grid" style="margin-top:.5rem;">
         <div class="cfg-res-field">
-          <label>Initial delay (s)</label>
+          <label>Initial delay (s)${tip('Seconds to wait after the container starts before the first check. Set high enough for the app to initialize.')}</label>
           <input type="number" class="cfg-inp cfg-inp-full" value="${c[prefix + '_initial_delay'] ?? (prefix==='liveness'?30:10)}"
             min="0" oninput="cfgSet('${prefix}_initial_delay',this.value!==''?parseInt(this.value):null)">
         </div>
         <div class="cfg-res-field">
-          <label>Period (s)</label>
+          <label>Period (s)${tip('How often the check is performed. e.g. 10 = check every 10 seconds.')}</label>
           <input type="number" class="cfg-inp cfg-inp-full" value="${c[prefix + '_period'] ?? 10}"
             min="1" oninput="cfgSet('${prefix}_period',this.value!==''?parseInt(this.value):null)">
         </div>
         <div class="cfg-res-field">
-          <label>Failure threshold</label>
+          <label>Failure threshold${tip('How many consecutive failures trigger the action (restart for liveness, not-ready for readiness). Default: 3.')}</label>
           <input type="number" class="cfg-inp cfg-inp-full" value="${c[prefix + '_failure_threshold'] ?? ''}"
             min="1" placeholder="3" oninput="cfgSet('${prefix}_failure_threshold',this.value?parseInt(this.value):null)">
         </div>
@@ -2838,8 +2849,10 @@ function renderProbeSection(c) {
     onclick="loadProbeSuggestion()" title="Fill from image preset">
     <i class="bi bi-magic me-1"></i>Suggest
   </button>`;
-  return _probeFields(c, 'liveness', 'Liveness Probe', suggestBtn) +
-         _probeFields(c, 'readiness', 'Readiness Probe', '');
+  const livenessTitle  = `Liveness Probe ${tip('Podman restarts the container if this check fails repeatedly. Use it to detect hung or deadlocked processes that are no longer functional.')}`;
+  const readinessTitle = `Readiness Probe ${tip('Marks the container as not ready if this check fails. Use it to delay traffic until the application has fully started up.')}`;
+  return _probeFields(c, 'liveness', livenessTitle, suggestBtn) +
+         _probeFields(c, 'readiness', readinessTitle, '');
 }
 
 function loadProbeSuggestion() {
