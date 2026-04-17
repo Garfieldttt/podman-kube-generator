@@ -318,7 +318,7 @@ def validate_form_data(form_data):
                     pass
 
     # 11. Container name used as hostname in another container's env → works, but fragile if renamed
-    _NON_HOST_KEY_RE = re.compile(r'DATABASE|DB_NAME|DBNAME|_NAME$|_USER$|_DB$|PASSWORD|SECRET|KEY|TOKEN', re.IGNORECASE)
+    _NON_HOST_KEY_RE = re.compile(r'DATABASE|DB_NAME|DBNAME|_NAME$|_USER$|_DB$|_DIALECT$|_DRIVER$|_TYPE$|PASSWORD|SECRET|KEY|TOKEN', re.IGNORECASE)
     container_names = {c.get('name', '').strip() for c in containers if c.get('name')}
     for c in containers:
         env_map = _parse_env_str(c.get('env', ''))
