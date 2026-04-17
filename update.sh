@@ -266,6 +266,13 @@ collectstatic() {
 restart_service() {
     step "── Restarting service ──────────────────────────────────"
 
+    if ! systemctl --user list-unit-files "${SERVICE}" &>/dev/null || \
+       ! systemctl --user cat "${SERVICE}" &>/dev/null; then
+        warn "Service ${SERVICE} not found — skipping restart."
+        warn "Start manually: cd ${SCRIPT_DIR} && ./start.sh"
+        return
+    fi
+
     info "Restarting $SERVICE..."
     systemctl --user restart "$SERVICE"
     sleep 2
