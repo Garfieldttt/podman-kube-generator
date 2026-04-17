@@ -1855,5 +1855,57 @@
       "sort_order": 45,
       "created_at": "2026-04-05T04:19:09.107Z"
     }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 50,
+    "fields": {
+      "key": "awx-postgres",
+      "label": "AWX (Ansible Tower)",
+      "icon": "bi-robot",
+      "category": "Automation",
+      "description": "Open-source Ansible Tower: web UI for Ansible with task scheduling, inventory and job management",
+      "stack_data": {
+        "pod_name": "awx",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "awx-web",
+            "image": "quay.io/ansible/awx:latest",
+            "ports": "8052:8052",
+            "env": "DATABASE_USER=awx\nDATABASE_PASSWORD=changeme\nDATABASE_NAME=awx\nDATABASE_HOST=127.0.0.1\nDATABASE_PORT=5432\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nSECRET_KEY=changeme_replace_with_50_char_random_string\nAWX_ADMIN_USER=admin\nAWX_ADMIN_PASSWORD=changeme",
+            "volumes": "awx-projects:/var/lib/awx/projects:Z",
+            "command": "/usr/bin/launch_awx.sh",
+            "run_as_user": 0
+          },
+          {
+            "name": "awx-task",
+            "image": "quay.io/ansible/awx:latest",
+            "env": "DATABASE_USER=awx\nDATABASE_PASSWORD=changeme\nDATABASE_NAME=awx\nDATABASE_HOST=127.0.0.1\nDATABASE_PORT=5432\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nSECRET_KEY=changeme_replace_with_50_char_random_string\nAWX_ADMIN_USER=admin\nAWX_ADMIN_PASSWORD=changeme",
+            "volumes": "awx-projects:/var/lib/awx/projects:Z",
+            "command": "/usr/bin/launch_awx_task.sh",
+            "run_as_user": 0
+          },
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:15",
+            "env": "POSTGRES_USER=awx\nPOSTGRES_PASSWORD=changeme\nPOSTGRES_DB=awx",
+            "volumes": "awx-db:/var/lib/postgresql/data:Z",
+            "run_as_user": 999,
+            "run_as_group": 999
+          },
+          {
+            "name": "redis",
+            "image": "docker.io/redis:7-alpine",
+            "command": "redis-server --appendonly yes",
+            "volumes": "awx-redis:/data:Z"
+          }
+        ]
+      },
+      "is_active": true,
+      "sort_order": 46,
+      "created_at": "2026-04-17T00:00:00.000Z"
+    }
   }
 ]
