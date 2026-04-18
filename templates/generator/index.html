@@ -723,9 +723,23 @@ async function fillStack(stack) {
   const hnEl = document.getElementById('id_host_network');
   if (hnEl) hnEl.checked = !!stack.host_network;
 
-  // Bestehende Container entfernen
+  // Bestehende Container + Init-Container entfernen
   document.getElementById('containers-wrapper').innerHTML = '';
   document.getElementById('container_count').value = 0;
+  document.getElementById('init-containers-wrapper').innerHTML = '';
+  document.getElementById('init_count').value = 0;
+  const noInitHint = document.getElementById('no-init-hint');
+
+  // Init-Container sequentiell laden
+  const initContainers = stack.init_containers || [];
+  for (let i = 0; i < initContainers.length; i++) {
+    const html = await fetch(`/add-init-container/?index=${i}`).then(r => r.text());
+    document.getElementById('init-containers-wrapper').insertAdjacentHTML('beforeend', html);
+    document.getElementById('init_count').value = i + 1;
+    await new Promise(res => setTimeout(res, 30));
+    fillInitContainerBlock(i, initContainers[i]);
+  }
+  if (noInitHint) noInitHint.classList.toggle('d-none', initContainers.length > 0);
 
   // Container sequentiell laden → garantierte Reihenfolge
   const containers = stack.containers || [];
@@ -738,6 +752,28 @@ async function fillStack(stack) {
     fillContainerBlock(i, containers[i]);
   }
   refreshConnectionAssistant();
+}
+
+function fillInitContainerBlock(idx, c) {
+  const block = document.getElementById(`init-container-${idx}`);
+  if (!block) return;
+
+  const nameEl = block.querySelector('input[name$="-name"]');
+  if (nameEl) nameEl.value = c.name || '';
+
+  const searchEl = document.getElementById(`img-search-i${idx}`);
+  const hiddenEl = block.querySelector('input[name$="-image"]');
+  if (searchEl) searchEl.value = c.image || '';
+  if (hiddenEl) hiddenEl.value = c.image || '';
+
+  const set = (sel, val) => { const el = block.querySelector(sel); if (el && val !== undefined) el.value = val || ''; };
+  const setCheck = (sel, val) => { const el = block.querySelector(sel); if (el) el.checked = !!val; };
+
+  set('input[name$="-command"]', c.command);
+  set('input[name$="-args"]', c.args);
+  set('textarea[name$="-env"]', c.env);
+  set('textarea[name$="-volumes"]', c.volumes);
+  setCheck('input[name$="-run_always"]', c.run_always);
 }
 
 function fillContainerBlock(idx, c) {
