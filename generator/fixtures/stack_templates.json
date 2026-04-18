@@ -1886,7 +1886,7 @@
             "env": "DATABASE_USER=awx\nDATABASE_PASSWORD=changeme\nDATABASE_NAME=awx\nDATABASE_HOST=127.0.0.1\nDATABASE_PORT=5432\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nSECRET_KEY=changeme_replace_with_50_char_random_string\nAWX_ADMIN_USER=admin\nAWX_ADMIN_PASSWORD=changeme",
             "volumes": "awx-tower:/etc/tower:Z\nawx-nginx:/etc/nginx:Z\nawx-projects:/var/lib/awx/projects:Z",
             "command": "/bin/sh",
-            "args": "-c \"until python3 -c \\\"import socket;s=socket.create_connection(('${DATABASE_HOST:-127.0.0.1}',${DATABASE_PORT:-5432}),1);s.close()\\\" 2>/dev/null; do echo 'Waiting for postgres...'; sleep 3; done && awx-manage migrate && awx-manage createsuperuser --noinput --username ${AWX_ADMIN_USER:-admin} --email admin@localhost 2>/dev/null || true && awx-manage shell -c \\\"from django.contrib.auth.models import User;u=User.objects.get(username=__import__('os').environ.get('AWX_ADMIN_USER','admin'));u.set_password(__import__('os').environ.get('AWX_ADMIN_PASSWORD','changeme'));u.save()\\\" && exec /usr/bin/launch_awx_web.sh\""
+            "args": "-c \"until python3 -c \\\"import socket;s=socket.create_connection(('${DATABASE_HOST:-127.0.0.1}',${DATABASE_PORT:-5432}),1);s.close()\\\" 2>/dev/null; do echo 'Waiting for postgres...'; sleep 3; done && awx-manage migrate && DJANGO_SUPERUSER_PASSWORD=${AWX_ADMIN_PASSWORD:-changeme} awx-manage createsuperuser --noinput --username ${AWX_ADMIN_USER:-admin} --email admin@localhost 2>/dev/null || true && exec /usr/bin/launch_awx_web.sh\""
           },
           {
             "name": "awx-task",
