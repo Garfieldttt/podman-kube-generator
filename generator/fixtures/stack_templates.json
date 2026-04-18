@@ -666,7 +666,7 @@
       "key": "semaphore-postgres",
       "label": "Semaphore",
       "icon": "bi-play-btn",
-      "category": "DevOps",
+      "category": "Automation",
       "description": "Web UI for Ansible playbooks with inventory and task management",
       "stack_data": {
         "pod_name": "semaphore",
