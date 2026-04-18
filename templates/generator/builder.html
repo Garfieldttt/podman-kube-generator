@@ -1445,6 +1445,7 @@ const state = {
   quadlet_auto_update: '', quadlet_log_driver: '', quadlet_exit_code_propagation: '',
   quadlet_kube_down_force: false, quadlet_timeout_start: null,
   containers: [], connections: [],
+  init_containers: [],
 };
 
 let selectedId  = null; // container id open in config modal
@@ -2900,7 +2901,8 @@ function refreshAllNodeBadges() {
 // ══ Stack Loading ════════════════════════════════════════════════
 function _applyStackData(d) {
   pushUndo();
-  state.containers = []; state.connections = []; selectedId = null;
+  state.containers = []; state.connections = []; state.init_containers = []; selectedId = null;
+  if (d.init_containers && d.init_containers.length) state.init_containers = d.init_containers;
   if (d.pod_name) { state.pod_name=d.pod_name; document.getElementById('cv-pod-name').value=d.pod_name; }
   if (d.restart_policy) { state.restart_policy=d.restart_policy; document.getElementById('cv-restart').value=d.restart_policy; }
   if (d.mode) { state.mode=d.mode; document.getElementById('cv-mode').value=d.mode; }
@@ -2983,7 +2985,7 @@ function toFormData() {
     quadlet_exit_code_propagation:state.quadlet_exit_code_propagation||'',
     quadlet_kube_down_force:!!state.quadlet_kube_down_force,
     quadlet_timeout_start:state.quadlet_timeout_start||null,
-    init_containers:[],
+    init_containers: state.init_containers || [],
     containers: state.containers.map(c => ({
       name:  c.name  || shortName(c.image) || 'container',
       image: c.image || 'busybox',
