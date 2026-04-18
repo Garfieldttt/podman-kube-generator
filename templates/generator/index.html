@@ -203,6 +203,7 @@
       {% csrf_token %}
       <input type="hidden" name="container_count" id="container_count" value="{{ container_forms|length }}">
       <input type="hidden" name="init_count" id="init_count" value="{{ init_forms|length }}">
+      <input type="hidden" name="selected_stack_key" id="selected_stack_key" value="">
       {% if editing_stack_id %}
       <input type="hidden" name="editing_stack_id" value="{{ editing_stack_id }}">
       <input type="hidden" name="editing_stack_name" value="{{ editing_stack_name }}">
@@ -537,6 +538,7 @@ async function pickCommunityStack(id, username, name) {
 }
 
 async function pickStack(key, label) {
+  document.getElementById('selected_stack_key').value = key;
   const lbl = document.getElementById('stack-picker-label');
   document.getElementById('stack-picker-label-text').textContent = label;
   lbl.style.display = 'inline';

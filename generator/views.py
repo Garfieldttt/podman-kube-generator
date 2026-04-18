@@ -660,6 +660,25 @@ def generate_view(request):
         })
 
     pd = pod_form.cleaned_data
+    init_containers_data = [f.cleaned_data for f in init_forms]
+
+    # Fallback: if a stack was selected but init_containers weren't submitted
+    # (can happen when fillStack JS doesn't complete in time), load from DB.
+    if not init_containers_data:
+        stack_key = request.POST.get('selected_stack_key', '').strip()
+        if stack_key:
+            try:
+                from .models import StackTemplate
+                tpl = StackTemplate.objects.get(key=stack_key, is_active=True)
+                raw_ics = tpl.stack_data.get('init_containers', [])
+                if raw_ics:
+                    import json as _json
+                    init_containers_data = _json.loads(
+                        _auto_passwords(_json.dumps(raw_ics))
+                    )
+            except StackTemplate.DoesNotExist:
+                pass
+
     form_data = {
         'pod_name': pd['pod_name'],
         'restart_policy': pd['restart_policy'],
@@ -673,7 +692,7 @@ def generate_view(request):
         'dns': pd.get('dns', ''),
         'network': pd.get('network', ''),
         'containers': [f.cleaned_data for f in container_forms],
-        'init_containers': [f.cleaned_data for f in init_forms],
+        'init_containers': init_containers_data,
     }
 
     try:
