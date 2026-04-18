@@ -7,6 +7,19 @@ import shlex
 import yaml
 
 
+def _default_pull_policy(image):
+    """Returns 'Always' for :latest or untagged images, None otherwise."""
+    if not image:
+        return None
+    if '@' in image:
+        return None  # pinned to digest = specific version
+    name = image.split('/')[-1]
+    if ':' in name:
+        tag = name.split(':')[-1]
+        return 'Always' if tag == 'latest' else None
+    return 'Always'  # no tag = implicitly latest
+
+
 def _parse_lines(raw):
     return [l.strip() for l in (raw or '').splitlines() if l.strip()]
 
@@ -258,8 +271,9 @@ def _build_container(c, mounts):
         'image': c['image'].strip(),
     }
     is_db = _is_db_image(c.get('image', ''))
-    if c.get('pull_policy'):
-        spec['imagePullPolicy'] = c['pull_policy']
+    _pull = c.get('pull_policy') or _default_pull_policy(c.get('image', ''))
+    if _pull:
+        spec['imagePullPolicy'] = _pull
     ports = _parse_ports(c.get('ports', ''))
     if ports:
         spec['ports'] = ports
