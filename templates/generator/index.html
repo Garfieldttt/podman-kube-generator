@@ -933,6 +933,19 @@ document.addEventListener('change', function(e) {
   const netEl = document.getElementById('id_network');
   if (netEl && data.network) netEl.value = data.network;
 
+  document.getElementById('init-containers-wrapper').innerHTML = '';
+  document.getElementById('init_count').value = 0;
+  const noInitHint = document.getElementById('no-init-hint');
+  const initContainers = data.init_containers || [];
+  for (let i = 0; i < initContainers.length; i++) {
+    const html = await fetch(`/add-init-container/?index=${i}`).then(r => r.text());
+    document.getElementById('init-containers-wrapper').insertAdjacentHTML('beforeend', html);
+    document.getElementById('init_count').value = i + 1;
+    await new Promise(res => setTimeout(res, 30));
+    fillInitContainerBlock(i, initContainers[i]);
+  }
+  if (noInitHint) noInitHint.classList.toggle('d-none', initContainers.length > 0);
+
   document.getElementById('containers-wrapper').innerHTML = '';
   const containers = data.containers || [];
   for (let i = 0; i < containers.length; i++) {
