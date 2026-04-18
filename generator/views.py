@@ -985,7 +985,7 @@ def edit_config(request, uuid):
 
 def stack_detail(request, key):
     stack = get_object_or_404(StackTemplate, key=key, is_active=True)
-    sd = stack.stack_data
+    sd = json.loads(_auto_passwords(json.dumps(stack.stack_data)))
     form_data = {
         'pod_name': sd.get('pod_name', key),
         'restart_policy': sd.get('restart_policy', 'Always'),
