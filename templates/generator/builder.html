@@ -3507,7 +3507,7 @@ function scanForTips() {
   const fileCreateParents = new Set();
   const allContainers = [...state.containers, ...(state.init_containers || [])];
   for (const c of allContainers) {
-    for (const v of c.volumes) {
+    for (const v of (Array.isArray(c.volumes) ? c.volumes : [])) {
       const src = (v.src || '').trim();
       const isPath = src.startsWith('/') || src.startsWith('~') || src.startsWith('./') || src.startsWith('../');
       if (!isPath) continue;
@@ -3534,7 +3534,7 @@ function scanForTips() {
   const _SOCKET_RE = /docker\.sock|podman\.sock|containerd\.sock/i;
   const socketContainers = [];
   for (const c of allContainers) {
-    for (const v of c.volumes) {
+    for (const v of (Array.isArray(c.volumes) ? c.volumes : [])) {
       if (_SOCKET_RE.test(v.src || '') || _SOCKET_RE.test(v.dst || '')) {
         if (!socketContainers.includes(c.name)) socketContainers.push(c.name);
       }
@@ -3551,7 +3551,7 @@ function scanForTips() {
   if (state.mode !== 'rootful') {
     const privPorts = [];
     for (const c of allContainers) {
-      for (const p of c.ports) {
+      for (const p of (c.ports || [])) {
         if (p.host > 0 && p.host < 1024) privPorts.push(`${c.name}:${p.host}`);
       }
     }

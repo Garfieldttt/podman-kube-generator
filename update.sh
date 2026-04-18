@@ -133,6 +133,12 @@ backup() {
     ok "DB backup: $BACKUP_DIR/db.sqlite3.bak ($(du -h "$BACKUP_DIR/db.sqlite3.bak" | cut -f1))"
 }
 
+# ── Upgrade pip/packaging (tooling, not in requirements.txt) ───
+upgrade_tooling() {
+    step "── Upgrading pip / packaging ───────────────────────────"
+    "$PIP" install -q --upgrade pip packaging >> "$LOG" 2>&1 && ok "pip + packaging up to date." || warn "pip/packaging upgrade failed (non-fatal)."
+}
+
 # ── Show available updates ─────────────────────────────────────
 show_outdated() {
     step "── Available updates ───────────────────────────────────"
@@ -315,6 +321,7 @@ echo -e "${CYAN}${BOLD}╚══════════════════
 preflight
 git_pull
 backup
+upgrade_tooling
 show_outdated
 dryrun
 confirm
