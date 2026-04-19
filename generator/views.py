@@ -769,17 +769,25 @@ def validate_form_data(form_data):
                         host_path_dirs.append(src)
                         seen_host_dirs.add(src)
     if host_path_containers:
+        _ALWAYS_EXISTS = {
+            '/media', '/mnt', '/srv', '/tmp', '/var', '/opt', '/home',
+            '/data', '/backup', '/storage', '/nas', '/share', '/shares',
+        }
         names = ', '.join(f'<code>{n}</code>' for n in host_path_containers)
         unshare = 'podman unshare chown' if mode == 'rootless' else 'chown'
-        mkdir_lines = '\n'.join(f'  mkdir -p {p}' for p in host_path_dirs)
+        needs_mkdir = [p for p in host_path_dirs
+                       if not any(p == d or p.startswith(d + '/') for d in _ALWAYS_EXISTS)]
         chown_lines = '\n'.join(f'  {unshare} UID:GID {p}' for p in host_path_dirs)
+        mkdir_section = ''
+        if needs_mkdir:
+            mkdir_lines = '\n'.join(f'  mkdir -p {p}' for p in needs_mkdir)
+            mkdir_section = f'Create the directories and set permissions before starting:\n{mkdir_lines}\n\n'
         warnings.append({
             'level': 'warning',
             'msg': f'{names}: uses host path volume — directory must exist and UID/GID must be set',
             'hint': 'hostPath volume',
             'suggestion': (
-                f'Create the directories and set permissions before starting:\n'
-                f'{mkdir_lines}\n\n'
+                f'{mkdir_section}'
                 f'Set ownership (find UID/GID with: podman run --rm <image> id):\n'
                 f'{chown_lines}\n\n'
                 f'Named volumes (e.g. mydata:/path) are simpler — podman creates them\n'
