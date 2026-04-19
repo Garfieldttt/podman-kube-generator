@@ -256,6 +256,11 @@ def _build_resources(c):
         requests['memory'] = c['memory_request']
     if c.get('cpu_request'):
         requests['cpu'] = str(c['cpu_request'])
+    gpu = c.get('gpu_access', '')
+    if gpu == 'nvidia':
+        limits['nvidia.com/gpu'] = '1'
+    elif gpu == 'amd_rocm':
+        limits['amd.com/gpu'] = '1'
     res = {}
     if limits:
         res['limits'] = limits
@@ -339,9 +344,18 @@ def generate(form_data):
     for c in form_data.get('containers', []):
         mounts, vols, vol_counter = _parse_volumes(c.get('volumes', ''), vol_counter, vol_map, c.get('env', ''))
         all_volumes.extend(vols)
+        cname = re.sub(r'[^a-z0-9-]', '', (c.get('name') or 'container').strip().lower())
         if c.get('userns'):
-            cname = re.sub(r'[^a-z0-9-]', '', (c.get('name') or 'container').strip().lower())
             annotations[f'io.podman.annotations.userns/{cname}'] = c['userns']
+        gpu = c.get('gpu_access', '')
+        if gpu == 'vaapi':
+            annotations[f'io.podman.annotations.device/{cname}'] = '/dev/dri:/dev/dri'
+        elif gpu == 'webcam':
+            annotations[f'io.podman.annotations.device/{cname}'] = '/dev/video0:/dev/video0'
+        elif gpu == 'custom':
+            dev = (c.get('custom_device') or '').strip()
+            if dev:
+                annotations[f'io.podman.annotations.device/{cname}'] = dev
         containers_spec.append(_build_container(c, mounts))
 
     pod_spec = {

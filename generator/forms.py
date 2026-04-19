@@ -11,6 +11,15 @@ RESTART_CHOICES = [
     ('Never', 'Never'),
 ]
 
+GPU_ACCESS_CHOICES = [
+    ('', '— None —'),
+    ('nvidia', 'NVIDIA GPU (CDI)'),
+    ('amd_rocm', 'AMD GPU – ROCm (CDI)'),
+    ('vaapi', 'Intel / AMD – VAAPI (/dev/dri)'),
+    ('webcam', 'Webcam (/dev/video0)'),
+    ('custom', 'Custom device'),
+]
+
 PULL_POLICY_CHOICES = [
     ('', '— Default (IfNotPresent) —'),
     ('IfNotPresent', 'IfNotPresent'),
@@ -290,6 +299,21 @@ class ContainerForm(forms.Form):
         choices=USERNS_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
+    )
+    # GPU / Hardware
+    gpu_access = forms.ChoiceField(
+        label='GPU / Hardware Access',
+        choices=GPU_ACCESS_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
+    )
+    custom_device = forms.CharField(
+        label='Device path (host:container)',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-sm font-monospace',
+            'placeholder': '/dev/dri/renderD128:/dev/dri/renderD128',
+        }),
     )
     # Liveness Probe
     liveness_probe_type = forms.ChoiceField(

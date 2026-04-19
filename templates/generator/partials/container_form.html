@@ -102,6 +102,29 @@
           {{ form.cpu_request }}
         </div>
 
+        <!-- GPU / Hardware -->
+        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">GPU / HARDWARE</span></div>
+        <div class="col-md-4">
+          <label>{{ form.gpu_access.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="NVIDIA/AMD ROCm: adds CDI resource limit (requires CDI configured on host). Intel/AMD VAAPI: passes /dev/dri into the container via annotation. Custom: specify any host:container device path."></i></label>
+          {{ form.gpu_access }}
+        </div>
+        <div class="col-md-4 gpu-custom-{{ index }}" style="display:none">
+          <label>{{ form.custom_device.label }}</label>
+          {{ form.custom_device }}
+        </div>
+        <div class="col-md-4"></div>
+        <script>
+        (function() {
+          var idx = {{ index }};
+          var sel = document.querySelector('[name="c{{ index }}-gpu_access"]');
+          function toggleGpuCustom() {
+            var show = sel && sel.value === 'custom';
+            document.querySelectorAll('.gpu-custom-' + idx).forEach(function(el) { el.style.display = show ? '' : 'none'; });
+          }
+          if (sel) { sel.addEventListener('change', toggleGpuCustom); toggleGpuCustom(); }
+        })();
+        </script>
+
         <!-- Security Context -->
         <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">SECURITY CONTEXT</span></div>
         <div class="col-md-3">
