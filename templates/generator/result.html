@@ -112,12 +112,6 @@
           <i class="bi bi-file-code me-1"></i>Kubernetes YAML
         </button>
       </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-shell-btn" data-bs-toggle="tab"
-          data-bs-target="#tab-shell" type="button" role="tab">
-          <i class="bi bi-terminal me-1"></i>Shell Script
-        </button>
-      </li>
     </ul>
 
     <div class="tab-content mb-4">
@@ -171,32 +165,6 @@
           <div class="card-body p-0">
             <pre class="m-0 rounded-bottom" id="quadlet-output">{{ quadlet_content }}</pre>
           </div>
-        </div>
-      </div>
-
-      <!-- Shell-Script Tab -->
-      <div class="tab-pane fade" id="tab-shell" role="tabpanel">
-        <div class="card" style="border-top-left-radius:0; border-top-right-radius:0; border-top:0;">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="text-secondary small">Immediately executable — for testing without systemd</span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ pod_name }}.sh', document.getElementById('shell-output').textContent)">
-                <i class="bi bi-download"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'shell-output')">
-                <i class="bi bi-clipboard"></i> Copy
-              </button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <pre class="m-0 rounded-0 rounded-bottom" id="shell-output">{{ shell_content }}</pre>
-          </div>
-        </div>
-        <div class="mt-2 px-1">
-          <p class="text-secondary small mb-0">
-            <i class="bi bi-info-circle me-1"></i>
-            Ports are published on the pod (not on individual containers) — this is how the network works correctly. Init containers run before main containers and then exit. Stop commands are commented out — activate at the end if needed.
-          </p>
         </div>
       </div>
 

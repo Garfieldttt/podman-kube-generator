@@ -22,7 +22,6 @@ from django_ratelimit.decorators import ratelimit
 
 from .forms import PodForm, ContainerForm, InitContainerForm, RegistrationForm
 from .kube import generate
-from .shell import generate_shell
 from .quadlet import generate_quadlet
 from .models import SavedConfig, StackTemplate, ImpressumSettings, SiteSettings, UserStack, RegistrationSettings, UserProfile, StackLike, StackComment
 from .registry import search_images, get_tags, get_hub_info, get_tag_vulns
@@ -1037,7 +1036,6 @@ def generate_view(request):
     notices = _inject_db_init(form_data)
     try:
         yaml_content = generate(form_data)
-        shell_content = generate_shell(form_data)
         quadlet_content = generate_quadlet(form_data)
         env_file_content = generate_env_file(form_data)
     except Exception as e:
@@ -1093,7 +1091,6 @@ def generate_view(request):
 
     return render(request, 'generator/result.html', {
         'yaml_content': yaml_content,
-        'shell_content': shell_content,
         'quadlet_content': quadlet_content,
         'env_file_content': env_file_content,
         'pod_name': pod_name,
@@ -1144,14 +1141,12 @@ def save_config(request):
 
 def saved_detail(request, uuid):
     config = get_object_or_404(SavedConfig, uuid=uuid)
-    shell_content = generate_shell(config.form_data)
     quadlet_content = generate_quadlet(config.form_data)
     env_file_content = generate_env_file(config.form_data)
     return render(request, 'generator/saved_detail.html', {
         'config': config,
         'pod_name': config.name,
         'yaml_content': config.yaml_content,
-        'shell_content': shell_content,
         'quadlet_content': quadlet_content,
         'env_file_content': env_file_content,
         'mode': config.form_data.get('mode', 'rootless'),
@@ -1677,7 +1672,6 @@ def view_user_stack(request, stack_id):
     form_data = dict(stack.form_data)  # shallow copy — kein In-place-Mutate des DB-Objekts
     notices = _inject_db_init(form_data)
     yaml_content = generate(form_data)
-    shell_content = generate_shell(form_data)
     pod_name = form_data.get('pod_name', stack.name).strip().lower().replace(' ', '-')
     net_info = []
     for c in form_data.get('containers', []):
@@ -1695,7 +1689,6 @@ def view_user_stack(request, stack_id):
     tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
     return render(request, 'generator/result.html', {
         'yaml_content': yaml_content,
-        'shell_content': shell_content,
         'pod_name': pod_name,
         'mode': form_data.get('mode', 'rootless'),
         'form_data_json': json.dumps(form_data),
@@ -2169,8 +2162,6 @@ def builder_generate(request):
             return JsonResponse({'error': 'invalid JSON'}, status=400)
         return JsonResponse({
             'yaml': generate(form_data),
-            'shell': generate_shell(form_data),
-            'compose': generate_compose(form_data),
             'warnings': validate_form_data(form_data),
         })
     else:
@@ -2182,7 +2173,6 @@ def builder_generate(request):
 
         notices = _inject_db_init(form_data)
         yaml_content = generate(form_data)
-        shell_content = generate_shell(form_data)
         quadlet_content = generate_quadlet(form_data)
         env_file_content = generate_env_file(form_data)
         pod_name = form_data.get('pod_name', 'unnamed').strip().lower().replace(' ', '-')
@@ -2222,7 +2212,6 @@ def builder_generate(request):
         tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
         return render(request, 'generator/result.html', {
             'yaml_content': yaml_content,
-            'shell_content': shell_content,
             'quadlet_content': quadlet_content,
             'env_file_content': env_file_content,
             'pod_name': pod_name,
