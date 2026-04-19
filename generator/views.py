@@ -386,6 +386,41 @@ def validate_form_data(form_data):
                 except ValueError:
                     pass
 
+    # 1b. Container port conflict — two containers listening on the same internal port
+    # All containers in a pod share localhost; only one process can bind a port.
+    container_ports = {}
+    for c in containers:
+        for line in (c.get('ports') or '').splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            # containerPort is the last segment: HOST:CONTAINER or just CONTAINER
+            cp_str = line.split('/')[ 0].split(':')[-1]
+            try:
+                cp = int(cp_str)
+                if cp in container_ports:
+                    warnings.append({
+                        'level': 'error',
+                        'msg': (
+                            f'<code>{container_ports[cp]}</code> and <code>{c.get("name")}</code> '
+                            f'both listen on internal port <strong>{cp}</strong> — '
+                            f'only one process can bind a port inside a pod'
+                        ),
+                        'hint': f'containerPort: {cp}',
+                        'suggestion': (
+                            f'All pod containers share localhost. Two apps on the same\n'
+                            f'internal port will conflict — one will fail to start.\n\n'
+                            f'Options:\n'
+                            f'  a) Run them as separate pods (recommended)\n'
+                            f'  b) Configure one app to use a different port\n'
+                            f'  c) Put a reverse proxy (nginx) in front and route by path/host'
+                        ),
+                    })
+                else:
+                    container_ports[cp] = c.get('name', '')
+            except ValueError:
+                pass
+
     # 2. Invalid userns value → podman play kube fails
     _userns_hint = (
         'Valid values:\n'

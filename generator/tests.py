@@ -23,6 +23,37 @@ def _c(name, image, env='', volumes='', ports=''):
     return {'name': name, 'image': image, 'env': env, 'volumes': volumes, 'ports': ports}
 
 
+class ContainerPortConflictTests(TestCase):
+
+    def test_same_container_port_error(self):
+        fd = _make_form([
+            _c('wordpress', 'docker.io/wordpress:latest', ports='8080:80'),
+            _c('nextcloud', 'docker.io/nextcloud:latest', ports='8090:80'),
+        ])
+        warnings = validate_form_data(fd)
+        errors = [w for w in warnings if w['level'] == 'error' and 'containerPort: 80' in w.get('hint', '')]
+        self.assertEqual(len(errors), 1)
+        self.assertIn('wordpress', errors[0]['msg'])
+        self.assertIn('nextcloud', errors[0]['msg'])
+
+    def test_different_container_ports_ok(self):
+        fd = _make_form([
+            _c('app1', 'docker.io/nginx:latest', ports='8080:80'),
+            _c('app2', 'docker.io/nginx:latest', ports='8090:8080'),
+        ])
+        warnings = validate_form_data(fd)
+        port_errors = [w for w in warnings if 'containerPort' in w.get('hint', '')]
+        self.assertEqual(port_errors, [])
+
+    def test_no_ports_no_error(self):
+        fd = _make_form([
+            _c('db', 'docker.io/mariadb:11', env='MARIADB_ROOT_PASSWORD=x', volumes='db:/var/lib/mysql'),
+        ])
+        warnings = validate_form_data(fd)
+        port_errors = [w for w in warnings if 'containerPort' in w.get('hint', '')]
+        self.assertEqual(port_errors, [])
+
+
 class ClassifyDbConnectionsTests(TestCase):
 
     def test_no_db_container(self):
