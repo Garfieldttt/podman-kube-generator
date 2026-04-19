@@ -3684,6 +3684,51 @@ function scanForTips() {
     }
   }
 
+  // Tip 6: Wait-for-DB init container
+  const _WAIT_CFGS = [
+    { keys: ['postgresql', 'postgres'], cmd: 'pg_isready -h 127.0.0.1' },
+    { keys: ['mariadb'],                cmd: 'mysqladmin ping -h 127.0.0.1 --silent' },
+    { keys: ['mysql'],                  cmd: 'mysqladmin ping -h 127.0.0.1 --silent' },
+    { keys: ['valkey', 'redis'],        cmd: 'redis-cli -h 127.0.0.1 ping' },
+    { keys: ['mongodb', 'mongo'],       cmd: "mongosh --eval 'db.adminCommand({ping:1})' --quiet" },
+  ];
+  const initImages = new Set((state.init_containers || []).map(ic => ic.image));
+  const needsWait = [];
+  for (const c of state.containers) {
+    if (initImages.has(c.image)) continue;
+    const base = (c.image || '').split('/').pop().split(':')[0].toLowerCase();
+    for (const cfg of _WAIT_CFGS) {
+      if (cfg.keys.some(k => base.includes(k))) {
+        needsWait.push({ c, cmd: cfg.cmd });
+        break;
+      }
+    }
+  }
+  if (needsWait.length) {
+    _activeTips.push({
+      level: 'warn',
+      msg: `<strong>No depends_on in pods:</strong> ${needsWait.map(w=>`<code>${esc(w.c.name)}</code>`).join(', ')} `
+         + `may not be ready when your app starts. A healthcheck init container will retry until the service responds.`,
+      applyLabel: 'Add init container',
+      apply() {
+        for (const { c, cmd } of needsWait) {
+          (state.init_containers = state.init_containers || []).push({
+            name: `wait-for-${c.name}`,
+            image: c.image,
+            command: '/bin/sh',
+            args: `-c 'until ${cmd}; do sleep 2; done'`,
+            run_always: false,
+            read_only_root: true,
+            cap_drop: 'ALL',
+            env: '', ports: '', volumes: '',
+          });
+        }
+        showToast(`Wait-for init container${needsWait.length > 1 ? 's' : ''} added`, 'success');
+        scanForTips();
+      },
+    });
+  }
+
   renderTips();
 }
 
