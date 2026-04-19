@@ -640,6 +640,15 @@ def validate_form_data(form_data):
                 })
 
     # 13. Credential symmetry — app and DB container have different values for the same credential key
+    # Skip if an auto-injected init container handles the credential difference for this DB type.
+    _injected_db_types = set()
+    for ic in form_data.get('init_containers', []):
+        n = (ic.get('name') or '')
+        if n == 'db-init-mysql':
+            _injected_db_types.update(('mysql', 'mariadb'))
+        elif n == 'db-init-postgres':
+            _injected_db_types.update(('postgres', 'postgresql'))
+
     _CRED_PAIRS = [
         (['MYSQL_USER', 'MYSQL_USERNAME'],     ['MYSQL_USER'],     'mysql'),
         (['MYSQL_PASSWORD', 'MYSQL_PASS'],     ['MYSQL_PASSWORD'], 'mysql'),
@@ -658,6 +667,8 @@ def validate_form_data(form_data):
             app_env = _parse_env_str(app_c.get('env', ''))
             for app_keys, db_keys, pair_type in _CRED_PAIRS:
                 if pair_type not in db_type and db_type not in pair_type:
+                    continue
+                if pair_type in _injected_db_types:
                     continue
                 app_val = next((app_env[k] for k in app_keys if k in app_env), None)
                 db_val  = next((db_env[k]  for k in db_keys  if k in db_env),  None)

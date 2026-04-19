@@ -248,6 +248,36 @@ class InjectDbInitTests(TestCase):
         self.assertEqual(notices, [])
 
 
+class CredentialSymmetryWithInitContainerTests(TestCase):
+
+    def test_no_false_positive_when_init_container_present(self):
+        """Wenn db-init-postgres vorhanden, kein Credential-Mismatch-Error."""
+        fd = _make_form([
+            _c('db', 'docker.io/postgres:16',
+               'POSTGRES_USER=appuser\nPOSTGRES_PASSWORD=dbpass\nPOSTGRES_DB=appdb'),
+            _c('nc', 'docker.io/nextcloud:latest',
+               'POSTGRES_HOST=127.0.0.1\nPOSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=ncpass\nPOSTGRES_DB=nextcloud'),
+        ], init_containers=[{
+            'name': 'db-init-postgres', 'image': 'docker.io/busybox:latest',
+            'command': 'sh', 'args': '-c "echo test"', 'volumes': 'vol:/db-init', 'env': '',
+        }])
+        warnings = validate_form_data(fd)
+        mismatch = [w for w in warnings if 'mismatch' in w.get('msg', '')]
+        self.assertEqual(mismatch, [])
+
+    def test_mismatch_still_fires_without_init_container(self):
+        """Ohne Init-Container feuert Check #13 wie gewohnt."""
+        fd = _make_form([
+            _c('db', 'docker.io/postgres:16',
+               'POSTGRES_USER=appuser\nPOSTGRES_PASSWORD=dbpass\nPOSTGRES_DB=appdb'),
+            _c('nc', 'docker.io/nextcloud:latest',
+               'POSTGRES_HOST=127.0.0.1\nPOSTGRES_USER=nextcloud\nPOSTGRES_PASSWORD=ncpass\nPOSTGRES_DB=nextcloud'),
+        ])
+        warnings = validate_form_data(fd)
+        mismatch = [w for w in warnings if 'mismatch' in w.get('msg', '')]
+        self.assertGreater(len(mismatch), 0)
+
+
 class WrongDbTypeValidationTests(TestCase):
 
     def test_postgres_vars_without_postgres_container(self):
