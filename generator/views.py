@@ -317,15 +317,15 @@ def _inject_db_init(form_data):
         notices.append({
             'level': 'info',
             'msg': (
-                f'Multi-App-DB erkannt — Init-Container <code>{ic_name}</code> automatisch hinzugefügt: '
-                f'erstellt User/Datenbank für {apps_str} in <code>{db_cname}</code>'
+                f'Multi-app DB detected — init container <code>{ic_name}</code> added automatically: '
+                f'creates user/database for {apps_str} in <code>{db_cname}</code>'
             ),
             'hint': f'name: {ic_name}',
             'suggestion': (
-                f'Der Init-Container schreibt SQL nach\n'
-                f'/docker-entrypoint-initdb.d/01-init.sql (Volume: {vol_name}).\n'
-                f'Der DB-Container führt diese Scripts beim ersten Start automatisch aus.\n\n'
-                f'SQL-Inhalt:\n{sql}'
+                f'The init container writes SQL to\n'
+                f'/docker-entrypoint-initdb.d/01-init.sql (volume: {vol_name}).\n'
+                f'The DB container executes these scripts automatically on first start.\n\n'
+                f'SQL content:\n{sql}'
             ),
         })
 
@@ -789,7 +789,7 @@ def validate_form_data(form_data):
                 ),
             })
 
-    # 18. Falscher DB-Typ: POSTGRES_* aber kein Postgres, oder MYSQL_* aber kein MySQL/MariaDB
+    # 18. Wrong DB type: POSTGRES_* but no Postgres container, or MYSQL_* but no MySQL/MariaDB
     has_postgres_container = any('postgres' in _img_base(c.get('image', '')) for c in containers)
     has_mysql_container    = any(
         'mysql' in _img_base(c.get('image', '')) or 'mariadb' in _img_base(c.get('image', ''))
@@ -797,7 +797,7 @@ def validate_form_data(form_data):
     )
     for c in app_cs:
         env_map = _parse_env_str(c.get('env', ''))
-        # POSTGRES_HOST/PGHOST gesetzt → muss ein Postgres-Container vorhanden sein
+        # POSTGRES_HOST/PGHOST set → requires a Postgres container
         pg_host = env_map.get('POSTGRES_HOST') or env_map.get('PGHOST')
         if pg_host is not None and not has_postgres_container:
             pg_host_bare = pg_host.split(':')[0]
@@ -805,24 +805,24 @@ def validate_form_data(form_data):
                 warnings.append({
                     'level': 'error',
                     'msg': (
-                        f'<code>{c.get("name")}</code>: hat <code>POSTGRES_HOST</code> '
-                        f'— aber kein PostgreSQL-Container im Pod'
+                        f'<code>{c.get("name")}</code>: has <code>POSTGRES_HOST</code> '
+                        f'— but no PostgreSQL container in the pod'
                     ),
                     'hint': 'POSTGRES_HOST',
                     'suggestion': (
-                        'Für MariaDB/MySQL die korrekten Vars verwenden:\n'
+                        'For MariaDB/MySQL use the correct vars:\n'
                         '  MYSQL_HOST=127.0.0.1\n'
                         '  MYSQL_DATABASE=<db>\n'
                         '  MYSQL_USER=<user>\n'
                         '  MYSQL_PASSWORD=<pass>\n\n'
-                        'oder für MariaDB:\n'
-                        '  MARIADB_HOST=127.0.0.1  (bevorzugt)'
+                        'or for MariaDB (preferred):\n'
+                        '  MARIADB_HOST=127.0.0.1'
                     ) if has_mysql_container else (
-                        'Kein Datenbank-Container im Pod.\n'
-                        'Für PostgreSQL einen postgres-Container hinzufügen.'
+                        'No database container in the pod.\n'
+                        'Add a postgres container for PostgreSQL.'
                     ),
                 })
-        # MYSQL_HOST/MARIADB_HOST gesetzt → muss ein MySQL/MariaDB-Container vorhanden sein
+        # MYSQL_HOST/MARIADB_HOST set → requires a MySQL/MariaDB container
         my_host = env_map.get('MYSQL_HOST') or env_map.get('MARIADB_HOST')
         if my_host is not None and not has_mysql_container:
             my_host_bare = my_host.split(':')[0]
@@ -830,19 +830,19 @@ def validate_form_data(form_data):
                 warnings.append({
                     'level': 'error',
                     'msg': (
-                        f'<code>{c.get("name")}</code>: hat <code>MYSQL_HOST</code>/<code>MARIADB_HOST</code> '
-                        f'— aber kein MySQL/MariaDB-Container im Pod'
+                        f'<code>{c.get("name")}</code>: has <code>MYSQL_HOST</code>/<code>MARIADB_HOST</code> '
+                        f'— but no MySQL/MariaDB container in the pod'
                     ),
                     'hint': 'MYSQL_HOST',
                     'suggestion': (
-                        'Für PostgreSQL die korrekten Vars verwenden:\n'
+                        'For PostgreSQL use the correct vars:\n'
                         '  POSTGRES_HOST=127.0.0.1\n'
                         '  POSTGRES_DB=<db>\n'
                         '  POSTGRES_USER=<user>\n'
                         '  POSTGRES_PASSWORD=<pass>'
                     ) if has_postgres_container else (
-                        'Kein Datenbank-Container im Pod.\n'
-                        'Für MySQL/MariaDB einen entsprechenden Container hinzufügen.'
+                        'No database container in the pod.\n'
+                        'Add a mysql or mariadb container.'
                     ),
                 })
 
