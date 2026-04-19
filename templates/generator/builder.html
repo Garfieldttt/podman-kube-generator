@@ -1983,38 +1983,82 @@ function renderSvg() {
   tNet.textContent = netLabel;
   svg.appendChild(tNet);
 
-  // ── Mesh lines between all containers (localhost) ──
+  // ── Smart connection lines ───────────────────────────────
   if (cs.length > 1) {
+    const _SVC = {
+      postgres:5432, postgresql:5432, mariadb:3306, mysql:3306,
+      redis:6379, valkey:6379, mongodb:27017, mongo:27017,
+      influxdb:8086, rabbitmq:5672, minio:9000, memcached:11211,
+    };
+    const _svcPort = img => {
+      const b = (img||'').split('/').pop().split(':')[0].toLowerCase();
+      for (const [k,p] of Object.entries(_SVC)) { if (b.includes(k)) return p; }
+      return null;
+    };
+    const explicitSet = new Set(state.connections.map(([a,b]) => [a,b].sort().join('|')));
+
     for (let i = 0; i < cs.length; i++) {
       for (let j = i+1; j < cs.length; j++) {
         const a = cs[i], b = cs[j];
-        svg.appendChild(attr(mk('line'), {
-          x1: a.x+NW/2, y1: a.y+NH/2,
-          x2: b.x+NW/2, y2: b.y+NH/2,
-          stroke: 'rgba(99,102,241,0.45)',
-          'stroke-width': 1.5,
-          'stroke-dasharray': '5 4',
-        }));
+        const isExplicit = explicitSet.has([a.id,b.id].sort().join('|'));
+
+        const pA = _svcPort(a.image), pB = _svcPort(b.image);
+        let src, tgt, port;
+        if (pA && !pB)      { src=b; tgt=a; port=pA; }
+        else if (pB && !pA) { src=a; tgt=b; port=pB; }
+        else                 { src=a; tgt=b; port=null; }
+
+        const x1=src.x+NW/2, y1=src.y+NH/2;
+        const x2=tgt.x+NW/2, y2=tgt.y+NH/2;
+        const mx=(x1+x2)/2, my=(y1+y2)/2;
+
+        if (port) {
+          // Labeled service arrow (beats explicit styling)
+          svg.appendChild(attr(mk('path'), {
+            d: `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`,
+            stroke: 'rgba(99,102,241,0.6)', 'stroke-width': 1.5, fill: 'none',
+          }));
+          const ang = Math.atan2(y2-y1, x2-x1);
+          svg.appendChild(attr(mk('path'), {
+            d: `M${x2},${y2} L${x2-9*Math.cos(ang-.4)},${y2-9*Math.sin(ang-.4)} L${x2-9*Math.cos(ang+.4)},${y2-9*Math.sin(ang+.4)}Z`,
+            fill: 'rgba(99,102,241,0.6)',
+          }));
+          const lbl = `localhost:${port}`;
+          const lw = lbl.length * 5.5 + 6;
+          svg.appendChild(attr(mk('rect'), {
+            x: mx-lw/2, y: my-9, width: lw, height: 16,
+            rx: 4, fill: 'var(--surface-2)', stroke: 'rgba(99,102,241,0.35)', 'stroke-width': 1,
+          }));
+          const t = attr(mk('text'), {
+            x: mx, y: my+4, fill: 'rgba(99,102,241,0.9)',
+            'font-size': 9, 'font-family': 'ui-monospace,monospace',
+            'text-anchor': 'middle', 'pointer-events': 'none',
+          });
+          t.textContent = lbl;
+          svg.appendChild(t);
+        } else if (isExplicit) {
+          // Explicit stack connection without known service port
+          svg.appendChild(attr(mk('path'), {
+            d: `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`,
+            stroke: 'var(--accent)', 'stroke-width': 2,
+            fill: 'none', 'stroke-opacity': 0.5, 'stroke-dasharray': '6 3',
+          }));
+          const ang = Math.atan2(y2-y1, x2-x1);
+          svg.appendChild(attr(mk('path'), {
+            d: `M${x2},${y2} L${x2-10*Math.cos(ang-.4)},${y2-10*Math.sin(ang-.4)} L${x2-10*Math.cos(ang+.4)},${y2-10*Math.sin(ang+.4)}Z`,
+            fill: 'var(--accent)', 'fill-opacity': 0.5,
+          }));
+        } else {
+          // Generic subtle line
+          svg.appendChild(attr(mk('line'), {
+            x1: a.x+NW/2, y1: a.y+NH/2,
+            x2: b.x+NW/2, y2: b.y+NH/2,
+            stroke: 'rgba(99,102,241,0.2)', 'stroke-width': 1, 'stroke-dasharray': '4 5',
+          }));
+        }
       }
     }
   }
-
-  // ── Explicit stack connection lines (bezier + arrow) ──
-  state.connections.forEach(([id1,id2]) => {
-    const c1=getC(id1), c2=getC(id2);
-    if (!c1||!c2) return;
-    const x1=c1.x+NW/2, y1=c1.y+NH/2, x2=c2.x+NW/2, y2=c2.y+NH/2, cx=(x1+x2)/2;
-    svg.appendChild(attr(mk('path'), {
-      d: `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`,
-      stroke: 'var(--accent)', 'stroke-width': 2,
-      fill: 'none', 'stroke-opacity': 0.5, 'stroke-dasharray': '6 3',
-    }));
-    const a = Math.atan2(y2-y1, x2-x1);
-    svg.appendChild(attr(mk('path'), {
-      d: `M${x2},${y2} L${x2-10*Math.cos(a-.4)},${y2-10*Math.sin(a-.4)} L${x2-10*Math.cos(a+.4)},${y2-10*Math.sin(a+.4)}Z`,
-      fill: 'var(--accent)', 'fill-opacity': 0.5,
-    }));
-  });
 }
 
 function updateCounter() {
