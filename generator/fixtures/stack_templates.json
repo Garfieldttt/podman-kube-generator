@@ -72,7 +72,7 @@
     "pk": 2,
     "fields": {
       "key": "nextcloud-postgres",
-      "label": "Nextcloud",
+      "label": "Nextcloud (PostgreSQL)",
       "icon": "bi-cloud",
       "category": "Cloud",
       "description": "Private cloud storage solution with calendar, contacts and more",
