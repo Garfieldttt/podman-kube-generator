@@ -1019,6 +1019,9 @@ def generate_view(request):
         'userns': pd.get('userns', ''),
         'dns': pd.get('dns', ''),
         'network': pd.get('network', ''),
+        'supplemental_groups': pd.get('supplemental_groups', ''),
+        'image_pull_secrets': pd.get('image_pull_secrets', ''),
+        'termination_grace_period': pd.get('termination_grace_period'),
         'containers': [f.cleaned_data for f in container_forms],
         'init_containers': init_containers_data,
     }

@@ -154,6 +154,15 @@
           <label>{{ form.cap_drop.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Drop Linux capabilities to harden the container (e.g. NET_RAW, MKNOD). Drop ALL and add back only what you need."></i></label>
           {{ form.cap_drop }}
         </div>
+        <div class="col-md-3">
+          <label>{{ form.allow_privilege_escalation.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="false: prevents processes inside the container from gaining more privileges than their parent (recommended for hardening). true: allows setuid binaries."></i></label>
+          {{ form.allow_privilege_escalation }}
+        </div>
+        <div class="col-md-5">
+          <label>{{ form.pre_stop_cmd.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Command executed before the container receives SIGTERM. Use for graceful shutdown, e.g. pg_ctl stop -m fast. The container waits for this to finish (up to terminationGracePeriodSeconds)."></i></label>
+          {{ form.pre_stop_cmd }}
+        </div>
+        <div class="col-md-4"></div>
 
         <!-- Liveness Probe -->
         <div class="col-12 mt-2">

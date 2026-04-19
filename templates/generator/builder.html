@@ -676,6 +676,26 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
               style="resize:vertical;font-size:.75rem;font-family:monospace;"
               oninput="state.host_aliases=this.value"></textarea>
           </div>
+          <div class="cvs-field">
+            <label class="cvs-field-label">Supplemental groups <span style="font-weight:400;color:var(--text-muted);font-size:.65rem;">(one GID per line)</span></label>
+            <textarea class="cv-ctrl" id="cv-supplemental-groups" rows="2"
+              placeholder="44&#10;109"
+              style="resize:vertical;font-size:.75rem;font-family:monospace;"
+              oninput="state.supplemental_groups=this.value"></textarea>
+          </div>
+          <div class="cvs-field">
+            <label class="cvs-field-label">imagePullSecrets <span style="font-weight:400;color:var(--text-muted);font-size:.65rem;">(one name per line)</span></label>
+            <textarea class="cv-ctrl" id="cv-image-pull-secrets" rows="2"
+              placeholder="my-registry-secret"
+              style="resize:vertical;font-size:.75rem;font-family:monospace;"
+              oninput="state.image_pull_secrets=this.value"></textarea>
+          </div>
+          <div class="cvs-field">
+            <label class="cvs-field-label">terminationGracePeriodSeconds</label>
+            <input type="number" class="cv-ctrl" id="cv-term-grace" min="0"
+              placeholder="e.g. 60"
+              oninput="state.termination_grace_period=this.value===''?null:+this.value">
+          </div>
         </div>
       </details>
 
@@ -1442,6 +1462,7 @@ const state = {
   pod_name: 'mypod', restart_policy: 'Always', mode: 'rootless',
   host_network: false, host_pid: false, host_ipc: false,
   hostname: '', host_aliases: '', dns: '', network: '',
+  supplemental_groups: '', image_pull_secrets: '', termination_grace_period: null,
   quadlet_auto_update: '', quadlet_log_driver: '', quadlet_exit_code_propagation: '',
   quadlet_kube_down_force: false, quadlet_timeout_start: null,
   containers: [], connections: [],
@@ -1758,6 +1779,10 @@ function mkC(d) {
     cap_add:  d.cap_add  || '',
     cap_drop: d.cap_drop || '',
     userns:   d.userns   || '',
+    gpu_access:                d.gpu_access                || '',
+    custom_device:             d.custom_device             || '',
+    allow_privilege_escalation:d.allow_privilege_escalation|| '',
+    pre_stop_cmd:              d.pre_stop_cmd              || '',
     liveness_probe_type:    d.liveness_probe_type    || 'exec',
     liveness_probe_cmd:     d.liveness_probe_cmd     || '',
     liveness_http_path:     d.liveness_http_path     || '/health',
@@ -2748,6 +2773,43 @@ function tabResources(c) {
           <textarea class="cfg-inp cfg-inp-full" rows="2" placeholder="NET_RAW&#10;MKNOD" oninput="cfgSet('cap_drop',this.value)">${esc(c.cap_drop||'')}</textarea>
         </div>
       </div>
+      <div class="cfg-res-row mt-2">
+        <div class="cfg-res-field">
+          <label>allowPrivilegeEscalation${tip('false: prevents setuid binaries from gaining more privileges than the parent process. Recommended for hardening. true: allows privilege escalation (required for some legacy apps).')}</label>
+          <select class="cfg-inp cfg-inp-full" onchange="cfgSet('allow_privilege_escalation',this.value)">
+            <option value="" ${!c.allow_privilege_escalation?'selected':''}>— default —</option>
+            <option value="false" ${c.allow_privilege_escalation==='false'?'selected':''}>false (recommended)</option>
+            <option value="true" ${c.allow_privilege_escalation==='true'?'selected':''}>true</option>
+          </select>
+        </div>
+        <div class="cfg-res-field">
+          <label>preStop command${tip('Runs before SIGTERM is sent. Use for graceful shutdown (e.g. pg_ctl stop -m fast). The container waits for this command to finish, up to terminationGracePeriodSeconds.')}</label>
+          <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.pre_stop_cmd||'')}"
+            placeholder="e.g. pg_ctl stop -m fast" oninput="cfgSet('pre_stop_cmd',this.value)">
+        </div>
+      </div>
+    </div>
+
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="bi bi-gpu-card"></i>GPU / Hardware</div>
+      <div class="cfg-res-row">
+        <div class="cfg-res-field">
+          <label>GPU / Hardware Access${tip('NVIDIA/AMD ROCm: adds CDI resource limit (requires CDI on host). Intel/AMD VAAPI: passes /dev/dri into the container via annotation. Custom: specify any host:container device path.')}</label>
+          <select class="cfg-inp cfg-inp-full" onchange="cfgSet('gpu_access',this.value);renderCfgTab()">
+            <option value="" ${!c.gpu_access?'selected':''}>— None —</option>
+            <option value="nvidia" ${c.gpu_access==='nvidia'?'selected':''}>NVIDIA GPU (CDI)</option>
+            <option value="amd_rocm" ${c.gpu_access==='amd_rocm'?'selected':''}>AMD GPU – ROCm (CDI)</option>
+            <option value="vaapi" ${c.gpu_access==='vaapi'?'selected':''}>Intel / AMD – VAAPI (/dev/dri)</option>
+            <option value="webcam" ${c.gpu_access==='webcam'?'selected':''}>Webcam (/dev/video0)</option>
+            <option value="custom" ${c.gpu_access==='custom'?'selected':''}>Custom device</option>
+          </select>
+        </div>
+        ${c.gpu_access==='custom'?`<div class="cfg-res-field">
+          <label>Device path (host:container)</label>
+          <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.custom_device||'')}"
+            placeholder="/dev/dri/renderD128:/dev/dri/renderD128" oninput="cfgSet('custom_device',this.value)">
+        </div>`:'<div class="cfg-res-field"></div>'}
+      </div>
     </div>
 
     <div class="cfg-section">
@@ -2980,6 +3042,9 @@ function toFormData() {
     host_pid:!!state.host_pid, host_ipc:!!state.host_ipc,
     hostname:state.hostname||'', host_aliases:state.host_aliases||'',
     userns:'', dns:state.dns||'', network:state.network||'',
+    supplemental_groups:state.supplemental_groups||'',
+    image_pull_secrets:state.image_pull_secrets||'',
+    termination_grace_period:state.termination_grace_period||null,
     quadlet_auto_update:state.quadlet_auto_update||'',
     quadlet_log_driver:state.quadlet_log_driver||'',
     quadlet_exit_code_propagation:state.quadlet_exit_code_propagation||'',
@@ -3001,6 +3066,9 @@ function toFormData() {
       read_only_root:!!c.read_only_root, privileged:!!c.privileged,
       cap_add:c.cap_add||'', cap_drop:c.cap_drop||'',
       userns:c.userns||'',
+      gpu_access:c.gpu_access||'', custom_device:c.custom_device||'',
+      allow_privilege_escalation:c.allow_privilege_escalation||'',
+      pre_stop_cmd:c.pre_stop_cmd||'',
       liveness_probe_type:c.liveness_probe_type||'exec',
       liveness_probe_cmd:c.liveness_probe_cmd||'',
       liveness_http_path:c.liveness_http_path||'',

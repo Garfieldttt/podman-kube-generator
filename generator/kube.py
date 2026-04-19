@@ -184,6 +184,11 @@ def _build_security_context(c, skip_user=False):
         sc['readOnlyRootFilesystem'] = True
     if c.get('privileged'):
         sc['privileged'] = True
+    ape = c.get('allow_privilege_escalation', '')
+    if ape == 'false':
+        sc['allowPrivilegeEscalation'] = False
+    elif ape == 'true':
+        sc['allowPrivilegeEscalation'] = True
     caps = {}
     add = [cap.strip() for line in _parse_lines(c.get('cap_add', '')) for cap in line.split(',') if cap.strip()]
     drop = [cap.strip() for line in _parse_lines(c.get('cap_drop', '')) for cap in line.split(',') if cap.strip()]
@@ -307,6 +312,10 @@ def _build_container(c, mounts):
     res = _build_resources(c)
     if res:
         spec['resources'] = res
+    pre_stop = (c.get('pre_stop_cmd') or '').strip()
+    if pre_stop:
+        cmd = ['/bin/sh', '-c', pre_stop] if _SHELL_OPS.search(pre_stop) else _split(pre_stop)
+        spec['lifecycle'] = {'preStop': {'exec': {'command': cmd}}}
     return spec
 
 
@@ -380,6 +389,26 @@ def generate(form_data):
     dns_lines = _parse_lines(form_data.get('dns', ''))
     if dns_lines:
         pod_spec['dnsConfig'] = {'nameservers': dns_lines}
+
+    supplemental_groups = [
+        int(g) for g in _parse_lines(form_data.get('supplemental_groups', ''))
+        if g.strip().isdigit()
+    ]
+    if supplemental_groups:
+        pod_spec.setdefault('securityContext', {})['supplementalGroups'] = supplemental_groups
+
+    tgp = form_data.get('termination_grace_period')
+    if tgp is not None:
+        try:
+            pod_spec['terminationGracePeriodSeconds'] = int(tgp)
+        except (ValueError, TypeError):
+            pass
+
+    pull_secrets = [
+        {'name': s} for s in _parse_lines(form_data.get('image_pull_secrets', '')) if s.strip()
+    ]
+    if pull_secrets:
+        pod_spec['imagePullSecrets'] = pull_secrets
 
     if all_volumes:
         pod_spec['volumes'] = all_volumes

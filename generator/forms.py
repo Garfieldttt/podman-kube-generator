@@ -138,6 +138,28 @@ class PodForm(forms.Form):
             'placeholder': 'e.g. podman-net (empty = default)',
         }),
     )
+    supplemental_groups = forms.CharField(
+        label='Supplemental Groups (one GID per line)',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control font-monospace', 'rows': 2,
+            'placeholder': '44\n109',
+        }),
+    )
+    image_pull_secrets = forms.CharField(
+        label='imagePullSecrets (one secret name per line)',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control font-monospace', 'rows': 2,
+            'placeholder': 'my-registry-secret',
+        }),
+    )
+    termination_grace_period = forms.IntegerField(
+        label='terminationGracePeriodSeconds',
+        required=False,
+        min_value=0,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 60'}),
+    )
     # Quadlet options
     quadlet_auto_update = forms.ChoiceField(
         label='Auto-Update',
@@ -313,6 +335,20 @@ class ContainerForm(forms.Form):
         widget=forms.TextInput(attrs={
             'class': 'form-control form-control-sm font-monospace',
             'placeholder': '/dev/dri/renderD128:/dev/dri/renderD128',
+        }),
+    )
+    allow_privilege_escalation = forms.ChoiceField(
+        label='allowPrivilegeEscalation',
+        choices=[('', '— default —'), ('false', 'false (recommended)'), ('true', 'true')],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
+    )
+    pre_stop_cmd = forms.CharField(
+        label='preStop command',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control form-control-sm font-monospace',
+            'placeholder': 'e.g. pg_ctl stop -m fast',
         }),
     )
     # Liveness Probe
