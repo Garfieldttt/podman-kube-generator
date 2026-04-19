@@ -959,8 +959,9 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
       <div class="modal-header pb-0" style="border-color:var(--border);">
         <div class="d-flex align-items-center w-100">
           <ul class="nav nav-tabs border-0 flex-grow-1">
-            <li class="nav-item"><button id="otab-btn-yaml"  class="nav-link active" onclick="showOutTab('yaml')"><i class="bi bi-file-code me-1"></i>pod.yaml</button></li>
-            <li class="nav-item"><button id="otab-btn-shell" class="nav-link"        onclick="showOutTab('shell')"><i class="bi bi-terminal me-1"></i>deploy.sh</button></li>
+            <li class="nav-item"><button id="otab-btn-yaml"    class="nav-link active" onclick="showOutTab('yaml')"><i class="bi bi-file-code me-1"></i>pod.yaml</button></li>
+            <li class="nav-item"><button id="otab-btn-shell"   class="nav-link"        onclick="showOutTab('shell')"><i class="bi bi-terminal me-1"></i>deploy.sh</button></li>
+            <li class="nav-item"><button id="otab-btn-compose" class="nav-link"        onclick="showOutTab('compose')"><i class="bi bi-layers me-1"></i>compose.yml</button></li>
           </ul>
           <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal"></button>
         </div>
@@ -979,6 +980,13 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
             <button class="btn btn-sm btn-outline-secondary" onclick="copyOut('shell')"><i class="bi bi-clipboard me-1"></i>Copy</button>
           </div>
           <pre id="cv-pre-shell" class="cv-pre"></pre>
+        </div>
+        <div id="otab-compose" style="display:none;">
+          <div class="cv-out-bar">
+            <span class="text-muted small">Docker / Podman Compose (docker-compose.yml)</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="copyOut('compose')"><i class="bi bi-clipboard me-1"></i>Copy</button>
+          </div>
+          <pre id="cv-pre-compose" class="cv-pre"></pre>
         </div>
       </div>
     </div>
@@ -3532,14 +3540,14 @@ function copyDbg(tab) {
 }
 
 function showOutTab(tab) {
-  document.getElementById('otab-yaml').style.display  = tab==='yaml'  ? '':'none';
-  document.getElementById('otab-shell').style.display = tab==='shell' ? '':'none';
-  document.getElementById('otab-btn-yaml').classList.toggle('active',  tab==='yaml');
-  document.getElementById('otab-btn-shell').classList.toggle('active', tab==='shell');
+  ['yaml','shell','compose'].forEach(t => {
+    document.getElementById(`otab-${t}`).style.display = tab===t ? '' : 'none';
+    document.getElementById(`otab-btn-${t}`).classList.toggle('active', tab===t);
+  });
 }
 
 function copyOut(tab) {
-  const pre = document.getElementById(tab==='yaml'?'cv-pre-yaml':'cv-pre-shell');
+  const pre = document.getElementById(`cv-pre-${tab}`);
   const btn = pre.previousElementSibling?.querySelector('button');
   navigator.clipboard.writeText(pre.textContent).then(()=>{
     if(btn){btn.innerHTML='<i class="bi bi-check me-1"></i>Copied!';setTimeout(()=>{btn.innerHTML='<i class="bi bi-clipboard me-1"></i>Copy';},2000);}

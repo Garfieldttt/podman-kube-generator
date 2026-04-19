@@ -118,12 +118,6 @@
           <i class="bi bi-terminal me-1"></i>Shell Script
         </button>
       </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-compose-btn" data-bs-toggle="tab"
-          data-bs-target="#tab-compose" type="button" role="tab">
-          <i class="bi bi-boxes me-1"></i>Docker Compose
-        </button>
-      </li>
     </ul>
 
     <div class="tab-content mb-4">
@@ -177,32 +171,6 @@
           <div class="card-body p-0">
             <pre class="m-0 rounded-bottom" id="quadlet-output">{{ quadlet_content }}</pre>
           </div>
-        </div>
-      </div>
-
-      <!-- Docker Compose Tab -->
-      <div class="tab-pane fade" id="tab-compose" role="tabpanel">
-        <div class="card" style="border-top-left-radius:0; border-top-right-radius:0; border-top:0;">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="text-secondary small">docker-compose.yml — for use with <code>docker compose up</code> or <code>podman-compose</code></span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('docker-compose.yml', document.getElementById('compose-output').textContent)">
-                <i class="bi bi-download"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'compose-output')">
-                <i class="bi bi-clipboard"></i> Copy
-              </button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <pre class="m-0 rounded-0 rounded-bottom" id="compose-output">{{ compose_content }}</pre>
-          </div>
-        </div>
-        <div class="mt-2 px-1">
-          <p class="text-secondary small mb-0">
-            <i class="bi bi-info-circle me-1"></i>
-            Containers communicate via service name (not localhost). Init containers use <code>depends_on: service_completed_successfully</code>. DB containers are waited on with <code>depends_on: service_started</code>.
-          </p>
         </div>
       </div>
 

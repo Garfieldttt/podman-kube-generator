@@ -23,7 +23,6 @@ from django_ratelimit.decorators import ratelimit
 from .forms import PodForm, ContainerForm, InitContainerForm, RegistrationForm
 from .kube import generate
 from .shell import generate_shell
-from .compose import generate_compose
 from .quadlet import generate_quadlet
 from .models import SavedConfig, StackTemplate, ImpressumSettings, SiteSettings, UserStack, RegistrationSettings, UserProfile, StackLike, StackComment
 from .registry import search_images, get_tags, get_hub_info, get_tag_vulns
@@ -2186,7 +2185,6 @@ def builder_generate(request):
         shell_content = generate_shell(form_data)
         quadlet_content = generate_quadlet(form_data)
         env_file_content = generate_env_file(form_data)
-        compose_content = generate_compose(form_data)
         pod_name = form_data.get('pod_name', 'unnamed').strip().lower().replace(' ', '-')
         validation_warnings = validate_form_data(form_data) + notices
 
@@ -2227,7 +2225,6 @@ def builder_generate(request):
             'shell_content': shell_content,
             'quadlet_content': quadlet_content,
             'env_file_content': env_file_content,
-            'compose_content': compose_content,
             'pod_name': pod_name,
             'mode': form_data.get('mode', 'rootless'),
             'form_data_json': json.dumps(form_data),
