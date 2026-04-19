@@ -3684,25 +3684,6 @@ function scanForTips() {
     }
   }
 
-  // Tip 6: DB service in same pod — startup order info
-  const _DB_KEYS = ['postgres', 'postgresql', 'mariadb', 'mysql', 'redis', 'valkey', 'mongodb', 'mongo'];
-  const dbContainers = state.containers.filter(c => {
-    const base = (c.image || '').split('/').pop().split(':')[0].toLowerCase();
-    return _DB_KEYS.some(k => base.includes(k));
-  });
-  const appContainers = state.containers.filter(c => {
-    const base = (c.image || '').split('/').pop().split(':')[0].toLowerCase();
-    return !_DB_KEYS.some(k => base.includes(k));
-  });
-  if (dbContainers.length && appContainers.length) {
-    _activeTips.push({
-      level: 'warn',
-      msg: `<strong>Startup order:</strong> All containers in a pod start simultaneously — `
-         + `init containers cannot wait for ${dbContainers.map(c=>`<code>${esc(c.name)}</code>`).join(', ')} `
-         + `because it hasn't started yet. Rely on your app's built-in reconnect logic, or increase `
-         + `<em>initialDelaySeconds</em> on the app container's liveness probe.`,
-    });
-  }
 
   renderTips();
 }
