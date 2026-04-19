@@ -56,11 +56,11 @@
       </div>
       {% for w in validation_warnings %}
       <div class="rounded mb-1 validation-item overflow-hidden"
-           style="border:1px solid {% if w.level == 'error' %}color-mix(in srgb,#dc3545 40%,transparent){% else %}color-mix(in srgb,#f59e0b 40%,transparent){% endif %};">
+           style="border:1px solid {% if w.level == 'error' %}color-mix(in srgb,#dc3545 40%,transparent){% elif w.level == 'info' %}color-mix(in srgb,#3b82f6 40%,transparent){% else %}color-mix(in srgb,#f59e0b 40%,transparent){% endif %};">
         <!-- Header row -->
         <div class="d-flex align-items-center gap-2 px-3 py-2"
-             style="background:{% if w.level == 'error' %}color-mix(in srgb,#dc3545 12%,var(--surface)){% else %}color-mix(in srgb,#f59e0b 10%,var(--surface)){% endif %};">
-          <i class="bi {% if w.level == 'error' %}bi-x-circle text-danger{% else %}bi-exclamation-triangle text-warning{% endif %} flex-shrink-0"></i>
+             style="background:{% if w.level == 'error' %}color-mix(in srgb,#dc3545 12%,var(--surface)){% elif w.level == 'info' %}color-mix(in srgb,#3b82f6 10%,var(--surface)){% else %}color-mix(in srgb,#f59e0b 10%,var(--surface)){% endif %};">
+          <i class="bi {% if w.level == 'error' %}bi-x-circle text-danger{% elif w.level == 'info' %}bi-info-circle{% else %}bi-exclamation-triangle text-warning{% endif %} flex-shrink-0"{% if w.level == 'info' %} style="color:#60a5fa"{% endif %}></i>
           <span class="small flex-grow-1">{{ w.msg|safe }}</span>
           <div class="d-flex gap-1 ms-auto flex-shrink-0">
             {% if w.hint %}
@@ -79,7 +79,7 @@
             {% endif %}
             {% if w.suggestion %}
             <button class="btn btn-sm py-0 px-2"
-                    style="font-size:.72rem;border:1px solid {% if w.level == 'error' %}#dc3545{% else %}#f59e0b{% endif %};opacity:.85;"
+                    style="font-size:.72rem;border:1px solid {% if w.level == 'error' %}#dc3545{% elif w.level == 'info' %}#3b82f6{% else %}#f59e0b{% endif %};opacity:.85;"
                     onclick="toggleSuggestion(this)">
               <i class="bi bi-lightbulb me-1"></i>Suggestion
             </button>
@@ -93,7 +93,7 @@
         </div>
         {% if w.suggestion %}
         <div class="suggestion-box" style="display:none;padding:.6rem 1rem;
-             background:var(--surface);border-top:1px solid {% if w.level == 'error' %}color-mix(in srgb,#dc3545 25%,transparent){% else %}color-mix(in srgb,#f59e0b 25%,transparent){% endif %};">
+             background:var(--surface);border-top:1px solid {% if w.level == 'error' %}color-mix(in srgb,#dc3545 25%,transparent){% elif w.level == 'info' %}color-mix(in srgb,#3b82f6 25%,transparent){% else %}color-mix(in srgb,#f59e0b 25%,transparent){% endif %};">
           <pre class="m-0 small" style="color:var(--text);white-space:pre-wrap;">{{ w.suggestion }}</pre>
         </div>
         {% endif %}
