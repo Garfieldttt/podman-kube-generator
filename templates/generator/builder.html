@@ -1757,8 +1757,8 @@ function addFromCatalog(key, image) {
 function mkC(d) {
   return {
     id: d.id||uid(),
-    x:  d.x ?? (60 + state.containers.length*25%480),
-    y:  d.y ?? (90 + Math.floor(state.containers.length*25/480)*200),
+    x:  d.x ?? (60 + (state.containers.length * 240) % 720),
+    y:  d.y ?? (90 + Math.floor(state.containers.length * 240 / 720) * 160),
     name: d.name || shortName(d.image),
     image: d.image || '',
     pull_policy:   d.pull_policy   || '',
