@@ -14,7 +14,7 @@
   <div class="row g-3">
     <!-- Name + Image -->
     <div class="col-md-5">
-      <label>{{ form.name.label }}</label>
+      <label>{{ form.name.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Lowercase letters, digits and hyphens only. Used as the container name inside the pod."></i></label>
       {{ form.name }}
     </div>
     <div class="col-md-5">
@@ -52,7 +52,7 @@
       {{ form.ports }}
     </div>
     <div class="col-md-4">
-      <label>{{ form.env.label }}</label>
+      <label>{{ form.env.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="One variable per line: KEY=value. Supports ${VAR:-default} substitution. Secrets should be set directly on the host, not stored in the YAML."></i></label>
       {{ form.env }}
     </div>
     <div class="col-md-4">
@@ -70,7 +70,7 @@
       {{ form.args }}
     </div>
     <div class="col-md-4">
-      <label>{{ form.working_dir.label }}</label>
+      <label>{{ form.working_dir.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Sets the working directory inside the container. Leave empty to use the image default (usually / or /app)."></i></label>
       {{ form.working_dir }}
     </div>
   </div>
@@ -90,7 +90,7 @@
           {{ form.memory_limit }}
         </div>
         <div class="col-md-3">
-          <label>{{ form.cpu_limit.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container is throttled if exceeded. 1.0 = one full core, 0.5 = half a core."></i></label>
+          <label>{{ form.cpu_limit.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container is throttled if exceeded. 1.0 = one full core, 0.5 = half a core. Note: CPU limits are not reliably enforced by Podman play kube."></i></label>
           {{ form.cpu_limit }}
         </div>
         <div class="col-md-3">
@@ -108,31 +108,38 @@
           <label>{{ form.gpu_access.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="NVIDIA/AMD ROCm: adds CDI resource limit (requires CDI configured on host). Intel/AMD VAAPI: passes /dev/dri into the container via annotation. Custom: specify any host:container device path."></i></label>
           {{ form.gpu_access }}
         </div>
+        <div class="col-md-2 gpu-count-{{ index }}" style="display:none">
+          <label>{{ form.gpu_count.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Number of GPUs to assign. 'all' passes every available GPU to the container."></i></label>
+          {{ form.gpu_count }}
+        </div>
         <div class="col-md-4 gpu-custom-{{ index }}" style="display:none">
-          <label>{{ form.custom_device.label }}</label>
+          <label>{{ form.custom_device.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Device path in host:container format. e.g. /dev/dri/renderD128:/dev/dri/renderD128"></i></label>
           {{ form.custom_device }}
         </div>
-        <div class="col-md-4"></div>
+        <div class="col-md-2"></div>
         <script>
         (function() {
           var idx = {{ index }};
           var sel = document.querySelector('[name="c{{ index }}-gpu_access"]');
-          function toggleGpuCustom() {
-            var show = sel && sel.value === 'custom';
-            document.querySelectorAll('.gpu-custom-' + idx).forEach(function(el) { el.style.display = show ? '' : 'none'; });
+          function toggleGpuFields() {
+            var val = sel ? sel.value : '';
+            var isCdi = val === 'nvidia' || val === 'amd_rocm';
+            var isCustom = val === 'custom';
+            document.querySelectorAll('.gpu-count-' + idx).forEach(function(el) { el.style.display = isCdi ? '' : 'none'; });
+            document.querySelectorAll('.gpu-custom-' + idx).forEach(function(el) { el.style.display = isCustom ? '' : 'none'; });
           }
-          if (sel) { sel.addEventListener('change', toggleGpuCustom); toggleGpuCustom(); }
+          if (sel) { sel.addEventListener('change', toggleGpuFields); toggleGpuFields(); }
         })();
         </script>
 
         <!-- Security Context -->
         <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">SECURITY CONTEXT</span></div>
         <div class="col-md-3">
-          <label>{{ form.run_as_user.label }}</label>
+          <label>{{ form.run_as_user.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="UID the container process runs as. e.g. 999 (postgres/mysql), 1000 (standard user). Find the correct UID with: podman run --rm &lt;image&gt; id"></i></label>
           {{ form.run_as_user }}
         </div>
         <div class="col-md-3">
-          <label>{{ form.run_as_group.label }}</label>
+          <label>{{ form.run_as_group.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Primary GID the container process runs as. Leave empty to use the image default GID."></i></label>
           {{ form.run_as_group }}
         </div>
         <div class="col-md-3 d-flex align-items-end gap-3 pb-1">
@@ -172,35 +179,35 @@
           </span>
         </div>
         <div class="col-md-2">
-          <label>{{ form.liveness_probe_type.label }}</label>
+          <label>{{ form.liveness_probe_type.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="exec: run a command inside the container. httpGet: HTTP GET request. tcpSocket: TCP connection check."></i></label>
           {{ form.liveness_probe_type }}
         </div>
         <div class="col-md-4 probe-exec-{{ index }}">
-          <label>{{ form.liveness_probe_cmd.label }}</label>
+          <label>{{ form.liveness_probe_cmd.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Command to run. Exit code 0 = healthy. e.g. pg_isready -U postgres or redis-cli ping"></i></label>
           {{ form.liveness_probe_cmd }}
         </div>
         <div class="col-md-2 probe-http-{{ index }}" style="display:none">
-          <label>{{ form.liveness_http_path.label }}</label>
+          <label>{{ form.liveness_http_path.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="HTTP path to check. e.g. /health or /api/ping. HTTP 200–399 = healthy."></i></label>
           {{ form.liveness_http_path }}
         </div>
         <div class="col-md-2 probe-http-{{ index }}" style="display:none">
-          <label>{{ form.liveness_http_port.label }}</label>
+          <label>{{ form.liveness_http_port.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container port to send the HTTP request to."></i></label>
           {{ form.liveness_http_port }}
         </div>
         <div class="col-md-3 probe-tcp-{{ index }}" style="display:none">
-          <label>{{ form.liveness_tcp_port.label }}</label>
+          <label>{{ form.liveness_tcp_port.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container port to attempt a TCP connection to. Success = healthy."></i></label>
           {{ form.liveness_tcp_port }}
         </div>
         <div class="col-md-2">
-          <label>{{ form.liveness_initial_delay.label }}</label>
+          <label>{{ form.liveness_initial_delay.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Seconds to wait after container start before running the first probe. Set this high enough for your app to initialize."></i></label>
           {{ form.liveness_initial_delay }}
         </div>
         <div class="col-md-2">
-          <label>{{ form.liveness_period.label }}</label>
+          <label>{{ form.liveness_period.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="How often (in seconds) the probe is run. Default: 10s."></i></label>
           {{ form.liveness_period }}
         </div>
         <div class="col-md-2">
-          <label>{{ form.liveness_failure_threshold.label }}</label>
+          <label>{{ form.liveness_failure_threshold.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="How many consecutive failures before the container is restarted. Default: 3."></i></label>
           {{ form.liveness_failure_threshold }}
         </div>
 
@@ -212,35 +219,35 @@
           </span>
         </div>
         <div class="col-md-2">
-          <label>{{ form.readiness_probe_type.label }}</label>
+          <label>{{ form.readiness_probe_type.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="exec: run a command inside the container. httpGet: HTTP GET request. tcpSocket: TCP connection check."></i></label>
           {{ form.readiness_probe_type }}
         </div>
         <div class="col-md-4 rprobe-exec-{{ index }}">
-          <label>{{ form.readiness_probe_cmd.label }}</label>
+          <label>{{ form.readiness_probe_cmd.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Command to run. Exit code 0 = ready. e.g. pg_isready -U postgres"></i></label>
           {{ form.readiness_probe_cmd }}
         </div>
         <div class="col-md-2 rprobe-http-{{ index }}" style="display:none">
-          <label>{{ form.readiness_http_path.label }}</label>
+          <label>{{ form.readiness_http_path.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="HTTP path to check. HTTP 200–399 = ready."></i></label>
           {{ form.readiness_http_path }}
         </div>
         <div class="col-md-2 rprobe-http-{{ index }}" style="display:none">
-          <label>{{ form.readiness_http_port.label }}</label>
+          <label>{{ form.readiness_http_port.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container port to send the HTTP request to."></i></label>
           {{ form.readiness_http_port }}
         </div>
         <div class="col-md-3 rprobe-tcp-{{ index }}" style="display:none">
-          <label>{{ form.readiness_tcp_port.label }}</label>
+          <label>{{ form.readiness_tcp_port.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Container port to attempt a TCP connection to."></i></label>
           {{ form.readiness_tcp_port }}
         </div>
         <div class="col-md-2">
-          <label>{{ form.readiness_initial_delay.label }}</label>
+          <label>{{ form.readiness_initial_delay.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Seconds to wait after container start before running the first readiness probe."></i></label>
           {{ form.readiness_initial_delay }}
         </div>
         <div class="col-md-2">
-          <label>{{ form.readiness_period.label }}</label>
+          <label>{{ form.readiness_period.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="How often (in seconds) the readiness probe is run. Default: 10s."></i></label>
           {{ form.readiness_period }}
         </div>
         <div class="col-md-2">
-          <label>{{ form.readiness_failure_threshold.label }}</label>
+          <label>{{ form.readiness_failure_threshold.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="How many consecutive failures before the container is marked not ready. Default: 3."></i></label>
           {{ form.readiness_failure_threshold }}
         </div>
         <script>

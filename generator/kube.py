@@ -262,10 +262,11 @@ def _build_resources(c):
     if c.get('cpu_request'):
         requests['cpu'] = str(c['cpu_request'])
     gpu = c.get('gpu_access', '')
+    gpu_count = c.get('gpu_count', '1') or '1'
     if gpu == 'nvidia':
-        limits['nvidia.com/gpu'] = '1'
+        limits['nvidia.com/gpu'] = gpu_count
     elif gpu == 'amd_rocm':
-        limits['amd.com/gpu'] = '1'
+        limits['amd.com/gpu'] = gpu_count
     res = {}
     if limits:
         res['limits'] = limits

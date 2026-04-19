@@ -329,6 +329,12 @@ class ContainerForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
     )
+    gpu_count = forms.ChoiceField(
+        label='GPU count',
+        choices=[('1', '1'), ('2', '2'), ('4', '4'), ('all', 'all')],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
+    )
     custom_device = forms.CharField(
         label='Device path (host:container)',
         required=False,

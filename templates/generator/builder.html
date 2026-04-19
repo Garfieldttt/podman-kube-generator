@@ -1780,6 +1780,7 @@ function mkC(d) {
     cap_drop: d.cap_drop || '',
     userns:   d.userns   || '',
     gpu_access:                d.gpu_access                || '',
+    gpu_count:                 d.gpu_count                 || '1',
     custom_device:             d.custom_device             || '',
     allow_privilege_escalation:d.allow_privilege_escalation|| '',
     pre_stop_cmd:              d.pre_stop_cmd              || '',
@@ -2102,12 +2103,12 @@ function renderCfgTab() {
 function tabGeneral(c) {
   return `
     <div class="cfg-section">
-      <div class="cfg-section-title"><i class="bi bi-tag"></i>Container name</div>
+      <div class="cfg-section-title"><i class="bi bi-tag"></i>Container name ${tip('Lowercase letters, digits and hyphens only. Must start and end with a letter or digit. Used as the container name inside the pod — also usable as hostname between containers.')}</div>
       <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.name)}"
         oninput="cfgSet('name',this.value);const nn=document.getElementById('nn-${c.id}');if(nn)nn.textContent=this.value||'container';document.getElementById('cfg-header-name').textContent=this.value||'Container'">
     </div>
     <div class="cfg-section">
-      <div class="cfg-section-title"><i class="bi bi-box-seam"></i>Container image</div>
+      <div class="cfg-section-title"><i class="bi bi-box-seam"></i>Container image ${tip('Full image reference: registry/repo:tag. If you omit the registry, docker.io is assumed. Pinning a specific tag (e.g. :15) is recommended over :latest for production.')}</div>
       <div style="display:flex;gap:.4rem;align-items:center;">
         <input type="text" id="cfg-image-inp" class="cfg-inp cfg-inp-full" value="${esc(c.image)}" placeholder="e.g. nginx:alpine or docker.io/nginx:alpine"
           oninput="cfgSet('image',this.value);document.getElementById('cfg-header-image').textContent=this.value.split('/').pop().split(':')[0]||this.value;renderVersionPicker(this.value)"
@@ -2176,7 +2177,7 @@ function tabPorts(c) {
   return `
     <div class="cfg-section">
       <div class="cfg-section-title" style="justify-content:space-between;">
-        <span><i class="bi bi-ethernet me-1"></i>Port Mappings <span style="font-size:.68rem;color:var(--text-muted);font-weight:400;">HOST → CONTAINER</span></span>
+        <span><i class="bi bi-ethernet me-1"></i>Port Mappings <span style="font-size:.68rem;color:var(--text-muted);font-weight:400;">HOST → CONTAINER</span></span> ${tip('Ports are published at pod level — all containers share the same network namespace. Rootless Podman cannot bind host ports below 1024 without extra configuration.')}
         <button class="btn btn-sm btn-outline-secondary" style="font-size:.72rem;padding:.15rem .5rem;"
           onclick="loadPortPreset()" title="Ports aus Backend-Preset laden">
           <i class="bi bi-magic me-1"></i>Suggestions
@@ -2292,7 +2293,7 @@ function tabStorage(c) {
               placeholder="/data" oninput="setVol(${i},'target',this.value)">
           </div>
           <div style="flex-shrink:0;padding-bottom:1px;">
-            <label style="font-size:.7rem;color:var(--text-muted);display:block;margin-bottom:.15rem;text-align:center;">:Z</label>
+            <label style="font-size:.7rem;color:var(--text-muted);display:block;margin-bottom:.15rem;text-align:center;">:Z ${tip('SELinux relabeling — required on SELinux-enabled systems (e.g. Fedora, RHEL) so the container process can access the volume. Safe to enable even without SELinux.')}</label>
             <div style="text-align:center;">
               <input type="checkbox" ${v.opts&&v.opts.includes('Z')?'checked':''} title="SELinux relabeling (:Z)"
                 style="accent-color:var(--accent);cursor:pointer;width:16px;height:16px;"
@@ -2306,7 +2307,7 @@ function tabStorage(c) {
   return `
     <div class="cfg-section">
       <div class="cfg-section-title" style="justify-content:space-between;">
-        <span><i class="bi bi-folder2 me-1"></i>Volumes</span>
+        <span><i class="bi bi-folder2 me-1"></i>Volumes ${tip('Named volume: managed by Podman, auto-created with correct permissions. Host path: binds a directory from the host — directory must exist and be owned by the container UID. Append :Z for SELinux systems.')}</span>
         <button class="btn btn-sm btn-outline-secondary" style="font-size:.72rem;padding:.15rem .5rem;"
           onclick="loadVolPreset()" title="Load volume suggestions">
           <i class="bi bi-magic me-1"></i>Suggestions
@@ -2395,7 +2396,7 @@ function tabEnv(c) {
     // Unknown image: raw KEY=VALUE rows + preset loader
     html += `<div class="cfg-section">
       <div class="cfg-section-title" style="justify-content:space-between;">
-        <span><i class="bi bi-code-slash me-1"></i>Environment Variables</span>
+        <span><i class="bi bi-code-slash me-1"></i>Environment Variables ${tip('KEY=value format. Supports ${VAR:-default} substitution. Do not store secrets (passwords, tokens) here — they end up in the YAML file. Set secrets directly on the host or use a Podman secret.')}</span>
         <button class="btn btn-sm btn-outline-secondary" style="font-size:.72rem;padding:.15rem .5rem;"
           onclick="loadEnvPreset()" id="env-preset-btn" title="Load suggestions from backend">
           <i class="bi bi-magic me-1"></i>Suggestions
@@ -2709,7 +2710,7 @@ function tabResources(c) {
           </div>
         </div>
         <div class="cfg-res-field">
-          <label>CPU limit ${tip('Container is throttled when it exceeds this. 1.0 = one full core, 0.5 = half a core, 2 = two cores.')}</label>
+          <label>CPU limit ${tip('Container is throttled when it exceeds this. 1.0 = one full core, 0.5 = half a core, 2 = two cores. Note: CPU limits are not reliably enforced by Podman play kube.')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.cpu_limit)}"
             placeholder="0.5" oninput="cfgSet('cpu_limit',this.value)">
           <div class="cfg-res-hint">e.g. 0.5, 1.0, 2 (number of cores)</div>
@@ -2804,7 +2805,15 @@ function tabResources(c) {
             <option value="custom" ${c.gpu_access==='custom'?'selected':''}>Custom device</option>
           </select>
         </div>
-        ${c.gpu_access==='custom'?`<div class="cfg-res-field">
+        ${(c.gpu_access==='nvidia'||c.gpu_access==='amd_rocm')?`<div class="cfg-res-field">
+          <label>GPU count${tip('Number of GPUs to assign. all passes every available GPU to the container.')}</label>
+          <select class="cfg-inp cfg-inp-full" onchange="cfgSet('gpu_count',this.value)">
+            <option value="1" ${(c.gpu_count||'1')==='1'?'selected':''}>1</option>
+            <option value="2" ${c.gpu_count==='2'?'selected':''}>2</option>
+            <option value="4" ${c.gpu_count==='4'?'selected':''}>4</option>
+            <option value="all" ${c.gpu_count==='all'?'selected':''}>all</option>
+          </select>
+        </div>`:c.gpu_access==='custom'?`<div class="cfg-res-field">
           <label>Device path (host:container)</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.custom_device||'')}"
             placeholder="/dev/dri/renderD128:/dev/dri/renderD128" oninput="cfgSet('custom_device',this.value)">
@@ -3066,7 +3075,7 @@ function toFormData() {
       read_only_root:!!c.read_only_root, privileged:!!c.privileged,
       cap_add:c.cap_add||'', cap_drop:c.cap_drop||'',
       userns:c.userns||'',
-      gpu_access:c.gpu_access||'', custom_device:c.custom_device||'',
+      gpu_access:c.gpu_access||'', gpu_count:c.gpu_count||'1', custom_device:c.custom_device||'',
       allow_privilege_escalation:c.allow_privilege_escalation||'',
       pre_stop_cmd:c.pre_stop_cmd||'',
       liveness_probe_type:c.liveness_probe_type||'exec',
