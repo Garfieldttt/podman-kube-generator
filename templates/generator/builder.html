@@ -237,7 +237,7 @@ select.cv-ctrl  { appearance: auto; }
 
 /* ── Nodes ───────────────────────────────────────────── */
 .cv-node {
-  position: absolute; width: 185px;
+  position: absolute; width: 215px;
   background: var(--surface-2);
   border: 1.5px solid var(--border);
   border-radius: var(--r-lg);
@@ -294,6 +294,7 @@ select.cv-ctrl  { appearance: auto; }
   font-size: .68rem; padding: .28rem .3rem;
   cursor: pointer; color: var(--text-muted);
   display: flex; align-items: center; justify-content: center; gap: .25rem;
+  white-space: nowrap; overflow: hidden;
   transition: color .12s, background .12s;
   border-radius: 0 0 var(--r-lg) var(--r-lg);
 }
