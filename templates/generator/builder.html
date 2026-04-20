@@ -890,7 +890,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         </button>
 
         <button class="btn btn-sm btn-primary" id="cv-gen-btn" onclick="generateYaml()">
-          <i class="bi bi-code-slash me-1"></i>Generate
+          <i class="bi bi-code-slash me-1"></i>Generate Pod
         </button>
       </div>
     </div>
@@ -1262,7 +1262,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
       <div class="modal-footer" style="border-color:var(--border);">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button class="btn btn-primary" onclick="_envReviewConfirm()">
-          <i class="bi bi-code-slash me-1"></i>Generate
+          <i class="bi bi-code-slash me-1"></i>Generate Pod
         </button>
       </div>
     </div>
@@ -1280,7 +1280,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
       <div class="modal-footer" style="border-color:color-mix(in srgb,#f59e0b 25%,transparent);">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button class="btn btn-warning" onclick="bootstrap.Modal.getInstance(document.getElementById('warnings-modal')).hide();_showEnvReview()">
-          <i class="bi bi-code-slash me-1"></i>Generate anyway
+          <i class="bi bi-code-slash me-1"></i>Generate Pod anyway
         </button>
       </div>
     </div>
@@ -3315,7 +3315,7 @@ function generateYaml() {
     warnModal.querySelector('.modal-footer').innerHTML = `
       <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
       <button class="btn btn-warning" onclick="bootstrap.Modal.getInstance(document.getElementById('warnings-modal')).hide();_showEnvReview()">
-        <i class="bi bi-code-slash me-1"></i>Generate anyway
+        <i class="bi bi-code-slash me-1"></i>Generate Pod anyway
       </button>`;
     warnModal.querySelector('#warnings-modal-body').innerHTML = _activeTips.map((t, i) => `
       <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded" style="background:${t.level==='error'?'rgba(239,68,68,.08)':'rgba(245,158,11,.08)'}">
@@ -4866,7 +4866,7 @@ window.addEventListener('pageshow', function(e) {
   if (e.persisted) {
     const btn = document.getElementById('cv-gen-btn');
     btn.disabled = false;
-    btn.innerHTML = '<i class="bi bi-code-slash me-1"></i>Generate';
+    btn.innerHTML = '<i class="bi bi-code-slash me-1"></i>Generate Pod';
   }
 });
 </script>
