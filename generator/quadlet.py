@@ -77,3 +77,45 @@ def generate_quadlet(form_data, yaml_filename=None):
 
     sections = [unit_lines, kube_lines, service_lines, install_lines]
     return '\n\n'.join('\n'.join(s) for s in sections)
+
+
+def generate_prune_units(form_data):
+    interval = (form_data.get('quadlet_image_prune') or '').strip()
+    if not interval:
+        return None
+
+    pod_name = re.sub(r'[^a-z0-9-]', '', (form_data.get('pod_name') or 'pod').strip().lower().replace(' ', '-')).strip('-') or 'pod'
+    mode = form_data.get('mode', 'rootless')
+    rootless = mode != 'rootful'
+
+    install_dir = '~/.config/systemd/user' if rootless else '/etc/systemd/system'
+    systemctl = 'systemctl --user' if rootless else 'sudo systemctl'
+
+    service_lines = [
+        '[Unit]',
+        f'Description=Prune unused Podman images ({pod_name})',
+        '',
+        '[Service]',
+        'Type=oneshot',
+        'ExecStart=podman image prune -af',
+    ]
+
+    timer_lines = [
+        '[Unit]',
+        f'Description=Prune unused Podman images ({pod_name}) — {interval}',
+        '',
+        '[Timer]',
+        f'OnCalendar={interval}',
+        'Persistent=true',
+        '',
+        '[Install]',
+        'WantedBy=timers.target',
+    ]
+
+    return {
+        'service': '\n'.join(service_lines),
+        'timer': '\n'.join(timer_lines),
+        'pod_name': pod_name,
+        'install_dir': install_dir,
+        'systemctl': systemctl,
+    }

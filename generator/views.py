@@ -22,7 +22,7 @@ from django_ratelimit.decorators import ratelimit
 
 from .forms import PodForm, ContainerForm, InitContainerForm, RegistrationForm
 from .kube import generate
-from .quadlet import generate_quadlet
+from .quadlet import generate_quadlet, generate_prune_units
 from .models import SavedConfig, StackTemplate, ImpressumSettings, SiteSettings, UserStack, RegistrationSettings, UserProfile, StackLike, StackComment
 from .registry import search_images, get_tags, get_hub_info, get_tag_vulns
 from .presets import get_preset, fetch_registry_all
@@ -1038,6 +1038,7 @@ def generate_view(request):
         yaml_content = generate(form_data)
         quadlet_content = generate_quadlet(form_data)
         env_file_content = generate_env_file(form_data)
+        prune_units = generate_prune_units(form_data)
     except Exception as e:
         return render(request, 'generator/index.html', {
             'pod_form': pod_form,
@@ -1093,6 +1094,7 @@ def generate_view(request):
         'yaml_content': yaml_content,
         'quadlet_content': quadlet_content,
         'env_file_content': env_file_content,
+        'prune_units': prune_units,
         'pod_name': pod_name,
         'mode': form_data['mode'],
         'form_data_json': json.dumps(form_data),
@@ -1143,12 +1145,14 @@ def saved_detail(request, uuid):
     config = get_object_or_404(SavedConfig, uuid=uuid)
     quadlet_content = generate_quadlet(config.form_data)
     env_file_content = generate_env_file(config.form_data)
+    prune_units = generate_prune_units(config.form_data)
     return render(request, 'generator/saved_detail.html', {
         'config': config,
         'pod_name': config.name,
         'yaml_content': config.yaml_content,
         'quadlet_content': quadlet_content,
         'env_file_content': env_file_content,
+        'prune_units': prune_units,
         'mode': config.form_data.get('mode', 'rootless'),
     })
 

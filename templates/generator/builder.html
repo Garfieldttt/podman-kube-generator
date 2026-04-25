@@ -719,7 +719,10 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
         </summary>
         <div class="cvs-net-body">
           <div class="cvs-field">
-            <label class="cvs-field-label">Auto-Update</label>
+            <label class="cvs-field-label">
+              Auto-Update
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="registry: pulls updated image from registry on podman auto-update. local: detects locally rebuilt images."></i>
+            </label>
             <select id="cv-quadlet-auto-update" class="cv-ctrl" onchange="state.quadlet_auto_update=this.value">
               <option value="">off</option>
               <option value="registry">registry</option>
@@ -727,7 +730,10 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
             </select>
           </div>
           <div class="cvs-field">
-            <label class="cvs-field-label">Log Driver</label>
+            <label class="cvs-field-label">
+              Log Driver
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="journald: logs to systemd journal (recommended). k8s-file: JSON file per container. none: discard logs. passthrough: inherit from host."></i>
+            </label>
             <select id="cv-quadlet-log-driver" class="cv-ctrl" onchange="state.quadlet_log_driver=this.value">
               <option value="">— default —</option>
               <option value="journald">journald</option>
@@ -737,7 +743,10 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
             </select>
           </div>
           <div class="cvs-field">
-            <label class="cvs-field-label">Exit Code Propagation</label>
+            <label class="cvs-field-label">
+              Exit Code Propagation
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Determines the service exit code. all: exit 0 only if all containers exit 0. any: exit 0 if any container exits 0."></i>
+            </label>
             <select id="cv-quadlet-exit-code" class="cv-ctrl" onchange="state.quadlet_exit_code_propagation=this.value">
               <option value="">— none —</option>
               <option value="all">all</option>
@@ -745,14 +754,32 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
             </select>
           </div>
           <div class="cvs-field">
-            <label class="cvs-field-label">Timeout Start (seconds)</label>
+            <label class="cvs-field-label">
+              Timeout Start (seconds)
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="systemd TimeoutStartSec: how long to wait for the pod to become ready before marking the service as failed."></i>
+            </label>
             <input type="number" id="cv-quadlet-timeout" class="cv-ctrl" placeholder="e.g. 120" min="1"
               oninput="state.quadlet_timeout_start=this.value?parseInt(this.value):null">
           </div>
           <div class="cvs-field" style="display:flex;align-items:center;gap:.5rem;padding-top:.15rem">
             <input type="checkbox" id="cv-quadlet-down-force" class="form-check-input"
               onchange="state.quadlet_kube_down_force=this.checked" style="margin:0">
-            <label for="cv-quadlet-down-force" class="cvs-field-label" style="margin:0">KubeDownForce</label>
+            <label for="cv-quadlet-down-force" class="cvs-field-label" style="margin:0">
+              KubeDownForce
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Passes --force to podman kube down on service stop — removes containers and volumes even if they were not created by this unit."></i>
+            </label>
+          </div>
+          <div class="cvs-field">
+            <label class="cvs-field-label">
+              Image Prune Timer
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Generates a companion systemd timer + service that runs &quot;podman image prune -af&quot; on a schedule to remove unused images and free disk space."></i>
+            </label>
+            <select id="cv-quadlet-image-prune" class="cv-ctrl" onchange="state.quadlet_image_prune=this.value">
+              <option value="">off</option>
+              <option value="weekly">weekly</option>
+              <option value="monthly">monthly</option>
+              <option value="daily">daily</option>
+            </select>
           </div>
         </div>
       </details>
@@ -1467,7 +1494,7 @@ const state = {
   hostname: '', host_aliases: '', dns: '', network: '',
   supplemental_groups: '', image_pull_secrets: '', termination_grace_period: null,
   quadlet_auto_update: '', quadlet_log_driver: '', quadlet_exit_code_propagation: '',
-  quadlet_kube_down_force: false, quadlet_timeout_start: null,
+  quadlet_kube_down_force: false, quadlet_timeout_start: null, quadlet_image_prune: '',
   containers: [], connections: [],
   init_containers: [],
 };
@@ -3109,6 +3136,7 @@ function toFormData() {
     quadlet_exit_code_propagation:state.quadlet_exit_code_propagation||'',
     quadlet_kube_down_force:!!state.quadlet_kube_down_force,
     quadlet_timeout_start:state.quadlet_timeout_start||null,
+    quadlet_image_prune:state.quadlet_image_prune||'',
     init_containers: state.init_containers || [],
     containers: state.containers.map(c => ({
       name:  c.name  || shortName(c.image) || 'container',

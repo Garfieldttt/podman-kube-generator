@@ -54,6 +54,13 @@ QUADLET_EXIT_CODE_CHOICES = [
     ('any', 'any (exit 0 if any container exits 0)'),
 ]
 
+QUADLET_IMAGE_PRUNE_CHOICES = [
+    ('', 'off'),
+    ('weekly', 'weekly'),
+    ('monthly', 'monthly'),
+    ('daily', 'daily'),
+]
+
 MODE_CHOICES = [
     ('rootless', 'Rootless (recommended, regular user)'),
     ('rootful', 'Rootful (root / sudo)'),
@@ -189,6 +196,12 @@ class PodForm(forms.Form):
         required=False,
         min_value=1,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 120'}),
+    )
+    quadlet_image_prune = forms.ChoiceField(
+        label='Image Prune Timer',
+        choices=QUADLET_IMAGE_PRUNE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
     )
 
 
