@@ -3073,7 +3073,7 @@ function _applyStackData(d) {
   if (d.init_containers && d.init_containers.length) state.init_containers = d.init_containers;
   if (d.pod_name) { state.pod_name=d.pod_name; document.getElementById('cv-pod-name').value=d.pod_name; }
   if (d.restart_policy) { state.restart_policy=d.restart_policy; document.getElementById('cv-restart').value=d.restart_policy; }
-  if (d.mode) { state.mode=d.mode; document.getElementById('cv-mode').value=d.mode; }
+  if (d.mode) { state.mode=d.mode; document.getElementById('cv-mode').value=d.mode; document.getElementById('cv-deploy-user-row').style.display=d.mode==='rootless'?'':'none'; }
   if (d.host_network) { state.host_network=true; const el=document.getElementById('cv-host-network'); if(el) el.checked=true; }
   if (d.network) { state.network=d.network; const el=document.getElementById('cv-network'); if(el) el.value=d.network; }
   const addedIds = [];
@@ -3144,7 +3144,8 @@ const parseEnv   = s => (typeof s === 'string' ? s : '').split('\n').map(l=>l.tr
 function toFormData() {
   return {
     pod_name: state.pod_name||'mypod', restart_policy:state.restart_policy||'Always',
-    mode:state.mode||'rootless', deploy_user:state.deploy_user||'',
+    mode:state.mode||'rootless',
+    deploy_user:state.deploy_user||(document.getElementById('cv-deploy-user')?.value.trim().toLowerCase().replace(/\s+/g,'-')||''),
     host_network:!!state.host_network,
     host_pid:!!state.host_pid, host_ipc:!!state.host_ipc,
     hostname:state.hostname||'', host_aliases:state.host_aliases||'',

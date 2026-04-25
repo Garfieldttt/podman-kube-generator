@@ -6,7 +6,6 @@
     <button type="button" class="btn btn-sm btn-outline-secondary" data-os="fedora" onclick="rlenOS('fedora')">Fedora / RHEL</button>
     <button type="button" class="btn btn-sm btn-outline-secondary" data-os="arch" onclick="rlenOS('arch')">Arch Linux</button>
     <button type="button" class="btn btn-sm btn-outline-secondary" data-os="alpine" onclick="rlenOS('alpine')">Alpine Linux</button>
-    <button type="button" class="btn btn-sm btn-outline-secondary" data-os="macos" onclick="rlenOS('macos')">macOS</button>
   </div>
 </div>
 
@@ -54,15 +53,6 @@
         </div>
       </div>
 
-      <div class="rlen-os" data-os="macos" style="display:none;">
-        <div class="pre-wrap mb-1">
-          <pre id="rlen-inst-mac">brew install podman
-podman machine init
-podman machine start</pre>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-inst-mac')"><i class="bi bi-clipboard"></i></button>
-        </div>
-        <p class="small mb-3" style="color:var(--text-muted);">Alternatively: installer package from <strong>podman.io</strong>. Podman Desktop (optional) manages the machine automatically at login.</p>
-      </div>
 
       <!-- 1. Create user -->
       <div class="rlen-os" data-os="debian fedora arch" style="display:block;">
@@ -81,10 +71,6 @@ passwd {{ deploy_user }}</pre>
 passwd {{ deploy_user }}</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-user-alp')"><i class="bi bi-clipboard"></i></button>
         </div>
-      </div>
-
-      <div class="rlen-os" data-os="macos" style="display:none;">
-        <p class="small mb-3" style="color:var(--text-muted);"><i class="bi bi-info-circle me-1"></i>On macOS, Podman runs inside a VM — no separate system user required. Continue as your normal user.</p>
       </div>
 
 
@@ -129,9 +115,6 @@ rc-update add {{ pod_name }}-pod default</pre>
         </div>
       </div>
 
-      <div class="rlen-os" data-os="macos" style="display:none;">
-        <p class="small mb-0" style="color:var(--text-muted);"><i class="bi bi-info-circle me-1"></i>No root steps required on macOS. Podman Machine and autostart are configured as a normal user (see Step 3 below).</p>
-      </div>
 
     </div>
   </div>
@@ -362,88 +345,6 @@ rc-service {{ pod_name }}-pod restart</pre>
 
 </div>
 
-<!-- ── Steps 3–5: macOS ──────────────────────────────────────── -->
-<div class="rlen-os" data-os="macos" style="display:none;">
-
-  <div class="step-block">
-    <div class="d-flex gap-3">
-      <div class="step-badge">3</div>
-      <div class="flex-grow-1">
-        <p class="mb-2 fw-semibold">Set up autostart via launchd</p>
-        <p class="small mb-2" style="color:var(--text-dim);">Create a LaunchAgent for the current user. The Podman Machine must already be running at login (e.g. via Podman Desktop).</p>
-        <div class="pre-wrap">
-          <pre id="rlen-mac-launchd">mkdir -p ~/Library/LaunchAgents/
-cat > ~/Library/LaunchAgents/com.podman.{{ pod_name }}.plist << 'EOF'
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
-&lt;plist version="1.0"&gt;
-&lt;dict&gt;
-  &lt;key&gt;Label&lt;/key&gt;
-  &lt;string&gt;com.podman.{{ pod_name }}&lt;/string&gt;
-  &lt;key&gt;ProgramArguments&lt;/key&gt;
-  &lt;array&gt;
-    &lt;string&gt;/usr/local/bin/podman&lt;/string&gt;
-    &lt;string&gt;play&lt;/string&gt;
-    &lt;string&gt;kube&lt;/string&gt;
-    &lt;string&gt;/Users/YOURUSER/.config/containers/{{ pod_name }}.yaml&lt;/string&gt;
-  &lt;/array&gt;
-  &lt;key&gt;RunAtLoad&lt;/key&gt;
-  &lt;true/&gt;
-  &lt;key&gt;StandardOutPath&lt;/key&gt;
-  &lt;string&gt;/tmp/{{ pod_name }}-pod.log&lt;/string&gt;
-  &lt;key&gt;StandardErrorPath&lt;/key&gt;
-  &lt;string&gt;/tmp/{{ pod_name }}-pod.log&lt;/string&gt;
-&lt;/dict&gt;
-&lt;/plist&gt;
-EOF
-launchctl load ~/Library/LaunchAgents/com.podman.{{ pod_name }}.plist</pre>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-mac-launchd')"><i class="bi bi-clipboard"></i></button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="step-block">
-    <div class="d-flex gap-3">
-      <div class="step-badge">4</div>
-      <div class="flex-grow-1">
-        <p class="mb-2 fw-semibold">Status &amp; Logs</p>
-        <div class="pre-wrap">
-          <pre id="rlen-mac-status">launchctl list | grep com.podman.{{ pod_name }}
-podman pod ps && podman ps
-cat /tmp/{{ pod_name }}-pod.log</pre>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-mac-status')"><i class="bi bi-clipboard"></i></button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="step-block">
-    <div class="d-flex gap-3">
-      <div class="step-badge">5</div>
-      <div class="flex-grow-1">
-        <p class="mb-2 fw-semibold">Apply image updates</p>
-        <div class="pre-wrap">
-          <pre id="rlen-mac-update">podman pull docker.io/&lt;image&gt;:&lt;tag&gt;
-launchctl stop com.podman.{{ pod_name }}
-launchctl start com.podman.{{ pod_name }}</pre>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-mac-update')"><i class="bi bi-clipboard"></i></button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="alert border-secondary mt-2" style="background:#12141f;">
-    <strong><i class="bi bi-info-circle me-1 text-secondary"></i> macOS:</strong>
-    <ul class="mb-0 mt-2 small">
-      <li>Podman runs inside a Linux VM (Podman Machine) — Quadlet files on the macOS host are <strong>not</strong> supported.</li>
-      <li>Path to <code>podman</code>: Homebrew Apple Silicon → <code>/opt/homebrew/bin/podman</code>, Intel → <code>/usr/local/bin/podman</code></li>
-      <li>Replace <code>YOURUSER</code> in the plist with your macOS username (<code>echo $USER</code>).</li>
-    </ul>
-  </div>
-
-</div>
 
 {% include "generator/partials/tips_en.html" with pod_name=pod_name tip_container_names=tip_container_names tip_named_volumes=tip_named_volumes tip_host_paths=tip_host_paths %}
 
