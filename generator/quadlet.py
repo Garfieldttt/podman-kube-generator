@@ -91,13 +91,19 @@ def generate_prune_units(form_data):
     install_dir = '~/.config/systemd/user' if rootless else '/etc/systemd/system'
     systemctl = 'systemctl --user' if rootless else 'sudo systemctl'
 
+    keep_hours = (form_data.get('quadlet_image_prune_keep') or '').strip()
+    if keep_hours:
+        prune_cmd = f'podman image prune -f --filter "until={keep_hours}h"'
+    else:
+        prune_cmd = 'podman image prune -af'
+
     service_lines = [
         '[Unit]',
         f'Description=Prune unused Podman images ({pod_name})',
         '',
         '[Service]',
         'Type=oneshot',
-        'ExecStart=podman image prune -af',
+        f'ExecStart={prune_cmd}',
     ]
 
     timer_lines = [

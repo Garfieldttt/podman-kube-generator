@@ -61,6 +61,13 @@ QUADLET_IMAGE_PRUNE_CHOICES = [
     ('daily', 'daily'),
 ]
 
+QUADLET_IMAGE_PRUNE_KEEP_CHOICES = [
+    ('', 'Remove all unused'),
+    ('168', 'Keep last 7 days'),
+    ('336', 'Keep last 14 days'),
+    ('720', 'Keep last 30 days'),
+]
+
 MODE_CHOICES = [
     ('rootless', 'Rootless (recommended, regular user)'),
     ('rootful', 'Rootful (root / sudo)'),
@@ -200,6 +207,12 @@ class PodForm(forms.Form):
     quadlet_image_prune = forms.ChoiceField(
         label='Image Prune Timer',
         choices=QUADLET_IMAGE_PRUNE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    quadlet_image_prune_keep = forms.ChoiceField(
+        label='Keep images for',
+        choices=QUADLET_IMAGE_PRUNE_KEEP_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-select'}),
     )

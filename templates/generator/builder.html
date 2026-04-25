@@ -774,11 +774,23 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
               Image Prune Timer
               <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Old images accumulate after updates and waste disk space. Generates two companion systemd files (*-prune.service + *-prune.timer) that automatically clean up unused images on the chosen schedule."></i>
             </label>
-            <select id="cv-quadlet-image-prune" class="cv-ctrl" onchange="state.quadlet_image_prune=this.value">
+            <select id="cv-quadlet-image-prune" class="cv-ctrl" onchange="state.quadlet_image_prune=this.value;document.getElementById('cv-prune-keep-row').style.display=this.value?'':'none';">
               <option value="">off</option>
               <option value="weekly">weekly</option>
               <option value="monthly">monthly</option>
               <option value="daily">daily</option>
+            </select>
+          </div>
+          <div class="cvs-field" id="cv-prune-keep-row" style="display:none;">
+            <label class="cvs-field-label">
+              Keep images for
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="&quot;Remove all unused&quot; deletes every unused image immediately. Choosing a retention period keeps images newer than that window — useful if you want to roll back to a previous version after an auto-update."></i>
+            </label>
+            <select id="cv-quadlet-image-prune-keep" class="cv-ctrl" onchange="state.quadlet_image_prune_keep=this.value">
+              <option value="">Remove all unused</option>
+              <option value="168">Keep last 7 days</option>
+              <option value="336">Keep last 14 days</option>
+              <option value="720">Keep last 30 days</option>
             </select>
           </div>
         </div>
@@ -1494,7 +1506,7 @@ const state = {
   hostname: '', host_aliases: '', dns: '', network: '',
   supplemental_groups: '', image_pull_secrets: '', termination_grace_period: null,
   quadlet_auto_update: '', quadlet_log_driver: '', quadlet_exit_code_propagation: '',
-  quadlet_kube_down_force: false, quadlet_timeout_start: null, quadlet_image_prune: '',
+  quadlet_kube_down_force: false, quadlet_timeout_start: null, quadlet_image_prune: '', quadlet_image_prune_keep: '',
   containers: [], connections: [],
   init_containers: [],
 };
@@ -3137,6 +3149,7 @@ function toFormData() {
     quadlet_kube_down_force:!!state.quadlet_kube_down_force,
     quadlet_timeout_start:state.quadlet_timeout_start||null,
     quadlet_image_prune:state.quadlet_image_prune||'',
+    quadlet_image_prune_keep:state.quadlet_image_prune_keep||'',
     init_containers: state.init_containers || [],
     containers: state.containers.map(c => ({
       name:  c.name  || shortName(c.image) || 'container',
