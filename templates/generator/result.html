@@ -104,20 +104,8 @@
 
     <input type="hidden" id="result-form-data" value="{{ form_data_json|escape }}">
 
-    <!-- Output Tabs -->
-    <ul class="nav nav-tabs mb-0" id="outputTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-yaml-btn" data-bs-toggle="tab"
-          data-bs-target="#tab-yaml" type="button" role="tab">
-          <i class="bi bi-file-code me-1"></i>Kubernetes YAML
-        </button>
-      </li>
-    </ul>
-
-    <div class="tab-content mb-4">
-      <!-- YAML Tab -->
-      <div class="tab-pane fade show active" id="tab-yaml" role="tabpanel">
-        <div class="card" style="border-top-left-radius:0; border-top-right-radius:0; border-top:0;">
+    <div class="mb-4">
+        <div class="card">
           <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
             <span class="text-secondary small" id="yaml-mode-label">for Kubernetes YAML + systemd Quadlet</span>
             <div class="d-flex gap-2">
@@ -150,62 +138,6 @@
                      border:none;padding:1rem;font-size:.8rem;line-height:1.6;resize:vertical;outline:none;">{{ yaml_content }}</textarea>
           </div>
         </div>
-        <div class="card mt-2">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="text-secondary small"><i class="bi bi-gear me-1"></i>{{ pod_name }}.kube — Systemd Quadlet unit</span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ pod_name }}.kube', document.getElementById('quadlet-output').textContent)">
-                <i class="bi bi-download"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'quadlet-output')">
-                <i class="bi bi-clipboard"></i> Copy
-              </button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <pre class="m-0 rounded-bottom" id="quadlet-output">{{ quadlet_content }}</pre>
-          </div>
-        </div>
-        {% if prune_units %}
-        <div class="card mt-2">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="text-secondary small"><i class="bi bi-clock me-1"></i>{{ prune_units.pod_name }}-prune.service — Image Prune Service</span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ prune_units.pod_name }}-prune.service', document.getElementById('prune-service-output').textContent)">
-                <i class="bi bi-download"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'prune-service-output')">
-                <i class="bi bi-clipboard"></i> Copy
-              </button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <pre class="m-0 rounded-bottom" id="prune-service-output">{{ prune_units.service }}</pre>
-          </div>
-        </div>
-        <div class="card mt-2">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="text-secondary small"><i class="bi bi-clock me-1"></i>{{ prune_units.pod_name }}-prune.timer — Image Prune Timer</span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ prune_units.pod_name }}-prune.timer', document.getElementById('prune-timer-output').textContent)">
-                <i class="bi bi-download"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'prune-timer-output')">
-                <i class="bi bi-clipboard"></i> Copy
-              </button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <pre class="m-0 rounded-bottom" id="prune-timer-output">{{ prune_units.timer }}</pre>
-          </div>
-        </div>
-        <div class="text-secondary small mt-1 px-1">
-          <i class="bi bi-info-circle me-1"></i>
-          Deploy to <code>{{ prune_units.install_dir }}/</code> &rarr; <code>{{ prune_units.systemctl }} enable --now {{ prune_units.pod_name }}-prune.timer</code>
-        </div>
-        {% endif %}
-      </div>
-
     </div>
 
     <!-- Save + community stack -->
@@ -507,9 +439,9 @@
     </h2>
 
     {% if mode == 'rootful' %}
-      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name prune_units=prune_units %}
+      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name prune_units=prune_units quadlet_content=quadlet_content %}
     {% else %}
-      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name prune_units=prune_units %}
+      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name prune_units=prune_units quadlet_content=quadlet_content %}
     {% endif %}
 
   </div>

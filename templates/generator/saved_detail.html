@@ -21,18 +21,8 @@
       </a>
     </div>
 
-    <ul class="nav nav-tabs mb-0" id="outputTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" data-bs-toggle="tab"
-          data-bs-target="#tab-yaml" type="button" role="tab">
-          <i class="bi bi-file-code me-1"></i>Kubernetes YAML
-        </button>
-      </li>
-    </ul>
-
-    <div class="tab-content mb-4">
-      <div class="tab-pane fade show active" id="tab-yaml" role="tabpanel">
-        <div class="card" style="border-top-left-radius:0; border-top-right-radius:0; border-top:0;">
+    <div class="mb-4">
+        <div class="card">
           <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
             <span class="fw-semibold"><i class="bi bi-file-code me-2"></i>{{ config.name }}.yaml</span>
             <div class="d-flex gap-2">
@@ -44,57 +34,6 @@
             <pre class="m-0 rounded-0 rounded-bottom" id="yaml-output">{{ config.yaml_content }}</pre>
           </div>
         </div>
-        <div class="card mt-2">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="text-secondary small"><i class="bi bi-gear me-1"></i>{{ config.name }}.kube — Systemd Quadlet unit</span>
-            <div class="d-flex gap-2">
-              <a href="{% url 'download_quadlet' config.uuid %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i></a>
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'quadlet-output')"><i class="bi bi-clipboard"></i></button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <pre class="m-0 rounded-bottom" id="quadlet-output">{{ quadlet_content }}</pre>
-          </div>
-        </div>
-        {% if prune_units %}
-        <div class="card mt-2">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="text-secondary small"><i class="bi bi-clock me-1"></i>{{ prune_units.pod_name }}-prune.service — Image Prune Service</span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ prune_units.pod_name }}-prune.service', document.getElementById('prune-service-output').textContent)">
-                <i class="bi bi-download"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'prune-service-output')">
-                <i class="bi bi-clipboard"></i>
-              </button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <pre class="m-0 rounded-bottom" id="prune-service-output">{{ prune_units.service }}</pre>
-          </div>
-        </div>
-        <div class="card mt-2">
-          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center">
-            <span class="text-secondary small"><i class="bi bi-clock me-1"></i>{{ prune_units.pod_name }}-prune.timer — Image Prune Timer</span>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ prune_units.pod_name }}-prune.timer', document.getElementById('prune-timer-output').textContent)">
-                <i class="bi bi-download"></i>
-              </button>
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'prune-timer-output')">
-                <i class="bi bi-clipboard"></i>
-              </button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <pre class="m-0 rounded-bottom" id="prune-timer-output">{{ prune_units.timer }}</pre>
-          </div>
-        </div>
-        <div class="text-secondary small mt-1 px-1">
-          <i class="bi bi-info-circle me-1"></i>
-          Deploy to <code>{{ prune_units.install_dir }}/</code> &rarr; <code>{{ prune_units.systemctl }} enable --now {{ prune_units.pod_name }}-prune.timer</code>
-        </div>
-        {% endif %}
-      </div>
     </div>
 
     <hr class="border-secondary my-4">
@@ -109,9 +48,9 @@
     </h2>
 
     {% if mode == 'rootful' %}
-      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name prune_units=prune_units %}
+      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name prune_units=prune_units quadlet_content=quadlet_content %}
     {% else %}
-      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name prune_units=prune_units %}
+      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name prune_units=prune_units quadlet_content=quadlet_content %}
     {% endif %}
 
     <hr class="border-secondary my-4">

@@ -189,7 +189,19 @@ podman play kube --down ~/.config/containers/{{ pod_name }}.yaml</pre>
       <div class="step-badge">3</div>
       <div class="flex-grow-1">
         <p class="mb-2 fw-semibold">Create Quadlet .kube file</p>
-        <p class="small mb-2" style="color:var(--text-dim);">Copy the <code>{{ pod_name }}.kube</code> file from the tab above and save it to <code>~/.config/containers/systemd/</code>:</p>
+        <div class="card mb-2" style="border-color:var(--border);">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="border-color:var(--border);">
+            <span class="text-secondary small"><i class="bi bi-gear me-1"></i>{{ pod_name }}.kube</span>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ pod_name }}.kube', document.getElementById('rlen-quadlet-pre').textContent)"><i class="bi bi-download"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'rlen-quadlet-pre')"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <pre class="m-0 rounded-bottom" id="rlen-quadlet-pre">{{ quadlet_content }}</pre>
+          </div>
+        </div>
+        <p class="small mb-2" style="color:var(--text-dim);">Save to <code>~/.config/containers/systemd/</code>:</p>
         <div class="pre-wrap">
           <pre id="rlen-step3">mkdir -p ~/.config/containers/systemd/
 nano ~/.config/containers/systemd/{{ pod_name }}.kube</pre>
@@ -205,7 +217,30 @@ nano ~/.config/containers/systemd/{{ pod_name }}.kube</pre>
       <div class="step-badge" style="background:linear-gradient(135deg,#6366f1,#4f46e5);"><i class="bi bi-clock"></i></div>
       <div class="flex-grow-1">
         <p class="mb-2 fw-semibold">Deploy image prune timer <span class="badge ms-1" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.7rem;">optional</span></p>
-        <p class="small mb-2" style="color:var(--text-dim);">Copy the <code>{{ pod_name }}-prune.service</code> and <code>{{ pod_name }}-prune.timer</code> files from above:</p>
+        <div class="card mb-2" style="border-color:var(--border);">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="border-color:var(--border);">
+            <span class="text-secondary small"><i class="bi bi-clock me-1"></i>{{ pod_name }}-prune.service</span>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ prune_units.pod_name }}-prune.service', document.getElementById('rlen-prune-service-pre').textContent)"><i class="bi bi-download"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'rlen-prune-service-pre')"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <pre class="m-0 rounded-bottom" id="rlen-prune-service-pre">{{ prune_units.service }}</pre>
+          </div>
+        </div>
+        <div class="card mb-2" style="border-color:var(--border);">
+          <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="border-color:var(--border);">
+            <span class="text-secondary small"><i class="bi bi-clock me-1"></i>{{ pod_name }}-prune.timer</span>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-outline-secondary" onclick="downloadFile('{{ prune_units.pod_name }}-prune.timer', document.getElementById('rlen-prune-timer-pre').textContent)"><i class="bi bi-download"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard(this, 'rlen-prune-timer-pre')"><i class="bi bi-clipboard"></i></button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <pre class="m-0 rounded-bottom" id="rlen-prune-timer-pre">{{ prune_units.timer }}</pre>
+          </div>
+        </div>
         <div class="pre-wrap">
           <pre id="rlen-prune">mkdir -p ~/.config/systemd/user/
 nano ~/.config/systemd/user/{{ pod_name }}-prune.service
