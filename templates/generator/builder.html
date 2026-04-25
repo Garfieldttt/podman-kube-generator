@@ -721,7 +721,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-field">
             <label class="cvs-field-label">
               Auto-Update
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="registry: pulls updated image from registry on podman auto-update. local: detects locally rebuilt images."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Aktiviert automatische Image-Updates via podman auto-update (oder systemd-Timer). registry: prüft ob ein neueres Image in der Registry verfügbar ist und zieht es. local: erkennt lokal neu gebaute Images. Nach dem Update wird der Pod automatisch neu gestartet."></i>
             </label>
             <select id="cv-quadlet-auto-update" class="cv-ctrl" onchange="state.quadlet_auto_update=this.value">
               <option value="">off</option>
@@ -732,7 +732,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-field">
             <label class="cvs-field-label">
               Log Driver
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="journald: logs to systemd journal (recommended). k8s-file: JSON file per container. none: discard logs. passthrough: inherit from host."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Wohin Container-Logs geschrieben werden. journald empfohlen: Logs sind dann per journalctl -u podname.service abrufbar. k8s-file schreibt JSON-Dateien pro Container. none verwirft alle Logs. Standard reicht für die meisten Fälle."></i>
             </label>
             <select id="cv-quadlet-log-driver" class="cv-ctrl" onchange="state.quadlet_log_driver=this.value">
               <option value="">— default —</option>
@@ -745,7 +745,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-field">
             <label class="cvs-field-label">
               Exit Code Propagation
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Determines the service exit code. all: exit 0 only if all containers exit 0. any: exit 0 if any container exits 0."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Wann gilt der Service als fehlgeschlagen? all: nur wenn alle Container sauber beendet wurden (Exit 0). any: sobald mindestens ein Container sauber beendet wurde. Relevant wenn systemd auf Fehler reagieren soll (Restart, Alerting)."></i>
             </label>
             <select id="cv-quadlet-exit-code" class="cv-ctrl" onchange="state.quadlet_exit_code_propagation=this.value">
               <option value="">— none —</option>
@@ -756,7 +756,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-field">
             <label class="cvs-field-label">
               Timeout Start (seconds)
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="systemd TimeoutStartSec: how long to wait for the pod to become ready before marking the service as failed."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Wie lange systemd auf den Start des Pods wartet bevor der Service als fehlgeschlagen gilt. Standard: 90s. Für langsam startende Anwendungen (z.B. Datenbanken) erhöhen, sonst startet systemd den Service unnötig neu."></i>
             </label>
             <input type="number" id="cv-quadlet-timeout" class="cv-ctrl" placeholder="e.g. 120" min="1"
               oninput="state.quadlet_timeout_start=this.value?parseInt(this.value):null">
@@ -766,13 +766,13 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
               onchange="state.quadlet_kube_down_force=this.checked" style="margin:0">
             <label for="cv-quadlet-down-force" class="cvs-field-label" style="margin:0">
               KubeDownForce
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Passes --force to podman kube down on service stop — removes containers and volumes even if they were not created by this unit."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Beim Stoppen des Service werden alle Container und Volumes zwangsweise entfernt, auch wenn sie nicht von dieser Unit erstellt wurden. Vorsicht: Daten in Volumes gehen verloren. Nur für Wegwerf-Umgebungen sinnvoll."></i>
             </label>
           </div>
           <div class="cvs-field">
             <label class="cvs-field-label">
               Image Prune Timer
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Generates a companion systemd timer + service that runs &quot;podman image prune -af&quot; on a schedule to remove unused images and free disk space."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Nach Image-Updates bleiben alte Images auf der Disk und belegen Speicher. Erzeugt zwei zusätzliche systemd-Dateien (*-prune.service + *-prune.timer) die alte Images automatisch im gewählten Intervall bereinigen."></i>
             </label>
             <select id="cv-quadlet-image-prune" class="cv-ctrl" onchange="state.quadlet_image_prune=this.value">
               <option value="">off</option>
