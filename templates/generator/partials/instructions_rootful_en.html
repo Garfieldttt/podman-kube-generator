@@ -59,7 +59,6 @@
       <p class="mb-2 fw-semibold">Save the YAML file</p>
       <div class="pre-wrap">
         <pre id="rfen-step1">sudo mkdir -p /etc/containers/
-# Copy the YAML above to:
 sudo nano /etc/containers/{{ pod_name }}.yaml</pre>
         <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rfen-step1')"><i class="bi bi-clipboard"></i></button>
       </div>
@@ -198,8 +197,7 @@ sudo podman ps</pre>
         <p class="mb-2 fw-semibold">Enable automatic image updates</p>
         <p class="small mb-2" style="color:var(--text-dim);">Requires <code>AutoUpdate=registry</code> in the .kube file. Podman checks for new images and restarts the pod automatically:</p>
         <div class="pre-wrap">
-          <pre id="rfen-step6">sudo systemctl daemon-reload
-sudo systemctl enable --now podman-auto-update.timer
+          <pre id="rfen-step6">sudo systemctl enable --now podman-auto-update.timer
 
 # Check status:
 sudo systemctl status podman-auto-update.timer

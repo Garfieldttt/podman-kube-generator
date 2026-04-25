@@ -133,7 +133,6 @@ rc-update add {{ pod_name }}-pod default</pre>
       <p class="mb-2 fw-semibold">Save the YAML file</p>
       <div class="pre-wrap">
         <pre id="rlen-step1b">mkdir -p ~/.config/containers/
-# Copy the YAML above to:
 nano ~/.config/containers/{{ pod_name }}.yaml</pre>
         <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step1b')"><i class="bi bi-clipboard"></i></button>
       </div>
@@ -273,7 +272,7 @@ podman ps</pre>
         <p class="mb-2 fw-semibold">Enable automatic image updates</p>
         <p class="small mb-2" style="color:var(--text-dim);">Requires <code>AutoUpdate=registry</code> in the .kube file. Podman then checks for new images and restarts the pod automatically:</p>
         <div class="pre-wrap">
-          <pre id="rlen-step6">systemctl --user start podman.socket
+          <pre id="rlen-step6">systemctl --user enable --now podman.socket
 systemctl --user daemon-reload
 systemctl --user enable --now podman-auto-update.timer
 
