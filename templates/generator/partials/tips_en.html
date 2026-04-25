@@ -152,24 +152,6 @@ podman volume prune -f        # unused volumes</pre>
   <!-- Updates -->
   <div class="tab-pane fade" id="tips-updates" role="tabpanel">
     <div class="row g-3">
-      <div class="col-12">
-        <div class="step-block mb-0">
-          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Automatic image updates (podman-auto-update)</p>
-          <p class="small mb-2" style="color:var(--text-dim);">Podman can automatically update images and restart the pod. Enable once:</p>
-          <div class="pre-wrap mb-2">
-            <pre id="tip-autoupdate" style="font-size:.77rem;">systemctl --user start podman.socket
-systemctl --user daemon-reload
-systemctl --user enable --now podman-auto-update.timer
-systemctl --user status podman-auto-update.timer</pre>
-            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-autoupdate')"><i class="bi bi-clipboard"></i></button>
-          </div>
-          <p class="small mb-1" style="color:var(--text-dim);">Test without actually updating:</p>
-          <div class="pre-wrap">
-            <pre id="tip-autoupdate-dry" style="font-size:.77rem;">podman auto-update --dry-run</pre>
-            <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-autoupdate-dry')"><i class="bi bi-clipboard"></i></button>
-          </div>
-        </div>
-      </div>
       <div class="col-md-6">
         <div class="step-block h-100 mb-0">
           <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Manual update</p>
@@ -184,11 +166,11 @@ podman play kube --replace \
       </div>
       <div class="col-md-6">
         <div class="step-block h-100 mb-0">
-          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Find outdated images</p>
-          <p class="small mb-1" style="color:var(--text-dim);">Check local images against the registry:</p>
+          <p class="small fw-semibold mb-2" style="color:var(--text-dim);">Check for outdated images</p>
+          <p class="small mb-1" style="color:var(--text-dim);">List local images and test auto-update without applying:</p>
           <div class="pre-wrap">
-            <pre id="tip-outdated" style="font-size:.77rem;">podman images --filter dangling=false
-podman pull --all-tags &lt;image&gt;</pre>
+            <pre id="tip-outdated" style="font-size:.77rem;">podman images
+podman auto-update --dry-run</pre>
             <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'tip-outdated')"><i class="bi bi-clipboard"></i></button>
           </div>
         </div>
