@@ -2179,6 +2179,7 @@ def builder_generate(request):
         yaml_content = generate(form_data)
         quadlet_content = generate_quadlet(form_data)
         env_file_content = generate_env_file(form_data)
+        prune_units = generate_prune_units(form_data)
         pod_name = form_data.get('pod_name', 'unnamed').strip().lower().replace(' ', '-')
         validation_warnings = validate_form_data(form_data) + notices
 
@@ -2218,6 +2219,7 @@ def builder_generate(request):
             'yaml_content': yaml_content,
             'quadlet_content': quadlet_content,
             'env_file_content': env_file_content,
+            'prune_units': prune_units,
             'pod_name': pod_name,
             'mode': form_data.get('mode', 'rootless'),
             'form_data_json': json.dumps(form_data),
