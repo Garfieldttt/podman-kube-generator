@@ -163,10 +163,6 @@ nano ~/.config/containers/{{ pod_name }}.yaml</pre>
     <div class="step-badge">2</div>
     <div class="flex-grow-1">
       <p class="mb-2 fw-semibold">Test the pod (without autostart)</p>
-        <div class="alert py-2 px-3 mb-2 small" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:6px;">
-          <i class="bi bi-exclamation-triangle me-1" style="color:#f59e0b;"></i>
-          <strong>Podman 5.x on Debian/Ubuntu:</strong> Short image names like <code>nginx:latest</code> fail with "did not resolve to an alias". Use fully-qualified names in the YAML: <code>docker.io/library/nginx:latest</code>
-        </div>
       <div class="pre-wrap">
         <pre id="rlen-step2">podman play kube ~/.config/containers/{{ pod_name }}.yaml
 
