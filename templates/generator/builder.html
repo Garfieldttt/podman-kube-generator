@@ -721,7 +721,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-field">
             <label class="cvs-field-label">
               Auto-Update
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Aktiviert automatische Image-Updates via podman auto-update (oder systemd-Timer). registry: prüft ob ein neueres Image in der Registry verfügbar ist und zieht es. local: erkennt lokal neu gebaute Images. Nach dem Update wird der Pod automatisch neu gestartet."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Enables automatic image updates via podman auto-update (or the built-in systemd timer). registry: checks whether a newer image is available in the registry and pulls it. local: detects locally rebuilt images. The pod is automatically restarted after an update."></i>
             </label>
             <select id="cv-quadlet-auto-update" class="cv-ctrl" onchange="state.quadlet_auto_update=this.value">
               <option value="">off</option>
@@ -732,7 +732,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-field">
             <label class="cvs-field-label">
               Log Driver
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Wohin Container-Logs geschrieben werden. journald empfohlen: Logs sind dann per journalctl -u podname.service abrufbar. k8s-file schreibt JSON-Dateien pro Container. none verwirft alle Logs. Standard reicht für die meisten Fälle."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Where container log output is written. journald recommended: logs are then accessible via journalctl -u podname.service. k8s-file writes one JSON file per container. none discards all logs. The default is fine for most setups."></i>
             </label>
             <select id="cv-quadlet-log-driver" class="cv-ctrl" onchange="state.quadlet_log_driver=this.value">
               <option value="">— default —</option>
@@ -745,7 +745,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-field">
             <label class="cvs-field-label">
               Exit Code Propagation
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Wann gilt der Service als fehlgeschlagen? all: nur wenn alle Container sauber beendet wurden (Exit 0). any: sobald mindestens ein Container sauber beendet wurde. Relevant wenn systemd auf Fehler reagieren soll (Restart, Alerting)."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Controls when systemd considers the service failed. all: only if every container exited cleanly (exit 0). any: as soon as at least one container exited cleanly. Relevant when systemd should react to failures via restart or alerting."></i>
             </label>
             <select id="cv-quadlet-exit-code" class="cv-ctrl" onchange="state.quadlet_exit_code_propagation=this.value">
               <option value="">— none —</option>
@@ -756,7 +756,7 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           <div class="cvs-field">
             <label class="cvs-field-label">
               Timeout Start (seconds)
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Wie lange systemd auf den Start des Pods wartet bevor der Service als fehlgeschlagen gilt. Standard: 90s. Für langsam startende Anwendungen (z.B. Datenbanken) erhöhen, sonst startet systemd den Service unnötig neu."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="How long systemd waits for the pod to become ready before marking the service as failed. Default: 90s. Increase for slow-starting applications like databases — otherwise systemd will restart the service unnecessarily."></i>
             </label>
             <input type="number" id="cv-quadlet-timeout" class="cv-ctrl" placeholder="e.g. 120" min="1"
               oninput="state.quadlet_timeout_start=this.value?parseInt(this.value):null">
@@ -766,13 +766,13 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
               onchange="state.quadlet_kube_down_force=this.checked" style="margin:0">
             <label for="cv-quadlet-down-force" class="cvs-field-label" style="margin:0">
               KubeDownForce
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Beim Stoppen des Service werden alle Container und Volumes zwangsweise entfernt, auch wenn sie nicht von dieser Unit erstellt wurden. Vorsicht: Daten in Volumes gehen verloren. Nur für Wegwerf-Umgebungen sinnvoll."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Forces removal of all containers and volumes on service stop, even if they were not created by this unit. Warning: data in volumes will be lost. Only useful for ephemeral environments."></i>
             </label>
           </div>
           <div class="cvs-field">
             <label class="cvs-field-label">
               Image Prune Timer
-              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Nach Image-Updates bleiben alte Images auf der Disk und belegen Speicher. Erzeugt zwei zusätzliche systemd-Dateien (*-prune.service + *-prune.timer) die alte Images automatisch im gewählten Intervall bereinigen."></i>
+              <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Old images accumulate after updates and waste disk space. Generates two companion systemd files (*-prune.service + *-prune.timer) that automatically clean up unused images on the chosen schedule."></i>
             </label>
             <select id="cv-quadlet-image-prune" class="cv-ctrl" onchange="state.quadlet_image_prune=this.value">
               <option value="">off</option>
@@ -2793,13 +2793,13 @@ function tabResources(c) {
           <div class="cfg-res-hint">e.g. 0.5, 1.0, 2 (number of cores)</div>
         </div>
         <div class="cfg-res-field">
-          <label>Memory request ${tip('Wie viel RAM dem Container mindestens reserviert wird. Verhindert dass der Container bei hoher Host-Last ausgehungert wird. Sinnvoll nur wenn auch ein Limit gesetzt ist — sollte kleiner oder gleich dem Limit sein.')}</label>
+          <label>Memory request ${tip('Minimum RAM reserved for this container — prevents it from being starved under high host load. Only meaningful when a limit is also set; should be less than or equal to the limit.')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.memory_request)}"
             placeholder="128Mi" oninput="cfgSet('memory_request',this.value)">
           <div class="cfg-res-hint">Minimum guaranteed</div>
         </div>
         <div class="cfg-res-field">
-          <label>CPU request ${tip('Wie viel CPU dem Container mindestens reserviert wird. Verhindert Aushungern bei hoher Last auf dem Host. Sinnvoll nur wenn auch ein CPU-Limit gesetzt ist — sollte kleiner oder gleich dem Limit sein.')}</label>
+          <label>CPU request ${tip('Minimum CPU reserved for this container — prevents starvation under high host load. Only meaningful when a CPU limit is also set; should be less than or equal to the limit.')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.cpu_request)}"
             placeholder="0.1" oninput="cfgSet('cpu_request',this.value)">
           <div class="cfg-res-hint">Minimum guaranteed</div>
@@ -2883,7 +2883,7 @@ function tabResources(c) {
           </select>
         </div>
         ${(c.gpu_access==='nvidia'||c.gpu_access==='amd_rocm')?`<div class="cfg-res-field">
-          <label>GPU count${tip('Wie viele GPUs dem Container zugewiesen werden. all übergibt alle verfügbaren GPUs — sinnvoll für Training/Inference die das gesamte System belegen dürfen. Für mehrere parallele Container besser eine feste Zahl setzen.')}</label>
+          <label>GPU count${tip('How many GPUs to assign to this container. all passes every available GPU — suitable for training or inference jobs that may use the entire system. Set a fixed number when running multiple containers in parallel.')}</label>
           <select class="cfg-inp cfg-inp-full" onchange="cfgSet('gpu_count',this.value)">
             <option value="1" ${(c.gpu_count||'1')==='1'?'selected':''}>1</option>
             <option value="2" ${c.gpu_count==='2'?'selected':''}>2</option>
