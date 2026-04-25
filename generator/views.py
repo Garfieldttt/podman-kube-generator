@@ -1681,7 +1681,10 @@ def view_user_stack(request, stack_id):
     form_data = dict(stack.form_data)  # shallow copy — kein In-place-Mutate des DB-Objekts
     notices = _inject_db_init(form_data)
     yaml_content = generate(form_data)
+    quadlet_content = generate_quadlet(form_data)
+    prune_units = generate_prune_units(form_data)
     pod_name = form_data.get('pod_name', stack.name).strip().lower().replace(' ', '-')
+    deploy_user = (form_data.get('deploy_user') or '').strip().lower().replace(' ', '-') or pod_name
     net_info = []
     for c in form_data.get('containers', []):
         ports = []
@@ -1698,7 +1701,10 @@ def view_user_stack(request, stack_id):
     tip_container_names, tip_named_volumes, tip_host_paths = _tip_vars(form_data)
     return render(request, 'generator/result.html', {
         'yaml_content': yaml_content,
+        'quadlet_content': quadlet_content,
+        'prune_units': prune_units,
         'pod_name': pod_name,
+        'deploy_user': deploy_user,
         'mode': form_data.get('mode', 'rootless'),
         'form_data_json': json.dumps(form_data),
         'net_info': net_info,
@@ -2186,6 +2192,7 @@ def builder_generate(request):
         env_file_content = generate_env_file(form_data)
         prune_units = generate_prune_units(form_data)
         pod_name = form_data.get('pod_name', 'unnamed').strip().lower().replace(' ', '-')
+        deploy_user = (form_data.get('deploy_user') or '').strip().lower().replace(' ', '-') or pod_name
         validation_warnings = validate_form_data(form_data) + notices
 
         try:
@@ -2226,6 +2233,7 @@ def builder_generate(request):
             'env_file_content': env_file_content,
             'prune_units': prune_units,
             'pod_name': pod_name,
+            'deploy_user': deploy_user,
             'mode': form_data.get('mode', 'rootless'),
             'form_data_json': json.dumps(form_data),
             'net_info': net_info,
