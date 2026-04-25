@@ -13,9 +13,11 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 
 ### Generator
 - Generate Kubernetes YAML for `podman play kube`
-- Generate Quadlet `.container` / `.pod` / `.kube` files
+- Generate Quadlet `.kube` unit with configurable options: AutoUpdate, LogDriver, ExitCodePropagation, KubeDownForce, TimeoutStartSec
+- Optional image prune timer: generates companion systemd `.service` + `.timer` units with configurable retention (remove all / keep 7, 14, or 30 days)
 - Download `.env` file for secret variables
 - Rootless and rootful mode
+- Configurable deployment user for rootless mode (used in `useradd`, `loginctl enable-linger`, OpenRC)
 - Init containers support
 - Host network mode
 - Auto-generated secure passwords for `changeme` placeholders
@@ -40,6 +42,11 @@ Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quad
 - Pre-configured environment variables for 50+ known images (MariaDB, PostgreSQL, Redis, Nextcloud, …)
 - Connection hints between containers (which env vars to set for app ↔ database)
 - Image inspector: Hub metadata, tags, registry config, CVEs in one view
+
+### Deployment Guide
+- Step-by-step deployment guide for rootless and rootful mode (systemd/Quadlet, Alpine/OpenRC, macOS/launchd)
+- Config files (`.kube`, prune units) embedded directly in the relevant steps — no scrolling between guide and files
+- OS selector (Debian/Ubuntu, Fedora/RHEL, Arch, Alpine, macOS)
 
 ### Stack Templates
 - 47 ready-to-use templates (WordPress, Nextcloud, Gitea, Vaultwarden, Zabbix, and more)
