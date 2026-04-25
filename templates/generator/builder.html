@@ -639,11 +639,19 @@ details[open] .cvs-net-summary { border-color: var(--accent); border-bottom-left
           </div>
           <div class="cvs-field" style="flex:1">
             <label class="cvs-field-label">Mode</label>
-            <select id="cv-mode" class="cv-ctrl" onchange="state.mode=this.value;updateNetworkState();scanForTips()">
+            <select id="cv-mode" class="cv-ctrl" onchange="state.mode=this.value;updateNetworkState();scanForTips();document.getElementById('cv-deploy-user-row').style.display=this.value==='rootless'?'':'none';">
               <option value="rootless">Rootless</option>
               <option value="rootful">Rootful</option>
             </select>
           </div>
+        </div>
+        <div class="cvs-field" id="cv-deploy-user-row">
+          <label class="cvs-field-label">
+            Deploy as user
+            <i class="bi bi-info-circle" style="color:var(--text-muted);font-size:.72rem;cursor:help;vertical-align:middle;margin-left:.25rem;" data-bs-toggle="tooltip" data-bs-placement="top" title="Linux username the pod will run as (rootless only). Used in the deployment guide for useradd and loginctl enable-linger. Leave empty to use the pod name."></i>
+          </label>
+          <input type="text" id="cv-deploy-user" class="cv-ctrl" placeholder="e.g. nextcloud (default: pod name)"
+            oninput="state.deploy_user=this.value.trim().toLowerCase().replace(/\s+/g,'-')">
         </div>
       </div>
 
@@ -1501,7 +1509,7 @@ function getEnvDefs(imageName) {
 
 // ══ State ════════════════════════════════════════════════════════
 const state = {
-  pod_name: 'mypod', restart_policy: 'Always', mode: 'rootless',
+  pod_name: 'mypod', restart_policy: 'Always', mode: 'rootless', deploy_user: '',
   host_network: false, host_pid: false, host_ipc: false,
   hostname: '', host_aliases: '', dns: '', network: '',
   supplemental_groups: '', image_pull_secrets: '', termination_grace_period: null,
@@ -3136,7 +3144,8 @@ const parseEnv   = s => (typeof s === 'string' ? s : '').split('\n').map(l=>l.tr
 function toFormData() {
   return {
     pod_name: state.pod_name||'mypod', restart_policy:state.restart_policy||'Always',
-    mode:state.mode||'rootless', host_network:!!state.host_network,
+    mode:state.mode||'rootless', deploy_user:state.deploy_user||'',
+    host_network:!!state.host_network,
     host_pid:!!state.host_pid, host_ipc:!!state.host_ipc,
     hostname:state.hostname||'', host_aliases:state.host_aliases||'',
     userns:'', dns:state.dns||'', network:state.network||'',

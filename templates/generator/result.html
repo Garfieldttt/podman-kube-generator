@@ -439,9 +439,9 @@
     </h2>
 
     {% if mode == 'rootful' %}
-      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name prune_units=prune_units quadlet_content=quadlet_content %}
+      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name prune_units=prune_units quadlet_content=quadlet_content deploy_user=deploy_user %}
     {% else %}
-      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name prune_units=prune_units quadlet_content=quadlet_content %}
+      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name prune_units=prune_units quadlet_content=quadlet_content deploy_user=deploy_user %}
     {% endif %}
 
   </div>

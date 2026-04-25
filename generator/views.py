@@ -1048,6 +1048,7 @@ def generate_view(request):
             'generate_error': str(e),
         })
     pod_name = form_data['pod_name'].strip().lower().replace(' ', '-')
+    deploy_user = (form_data.get('deploy_user') or '').strip().lower().replace(' ', '-') or pod_name
     validation_warnings = validate_form_data(form_data) + notices
 
     try:
@@ -1096,6 +1097,7 @@ def generate_view(request):
         'env_file_content': env_file_content,
         'prune_units': prune_units,
         'pod_name': pod_name,
+        'deploy_user': deploy_user,
         'mode': form_data['mode'],
         'form_data_json': json.dumps(form_data),
         'net_info': net_info,
@@ -1146,9 +1148,12 @@ def saved_detail(request, uuid):
     quadlet_content = generate_quadlet(config.form_data)
     env_file_content = generate_env_file(config.form_data)
     prune_units = generate_prune_units(config.form_data)
+    pod_name = config.name
+    deploy_user = (config.form_data.get('deploy_user') or '').strip().lower().replace(' ', '-') or pod_name
     return render(request, 'generator/saved_detail.html', {
         'config': config,
-        'pod_name': config.name,
+        'pod_name': pod_name,
+        'deploy_user': deploy_user,
         'yaml_content': config.yaml_content,
         'quadlet_content': quadlet_content,
         'env_file_content': env_file_content,

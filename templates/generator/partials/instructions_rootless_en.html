@@ -68,8 +68,8 @@ podman machine start</pre>
       <div class="rlen-os" data-os="debian fedora arch" style="display:block;">
         <p class="small fw-semibold mb-1" style="color:var(--text-dim);">1. Create user (if not existing)</p>
         <div class="pre-wrap mb-3">
-          <pre id="rlen-user-lin">useradd -m -s /bin/bash {{ pod_name }}
-passwd {{ pod_name }}</pre>
+          <pre id="rlen-user-lin">useradd -m -s /bin/bash {{ deploy_user }}
+passwd {{ deploy_user }}</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-user-lin')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>
@@ -77,8 +77,8 @@ passwd {{ pod_name }}</pre>
       <div class="rlen-os" data-os="alpine" style="display:none;">
         <p class="small fw-semibold mb-1" style="color:var(--text-dim);">1. Create user (if not existing)</p>
         <div class="pre-wrap mb-3">
-          <pre id="rlen-user-alp">adduser -D -s /bin/sh {{ pod_name }}
-passwd {{ pod_name }}</pre>
+          <pre id="rlen-user-alp">adduser -D -s /bin/sh {{ deploy_user }}
+passwd {{ deploy_user }}</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-user-alp')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>
@@ -92,7 +92,7 @@ passwd {{ pod_name }}</pre>
       <div class="rlen-os" data-os="debian fedora arch" style="display:block;">
         <p class="small fw-semibold mb-1" style="color:var(--text-dim);">2. Enable linger <span style="color:var(--text-muted);font-weight:400;">(service runs after reboot without login)</span></p>
         <div class="pre-wrap mb-0">
-          <pre id="rlen-linger">loginctl enable-linger {{ pod_name }}</pre>
+          <pre id="rlen-linger">loginctl enable-linger {{ deploy_user }}</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this,'rlen-linger')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>
@@ -105,9 +105,9 @@ passwd {{ pod_name }}</pre>
 #!/sbin/openrc-run
 name="{{ pod_name }}-pod"
 description="{{ pod_name }} Pod (Podman rootless)"
-command_user="{{ pod_name }}"
+command_user="{{ deploy_user }}"
 command="/usr/bin/podman"
-command_args="play kube /home/{{ pod_name }}/.config/containers/{{ pod_name }}.yaml"
+command_args="play kube /home/{{ deploy_user }}/.config/containers/{{ pod_name }}.yaml"
 command_background=true
 pidfile="/run/${RC_SVCNAME}.pid"
 
@@ -118,7 +118,7 @@ depend() {
 stop() {
     ebegin "Stopping ${name}"
     start-stop-daemon --stop --pidfile "${pidfile}"
-    su - {{ pod_name }} -c "podman play kube --down /home/{{ pod_name }}/.config/containers/{{ pod_name }}.yaml"
+    su - {{ deploy_user }} -c "podman play kube --down /home/{{ deploy_user }}/.config/containers/{{ pod_name }}.yaml"
     eend $?
 }
 INITEOF
@@ -140,7 +140,7 @@ rc-update add {{ pod_name }}-pod default</pre>
 <!-- ── From here on as deployment user ────────────────────────── -->
 <p class="mb-3 fw-semibold" style="color:#94a3b8;">
   As deployment user
-  <span class="badge ms-2" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.7rem;font-weight:600;">as {{ pod_name }}</span>
+  <span class="badge ms-2" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.7rem;font-weight:600;">as {{ deploy_user }}</span>
 </p>
 
 <div class="step-block">

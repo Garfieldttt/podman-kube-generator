@@ -80,6 +80,12 @@ class PodForm(forms.Form):
         max_length=63,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. myapp'}),
     )
+    deploy_user = forms.CharField(
+        label='Deploy as user',
+        max_length=64,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. nextcloud'}),
+    )
 
     def clean_pod_name(self):
         name = self.cleaned_data['pod_name'].strip().lower().replace(' ', '-')
