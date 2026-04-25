@@ -104,6 +104,28 @@ sudo nano /etc/containers/systemd/{{ pod_name }}.kube</pre>
     </div>
   </div>
 
+  {% if prune_units %}
+  <div class="step-block" style="border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.04);">
+    <div class="d-flex gap-3">
+      <div class="step-badge" style="background:linear-gradient(135deg,#6366f1,#4f46e5);"><i class="bi bi-clock"></i></div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Deploy image prune timer <span class="badge ms-1" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.7rem;">optional</span></p>
+        <p class="small mb-2" style="color:var(--text-dim);">Copy the <code>{{ pod_name }}-prune.service</code> and <code>{{ pod_name }}-prune.timer</code> files from above:</p>
+        <div class="pre-wrap">
+          <pre id="rfen-prune">sudo nano /etc/systemd/system/{{ pod_name }}-prune.service
+sudo nano /etc/systemd/system/{{ pod_name }}-prune.timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now {{ pod_name }}-prune.timer
+
+# Verify:
+sudo systemctl status {{ pod_name }}-prune.timer</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rfen-prune')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="step-block">
     <div class="d-flex gap-3">
       <div class="step-badge" style="background:#d97706;">4</div>
@@ -129,6 +151,27 @@ sudo journalctl -u {{ pod_name }}.service -f
 sudo podman pod ps
 sudo podman ps</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rfen-step5')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="d-flex gap-3">
+      <div class="step-badge" style="background:#d97706;">6</div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Enable automatic image updates</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Requires <code>AutoUpdate=registry</code> in the .kube file. Podman checks for new images and restarts the pod automatically:</p>
+        <div class="pre-wrap">
+          <pre id="rfen-step6">sudo systemctl daemon-reload
+sudo systemctl enable --now podman-auto-update.timer
+
+# Check status:
+sudo systemctl status podman-auto-update.timer
+
+# Trigger manually:
+sudo podman auto-update</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rfen-step6')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>
     </div>

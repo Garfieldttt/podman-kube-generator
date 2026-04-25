@@ -109,9 +109,9 @@
     </h2>
 
     {% if mode == 'rootful' %}
-      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name %}
+      {% include "generator/partials/instructions_rootful_en.html" with pod_name=pod_name prune_units=prune_units %}
     {% else %}
-      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name %}
+      {% include "generator/partials/instructions_rootless_en.html" with pod_name=pod_name prune_units=prune_units %}
     {% endif %}
 
     <hr class="border-secondary my-4">

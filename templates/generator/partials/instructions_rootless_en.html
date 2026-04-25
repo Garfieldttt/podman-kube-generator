@@ -195,6 +195,29 @@ nano ~/.config/containers/systemd/{{ pod_name }}.kube</pre>
     </div>
   </div>
 
+  {% if prune_units %}
+  <div class="step-block" style="border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.04);">
+    <div class="d-flex gap-3">
+      <div class="step-badge" style="background:linear-gradient(135deg,#6366f1,#4f46e5);"><i class="bi bi-clock"></i></div>
+      <div class="flex-grow-1">
+        <p class="mb-2 fw-semibold">Deploy image prune timer <span class="badge ms-1" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:.7rem;">optional</span></p>
+        <p class="small mb-2" style="color:var(--text-dim);">Copy the <code>{{ pod_name }}-prune.service</code> and <code>{{ pod_name }}-prune.timer</code> files from above:</p>
+        <div class="pre-wrap">
+          <pre id="rlen-prune">mkdir -p ~/.config/systemd/user/
+nano ~/.config/systemd/user/{{ pod_name }}-prune.service
+nano ~/.config/systemd/user/{{ pod_name }}-prune.timer
+systemctl --user daemon-reload
+systemctl --user enable --now {{ pod_name }}-prune.timer
+
+# Verify:
+systemctl --user status {{ pod_name }}-prune.timer</pre>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-prune')"><i class="bi bi-clipboard"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="step-block">
     <div class="d-flex gap-3">
       <div class="step-badge">4</div>
@@ -229,14 +252,18 @@ podman ps</pre>
     <div class="d-flex gap-3">
       <div class="step-badge">6</div>
       <div class="flex-grow-1">
-        <p class="mb-2 fw-semibold">Apply image updates</p>
-        <p class="small mb-2" style="color:var(--text-dim);">Pull new image versions and restart the pod:</p>
+        <p class="mb-2 fw-semibold">Enable automatic image updates</p>
+        <p class="small mb-2" style="color:var(--text-dim);">Requires <code>AutoUpdate=registry</code> in the .kube file. Podman then checks for new images and restarts the pod automatically:</p>
         <div class="pre-wrap">
-          <pre id="rlen-step6">podman pull docker.io/&lt;image&gt;:&lt;tag&gt;
-podman play kube --replace ~/.config/containers/{{ pod_name }}.yaml
+          <pre id="rlen-step6">systemctl --user start podman.socket
+systemctl --user daemon-reload
+systemctl --user enable --now podman-auto-update.timer
 
-# or via systemd:
-systemctl --user restart {{ pod_name }}.service</pre>
+# Check status:
+systemctl --user status podman-auto-update.timer
+
+# Trigger manually:
+podman auto-update</pre>
           <button class="btn btn-sm btn-outline-secondary copy-btn" onclick="copyToClipboard(this, 'rlen-step6')"><i class="bi bi-clipboard"></i></button>
         </div>
       </div>
