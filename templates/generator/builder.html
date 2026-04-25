@@ -2793,13 +2793,13 @@ function tabResources(c) {
           <div class="cfg-res-hint">e.g. 0.5, 1.0, 2 (number of cores)</div>
         </div>
         <div class="cfg-res-field">
-          <label>Memory request ${tip('Minimum memory guaranteed to this container. Should be &lt;= limit. Leave empty if no limit is set.')}</label>
+          <label>Memory request ${tip('Wie viel RAM dem Container mindestens reserviert wird. Verhindert dass der Container bei hoher Host-Last ausgehungert wird. Sinnvoll nur wenn auch ein Limit gesetzt ist — sollte kleiner oder gleich dem Limit sein.')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.memory_request)}"
             placeholder="128Mi" oninput="cfgSet('memory_request',this.value)">
           <div class="cfg-res-hint">Minimum guaranteed</div>
         </div>
         <div class="cfg-res-field">
-          <label>CPU request ${tip('Minimum CPU guaranteed to this container. Should be &lt;= limit. Leave empty if no limit is set.')}</label>
+          <label>CPU request ${tip('Wie viel CPU dem Container mindestens reserviert wird. Verhindert Aushungern bei hoher Last auf dem Host. Sinnvoll nur wenn auch ein CPU-Limit gesetzt ist — sollte kleiner oder gleich dem Limit sein.')}</label>
           <input type="text" class="cfg-inp cfg-inp-full" value="${esc(c.cpu_request)}"
             placeholder="0.1" oninput="cfgSet('cpu_request',this.value)">
           <div class="cfg-res-hint">Minimum guaranteed</div>
@@ -2883,7 +2883,7 @@ function tabResources(c) {
           </select>
         </div>
         ${(c.gpu_access==='nvidia'||c.gpu_access==='amd_rocm')?`<div class="cfg-res-field">
-          <label>GPU count${tip('Number of GPUs to assign. all passes every available GPU to the container.')}</label>
+          <label>GPU count${tip('Wie viele GPUs dem Container zugewiesen werden. all übergibt alle verfügbaren GPUs — sinnvoll für Training/Inference die das gesamte System belegen dürfen. Für mehrere parallele Container besser eine feste Zahl setzen.')}</label>
           <select class="cfg-inp cfg-inp-full" onchange="cfgSet('gpu_count',this.value)">
             <option value="1" ${(c.gpu_count||'1')==='1'?'selected':''}>1</option>
             <option value="2" ${c.gpu_count==='2'?'selected':''}>2</option>
