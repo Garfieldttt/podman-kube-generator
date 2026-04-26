@@ -1,1 +1,3 @@
 {{ seo.robots_txt|default:"User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /donated/"|safe }}
+
+Sitemap: {{ site_url }}/sitemap.xml
