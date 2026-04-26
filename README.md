@@ -19,7 +19,7 @@ Generated configurations can be saved, shared with others via link and organised
 The tool is designed to complement `podman kube play` and Podman Desktop, not replace them. The generator handles the configuration work upfront - the resulting YAML is run directly with `podman kube play` or imported into Podman Desktop.
 
 **Hosted Instance:** https://podman-generator.rzen.at/
-<img width="2869" height="1432" alt="image" src="https://github.com/user-attachments/assets/f33c75dd-8e69-4e48-91d3-1a3f6a94196f" />
+<img width="2869" height="1432" alt="image" src="https://github.com/user-attachments/assets/e73cc793-75b9-4f65-a56a-facc37b1a32f" />
 <img width="2869" height="1432" alt="image" src="https://github.com/user-attachments/assets/38e08f53-c5a1-40f8-9f8c-14dd744f56bb" />
 <img width="2869" height="1432" alt="image" src="https://github.com/user-attachments/assets/b6cdf8de-64e6-47d0-80c9-38d719c2f05b" />
 
