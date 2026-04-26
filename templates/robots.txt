@@ -1,3 +1,4 @@
 {{ seo.robots_txt|default:"User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /donated/"|safe }}
-
+{% if site_url and 'localhost' not in site_url %}
 Sitemap: {{ site_url }}/sitemap.xml
+{% endif %}
