@@ -1915,5 +1915,64 @@
       "is_active": true,
       "sort_order": 46
     }
+  },
+  {
+    "model": "generator.stacktemplate",
+    "pk": 51,
+    "fields": {
+      "key": "mastodon-postgres-es",
+      "label": "Mastodon + PostgreSQL + Elasticsearch",
+      "icon": "bi-mastodon",
+      "category": "Kommunikation",
+      "description": "Mastodon federated social network. Web UI on port 3000, Streaming API on port 4000. After first start, create admin: podman exec mastodon-mastodon-web bin/tootctl accounts create admin --email admin@example.com --role Owner --confirmed. Generate secrets before going live: SECRET_KEY_BASE via 'bundle exec rails secret', VAPID keys via 'bundle exec rails mastodon:webpush:generate_vapid_key', ACTIVE_RECORD keys via 'bundle exec rails db:encryption:init'.",
+      "is_active": true,
+      "sort_order": 47,
+      "stack_data": {
+        "pod_name": "mastodon",
+        "restart_policy": "Always",
+        "mode": "rootless",
+        "containers": [
+          {
+            "name": "postgres",
+            "image": "docker.io/postgres:14-alpine",
+            "env": "POSTGRES_DB=mastodon\nPOSTGRES_USER=mastodon\nPOSTGRES_PASSWORD=changeme",
+            "volumes": "mastodon-db:/var/lib/postgresql/data:Z"
+          },
+          {
+            "name": "redis",
+            "image": "docker.io/redis:7-alpine",
+            "args": "redis-server --appendonly yes",
+            "volumes": "mastodon-redis:/data:Z"
+          },
+          {
+            "name": "elasticsearch",
+            "image": "docker.elastic.co/elasticsearch/elasticsearch:7.17.29",
+            "env": "discovery.type=single-node\nxpack.security.enabled=false\nES_JAVA_OPTS=-Xms512m -Xmx512m\ncluster.name=mastodon-es",
+            "volumes": "mastodon-es:/usr/share/elasticsearch/data:Z"
+          },
+          {
+            "name": "mastodon-web",
+            "image": "ghcr.io/mastodon/mastodon:v4.5.9",
+            "ports": "3000:3000",
+            "env": "RAILS_ENV=production\nLOCAL_DOMAIN=mastodon.example.com\nSINGLE_USER_MODE=false\nDB_HOST=127.0.0.1\nDB_PORT=5432\nDB_NAME=mastodon\nDB_USER=mastodon\nDB_PASS=changeme\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nES_ENABLED=true\nES_HOST=127.0.0.1\nES_PORT=9200\nSECRET_KEY_BASE=changeme_generate_with_bundle_exec_rails_secret\nOTP_SECRET=changeme_generate_with_bundle_exec_rails_secret\nVAPID_PRIVATE_KEY=changeme_generate_with_rails_mastodon_webpush_generate_vapid_key\nVAPID_PUBLIC_KEY=changeme_generate_with_rails_mastodon_webpush_generate_vapid_key\nACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=changeme_generate_with_rails_db_encryption_init\nACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=changeme_generate_with_rails_db_encryption_init\nACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=changeme_generate_with_rails_db_encryption_init\nSMTP_SERVER=smtp.example.com\nSMTP_PORT=587\nSMTP_LOGIN=\nSMTP_PASSWORD=\nSMTP_FROM_ADDRESS=mastodon@example.com\nIP_RETENTION_PERIOD=31536000\nSESSION_RETENTION_PERIOD=31536000",
+            "volumes": "mastodon-system:/mastodon/public/system:Z",
+            "args": "bash -c \"until (echo > /dev/tcp/127.0.0.1/5432) 2>/dev/null; do sleep 3; done && bundle exec rails db:prepare && exec bundle exec puma -C config/puma.rb\""
+          },
+          {
+            "name": "mastodon-streaming",
+            "image": "ghcr.io/mastodon/mastodon-streaming:v4.5.9",
+            "ports": "4000:4000",
+            "env": "NODE_ENV=production\nLOCAL_DOMAIN=mastodon.example.com\nDB_HOST=127.0.0.1\nDB_PORT=5432\nDB_NAME=mastodon\nDB_USER=mastodon\nDB_PASS=changeme\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nSECRET_KEY_BASE=changeme_generate_with_bundle_exec_rails_secret\nPORT=4000\nSTREAMING_CLUSTER_NUM=1"
+          },
+          {
+            "name": "mastodon-sidekiq",
+            "image": "ghcr.io/mastodon/mastodon:v4.5.9",
+            "env": "RAILS_ENV=production\nLOCAL_DOMAIN=mastodon.example.com\nDB_HOST=127.0.0.1\nDB_PORT=5432\nDB_NAME=mastodon\nDB_USER=mastodon\nDB_PASS=changeme\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nES_ENABLED=true\nES_HOST=127.0.0.1\nES_PORT=9200\nSECRET_KEY_BASE=changeme_generate_with_bundle_exec_rails_secret\nOTP_SECRET=changeme_generate_with_bundle_exec_rails_secret\nVAPID_PRIVATE_KEY=changeme_generate_with_rails_mastodon_webpush_generate_vapid_key\nVAPID_PUBLIC_KEY=changeme_generate_with_rails_mastodon_webpush_generate_vapid_key\nACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=changeme_generate_with_rails_db_encryption_init\nACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=changeme_generate_with_rails_db_encryption_init\nACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=changeme_generate_with_rails_db_encryption_init\nSMTP_SERVER=smtp.example.com\nSMTP_PORT=587\nSMTP_LOGIN=\nSMTP_PASSWORD=\nSMTP_FROM_ADDRESS=mastodon@example.com",
+            "volumes": "mastodon-system:/mastodon/public/system:Z",
+            "args": "bundle exec sidekiq"
+          }
+        ]
+      }
+    }
   }
 ]
