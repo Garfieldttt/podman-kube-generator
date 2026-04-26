@@ -132,25 +132,37 @@
         })();
         </script>
 
-        <div class="col-md-5">
-          <label>{{ form.devices.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="One device per line. Format: /dev/host or /dev/host:/dev/container. e.g. /dev/ttyUSB0 for a Zigbee stick, /dev/video0 for a webcam."></i></label>
-          <div class="mb-1">
-            <select class="form-select form-select-sm" style="max-width:260px;"
+        <div class="col-md-6">
+          <label>{{ form.devices.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="One device per line. Format: /dev/host or /dev/host:/dev/container. Shorthand /dev/foo is expanded to /dev/foo:/dev/foo automatically."></i></label>
+          <div class="mb-1 d-flex align-items-center gap-2">
+            <select id="dev-preset-{{ index }}" class="form-select form-select-sm" style="max-width:240px;"
               onchange="(function(sel){
-                var v=sel.value;
-                if(!v){return;}
+                var opt=sel.options[sel.selectedIndex];
+                var v=opt.value;
+                if(!v){document.getElementById('dev-hint-{{ index }}').textContent='';return;}
                 var ta=document.querySelector('[name=\'c{{ index }}-devices\']');
                 var cur=(ta.value||'').trimEnd();
                 ta.value=cur?(cur+'\n'+v):v;
+                document.getElementById('dev-hint-{{ index }}').textContent=opt.getAttribute('data-desc')||'';
                 sel.value='';
               })(this)">
               <option value="">— add common device —</option>
-              <option value="/dev/ttyUSB0">/dev/ttyUSB0 — USB serial adapter</option>
-              <option value="/dev/ttyACM0">/dev/ttyACM0 — USB CDC device</option>
-              <option value="/dev/video0">/dev/video0 — Video device</option>
-              <option value="/dev/dri/renderD128">/dev/dri/renderD128 — GPU render node</option>
-              <option value="/dev/bus/usb">/dev/bus/usb — Full USB bus</option>
+              <option value="/dev/ttyUSB0"    data-desc="First USB-to-serial adapter. Common for USB dongles, converters.">/dev/ttyUSB0</option>
+              <option value="/dev/ttyUSB1"    data-desc="Second USB-to-serial adapter.">/dev/ttyUSB1</option>
+              <option value="/dev/ttyACM0"    data-desc="First USB CDC/ACM device. Used by modems, some USB serial devices.">/dev/ttyACM0</option>
+              <option value="/dev/ttyACM1"    data-desc="Second USB CDC/ACM device.">/dev/ttyACM1</option>
+              <option value="/dev/video0"     data-desc="First video device. Webcam or capture card.">/dev/video0</option>
+              <option value="/dev/video1"     data-desc="Second video device.">/dev/video1</option>
+              <option value="/dev/dri/card0"  data-desc="Primary GPU display output node.">/dev/dri/card0</option>
+              <option value="/dev/dri/renderD128" data-desc="GPU render/compute node. Used for hardware transcoding and GPU workloads.">/dev/dri/renderD128</option>
+              <option value="/dev/kvm"        data-desc="KVM virtualization. Required to run virtual machines inside the container.">/dev/kvm</option>
+              <option value="/dev/fuse"       data-desc="FUSE filesystem support. Needed for containers that mount user-space filesystems.">/dev/fuse</option>
+              <option value="/dev/snd"        data-desc="Sound/audio devices. Passes all ALSA audio devices into the container.">/dev/snd</option>
+              <option value="/dev/input"      data-desc="Input devices (keyboard, mouse, joystick, touchscreen).">/dev/input</option>
+              <option value="/dev/net/tun"    data-desc="TUN/TAP virtual network interface. Required for VPN clients inside the container.">/dev/net/tun</option>
+              <option value="/dev/bus/usb"    data-desc="Full USB bus passthrough. Gives the container access to all connected USB devices.">/dev/bus/usb</option>
             </select>
+            <small id="dev-hint-{{ index }}" class="text-secondary" style="font-size:.78rem;"></small>
           </div>
           {{ form.devices }}
         </div>
