@@ -358,14 +358,24 @@ def generate(form_data):
         if c.get('userns'):
             annotations[f'io.podman.annotations.userns/{cname}'] = c['userns']
         gpu = c.get('gpu_access', '')
+        device_parts = []
         if gpu == 'vaapi':
-            annotations[f'io.podman.annotations.device/{cname}'] = '/dev/dri:/dev/dri'
+            device_parts.append('/dev/dri:/dev/dri')
         elif gpu == 'webcam':
-            annotations[f'io.podman.annotations.device/{cname}'] = '/dev/video0:/dev/video0'
+            device_parts.append('/dev/video0:/dev/video0')
         elif gpu == 'custom':
             dev = (c.get('custom_device') or '').strip()
             if dev:
-                annotations[f'io.podman.annotations.device/{cname}'] = dev
+                device_parts.append(dev)
+        for line in _parse_lines(c.get('devices', '')):
+            line = line.strip()
+            if not line:
+                continue
+            if ':' not in line:
+                line = f'{line}:{line}'
+            device_parts.append(line)
+        if device_parts:
+            annotations[f'io.podman.annotations.device/{cname}'] = ','.join(device_parts)
         containers_spec.append(_build_container(c, mounts))
 
     pod_spec = {

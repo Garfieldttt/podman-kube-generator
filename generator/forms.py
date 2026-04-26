@@ -375,6 +375,15 @@ class ContainerForm(forms.Form):
             'placeholder': '/dev/dri/renderD128:/dev/dri/renderD128',
         }),
     )
+    devices = forms.CharField(
+        label='Devices',
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control form-control-sm font-monospace',
+            'rows': 3,
+            'placeholder': '/dev/ttyUSB0\n/dev/video0:/dev/video0',
+        }),
+    )
     allow_privilege_escalation = forms.ChoiceField(
         label='allowPrivilegeEscalation',
         choices=[('', '— default —'), ('false', 'false (recommended)'), ('true', 'true')],

@@ -102,8 +102,8 @@
           {{ form.cpu_request }}
         </div>
 
-        <!-- GPU / Hardware -->
-        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">GPU / HARDWARE</span></div>
+        <!-- GPU / Hardware / Devices -->
+        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">HARDWARE / DEVICES</span></div>
         <div class="col-md-4">
           <label>{{ form.gpu_access.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="NVIDIA/AMD ROCm: adds CDI resource limit (requires CDI configured on host). Intel/AMD VAAPI: passes /dev/dri into the container via annotation. Custom: specify any host:container device path."></i></label>
           {{ form.gpu_access }}
@@ -131,6 +131,29 @@
           if (sel) { sel.addEventListener('change', toggleGpuFields); toggleGpuFields(); }
         })();
         </script>
+
+        <div class="col-md-5">
+          <label>{{ form.devices.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="One device per line. Format: /dev/host or /dev/host:/dev/container. e.g. /dev/ttyUSB0 for a Zigbee stick, /dev/video0 for a webcam."></i></label>
+          <div class="mb-1">
+            <select class="form-select form-select-sm" style="max-width:260px;"
+              onchange="(function(sel){
+                var v=sel.value;
+                if(!v){return;}
+                var ta=document.querySelector('[name=\'c{{ index }}-devices\']');
+                var cur=(ta.value||'').trimEnd();
+                ta.value=cur?(cur+'\n'+v):v;
+                sel.value='';
+              })(this)">
+              <option value="">— add common device —</option>
+              <option value="/dev/ttyUSB0">/dev/ttyUSB0 — Zigbee/Z-Wave USB stick</option>
+              <option value="/dev/ttyACM0">/dev/ttyACM0 — USB serial (Arduino etc.)</option>
+              <option value="/dev/video0">/dev/video0 — Webcam</option>
+              <option value="/dev/dri/renderD128">/dev/dri/renderD128 — GPU render node</option>
+              <option value="/dev/bus/usb">/dev/bus/usb — Full USB bus</option>
+            </select>
+          </div>
+          {{ form.devices }}
+        </div>
 
         <!-- Security Context -->
         <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">SECURITY CONTEXT</span></div>
