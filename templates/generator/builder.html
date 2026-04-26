@@ -2999,14 +2999,14 @@ function tabResources(c) {
               var cur=(ta.value||'').trimEnd();
               ta.value=cur?(cur+'\n'+v):v;
               cfgSet('devices',ta.value);this.value='';}">
-          <button class="cfg-btn" onclick="(function(btn){
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="(function(btn){
             var inp=btn.previousElementSibling;
             var ta=btn.closest('.cfg-res-field').querySelector('textarea');
             var v=inp.value.trim();if(!v)return;
             var cur=(ta.value||'').trimEnd();
             ta.value=cur?(cur+'\n'+v):v;
             cfgSet('devices',ta.value);inp.value='';
-          })(this)" style="padding:4px 8px;">+</button>
+          })(this)"><i class="bi bi-plus-lg"></i></button>
         </div>
         <textarea class="cfg-inp cfg-inp-full" rows="3" placeholder="/dev/ttyUSB0&#10;/dev/video0:/dev/video0"
           oninput="cfgSet('devices',this.value)">${esc(c.devices||'')}</textarea>
