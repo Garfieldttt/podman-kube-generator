@@ -375,6 +375,12 @@ select.cv-ctrl  { appearance: auto; }
   border-radius: var(--r); flex-shrink: 0; transition: color .1s, background .1s;
 }
 .cfg-rdel:hover { color: #ef4444; background: rgba(239,68,68,.1); }
+.cfg-gen {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; padding: .15rem .25rem; font-size: .85rem;
+  border-radius: var(--r); flex-shrink: 0; transition: color .1s, background .1s;
+}
+.cfg-gen:hover { color: var(--accent); background: rgba(99,102,241,.08); }
 
 .cfg-port-name {
   font-size: .68rem; color: var(--text-muted);
@@ -2690,10 +2696,12 @@ function customEnvRow(e, realIdx) {
   return `
     <div class="cfg-row" id="envrow-${realIdx}">
       <input type="text" class="cfg-inp cfg-inp-sm" style="flex:1;min-width:0;" value="${esc(e.key)}"
-        placeholder="KEY" oninput="setEnv(${realIdx},'key',this.value)">
+        placeholder="KEY" oninput="setEnv(${realIdx},'key',this.value)"
+        onblur="autoGenIfSecret(${realIdx})">
       <span class="cfg-sep">=</span>
-      <input type="text" class="cfg-inp cfg-inp-sm" style="flex:1.5;min-width:0;" value="${esc(e.value)}"
+      <input type="text" id="envval-${realIdx}" class="cfg-inp cfg-inp-sm" style="flex:1.5;min-width:0;" value="${esc(e.value)}"
         placeholder="value" oninput="setEnv(${realIdx},'value',this.value)">
+      <button class="cfg-gen" type="button" onclick="genEnvPw(${realIdx})" title="Generate random value"><i class="bi bi-shuffle"></i></button>
       <button class="cfg-rdel" onclick="delEnv(${realIdx})"><i class="bi bi-x"></i></button>
     </div>`;
 }
@@ -2728,6 +2736,31 @@ function genPw(key, fieldId) {
   setEnvByKey(key, pw);
   const el = document.getElementById(fieldId);
   if (el) { el.value = pw; el.type = 'text'; }
+}
+
+function _looksLikeSecret(key) {
+  return /PASSWORD|SECRET|TOKEN|API_KEY|AUTH_KEY|PRIVATE_KEY|ACCESS_KEY|ADMIN_PASS|SIGNING_KEY|ENCRYPTION_KEY|PASSPHRASE/i.test(key);
+}
+
+function autoGenIfSecret(realIdx) {
+  const c = getC(selectedId); if (!c) return;
+  const e = c.env[realIdx]; if (!e || e.value) return;
+  if (!_looksLikeSecret(e.key)) return;
+  const pw = _randomPw();
+  e.value = pw;
+  const el = document.getElementById('envval-' + realIdx);
+  if (el) el.value = pw;
+  refreshBadges(selectedId);
+}
+
+function genEnvPw(realIdx) {
+  const c = getC(selectedId); if (!c) return;
+  const e = c.env[realIdx]; if (!e) return;
+  const pw = _randomPw();
+  e.value = pw;
+  const el = document.getElementById('envval-' + realIdx);
+  if (el) el.value = pw;
+  refreshBadges(selectedId);
 }
 
 function updateNetworkState() {

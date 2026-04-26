@@ -10,14 +10,14 @@ PRESETS = {
         "volumes": "nginx-html:/usr/share/nginx/html:Z\nnginx-conf:/etc/nginx/conf.d:Z",
         "run_as_user": None,
         "mode_hint": "rootless",
-        "note": "Port 80 nur rootful oder sysctl. Empfohlen: 8080→80.",
+        "note": "Port 80 requires rootful or sysctl. Recommended: 8080→80.",
         "probe": {"type": "tcpSocket", "tcp_port": 80, "initial_delay": 5, "period": 10},
     },
     "caddy": {
         "ports": "8080:80\n8443:443",
         "volumes": "caddy-data:/data:Z\ncaddy-config:/config:Z",
         "mode_hint": "rootless",
-        "note": "Caddy verwaltet TLS automatisch.",
+        "note": "Caddy handles TLS automatically.",
         "probe": {"type": "tcpSocket", "tcp_port": 80, "initial_delay": 5, "period": 10},
     },
     "traefik": {
