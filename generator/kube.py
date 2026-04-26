@@ -423,4 +423,15 @@ def generate(form_data):
     if annotations:
         pod['metadata']['annotations'] = annotations
 
-    return yaml.dump(pod, default_flow_style=False, allow_unicode=True, sort_keys=False)
+    yaml_str = yaml.dump(pod, default_flow_style=False, allow_unicode=True, sort_keys=False)
+
+    for ic in form_data.get('init_containers', []):
+        comment = (ic.get('_comment') or '').strip()
+        if not comment:
+            continue
+        name = re.sub(r'[^a-z0-9-]', '', (ic.get('name') or 'init').strip().lower())
+        marker = f'  - name: {name}\n'
+        comment_block = '\n'.join(f'  # {line}' for line in comment.splitlines()) + '\n'
+        yaml_str = yaml_str.replace(marker, comment_block + marker, 1)
+
+    return yaml_str
