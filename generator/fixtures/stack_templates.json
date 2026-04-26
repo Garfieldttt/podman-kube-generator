@@ -1969,7 +1969,7 @@
             "image": "ghcr.io/mastodon/mastodon:v4.5.9",
             "env": "RAILS_ENV=production\nLOCAL_DOMAIN=mastodon.example.com\nDB_HOST=127.0.0.1\nDB_PORT=5432\nDB_NAME=mastodon\nDB_USER=mastodon\nDB_PASS=changeme\nREDIS_HOST=127.0.0.1\nREDIS_PORT=6379\nES_ENABLED=true\nES_HOST=127.0.0.1\nES_PORT=9200\nSECRET_KEY_BASE=changeme_generate_with_bundle_exec_rails_secret\nOTP_SECRET=changeme_generate_with_bundle_exec_rails_secret\nVAPID_PRIVATE_KEY=changeme_generate_with_rails_mastodon_webpush_generate_vapid_key\nVAPID_PUBLIC_KEY=changeme_generate_with_rails_mastodon_webpush_generate_vapid_key\nACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=changeme_generate_with_rails_db_encryption_init\nACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=changeme_generate_with_rails_db_encryption_init\nACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=changeme_generate_with_rails_db_encryption_init\nSMTP_SERVER=smtp.example.com\nSMTP_PORT=587\nSMTP_LOGIN=\nSMTP_PASSWORD=\nSMTP_FROM_ADDRESS=mastodon@example.com",
             "volumes": "mastodon-system:/mastodon/public/system:Z",
-            "args": "bundle exec sidekiq"
+            "args": "bash -c \"until (echo > /dev/tcp/127.0.0.1/3000) 2>/dev/null; do sleep 3; done && exec bundle exec sidekiq\""
           }
         ]
       }
