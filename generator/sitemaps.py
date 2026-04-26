@@ -14,6 +14,10 @@ class StaticSitemap(Sitemap):
     def location(self, item):
         return reverse(item)
 
+    def lastmod(self, item):
+        latest = StackTemplate.objects.filter(is_active=True).order_by('-created_at').first()
+        return latest.created_at if latest else None
+
 
 class StackSitemap(Sitemap):
     changefreq = 'monthly'
