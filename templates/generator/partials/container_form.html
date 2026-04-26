@@ -104,29 +104,28 @@
 
         <!-- Hardware / Devices -->
         <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">HARDWARE</span></div>
-        <div class="col-md-4">
-          <label>{{ form.gpu_access.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="NVIDIA/AMD ROCm: adds CDI resource limit (requires CDI configured on host). Intel/AMD VAAPI: passes /dev/dri into the container via annotation. Custom: specify any host:container device path."></i></label>
+        <div class="col-md-3">
+          <label>{{ form.gpu_access.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Passes a GPU into the container via CDI (Container Device Interface). Requires CDI configured on the host. Use the Devices field below for /dev/dri or other hardware paths."></i></label>
           {{ form.gpu_access }}
         </div>
         <div class="col-md-2 gpu-count-{{ index }}" style="display:none">
           <label>{{ form.gpu_count.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Number of GPUs to assign. 'all' passes every available GPU to the container."></i></label>
           {{ form.gpu_count }}
         </div>
-        <div class="col-md-4 gpu-custom-{{ index }}" style="display:none">
-          <label>{{ form.custom_device.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="Device path in host:container format. e.g. /dev/dri/renderD128:/dev/dri/renderD128"></i></label>
-          {{ form.custom_device }}
-        </div>
-        <div class="col-md-2"></div>
+        <div class="col-md-1"></div>
         <script>
         (function() {
           var idx = {{ index }};
           var sel = document.querySelector('[name="c{{ index }}-gpu_access"]');
+          if (sel) {
+            ['vaapi','webcam','custom'].forEach(function(v) {
+              var opt = sel.querySelector('option[value="' + v + '"]');
+              if (opt) opt.remove();
+            });
+          }
           function toggleGpuFields() {
-            var val = sel ? sel.value : '';
-            var isCdi = val === 'nvidia' || val === 'amd_rocm';
-            var isCustom = val === 'custom';
+            var isCdi = sel && (sel.value === 'nvidia' || sel.value === 'amd_rocm');
             document.querySelectorAll('.gpu-count-' + idx).forEach(function(el) { el.style.display = isCdi ? '' : 'none'; });
-            document.querySelectorAll('.gpu-custom-' + idx).forEach(function(el) { el.style.display = isCustom ? '' : 'none'; });
           }
           if (sel) { sel.addEventListener('change', toggleGpuFields); toggleGpuFields(); }
         })();

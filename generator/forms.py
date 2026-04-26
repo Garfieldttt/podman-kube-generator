@@ -13,8 +13,8 @@ RESTART_CHOICES = [
 
 GPU_ACCESS_CHOICES = [
     ('', '— None —'),
-    ('nvidia', 'NVIDIA GPU (CDI)'),
-    ('amd_rocm', 'AMD GPU – ROCm (CDI)'),
+    ('nvidia', 'NVIDIA (CDI)'),
+    ('amd_rocm', 'AMD ROCm (CDI)'),
     ('vaapi', 'Intel / AMD – VAAPI (/dev/dri)'),
     ('webcam', 'Webcam (/dev/video0)'),
     ('custom', 'Custom device'),
@@ -356,7 +356,7 @@ class ContainerForm(forms.Form):
     )
     # GPU / Hardware
     gpu_access = forms.ChoiceField(
-        label='Hardware Access',
+        label='GPU (CDI)',
         choices=GPU_ACCESS_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
