@@ -1,6 +1,22 @@
 # Podman Kube Generator
 
-Web UI for generating **Podman Kubernetes YAML** (`podman play kube`) and **Quadlet** configs.
+**Podman Kube Generator** is a graphical web-based tool for creating Kubernetes YAML for `podman play kube` and systemd Quadlet files - designed to be approachable for beginners while covering everything advanced users need.
+
+Instead of writing YAML by hand, a visual interface guides you through the full pod configuration. Everything can be adjusted directly in the interface without touching a single line of YAML: image, ports, environment variables, volumes, host paths, CPU and memory limits, GPU access, security context, liveness and readiness probes, restart policy, network settings and more.
+
+Pods can be created in three ways:
+
+- **From a stack template** - pick a pre-configured setup from the built-in library and get a ready-to-run configuration with a single click
+- **From scratch** - select any image from Docker Hub, Quay.io, GitHub Container Registry or any other OCI-compatible registry and configure the pod step by step using the visual interface
+- **From an existing setup** - import and convert a Docker Compose file, a `podman run` or `docker run` command, or existing pod YAML directly into a new configuration
+
+Environment variable suggestions are fetched automatically from public registries - so you always know which variables an image supports without having to look them up separately. Passwords and secret keys are generated automatically - no default credentials end up in production.
+
+Both rootless and rootful deployments are covered. Once configured, the tool generates a step-by-step deployment guide that walks through everything needed to roll out the pod - from systemd integration via Quadlet to automatic image updates.
+
+Generated configurations can be saved, shared with others via link and organised into collections. A full version history means you can always go back to an earlier state. The community section lets users publish their own stacks, discover what others have built, and rate stacks with likes and comments.
+
+The tool is designed to complement `podman kube play` and Podman Desktop, not replace them. The generator handles the configuration work upfront - the resulting YAML is run directly with `podman kube play` or imported into Podman Desktop.
 
 **Hosted Instance:** https://podman-generator.rzen.at/
 
