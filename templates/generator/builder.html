@@ -2946,15 +2946,13 @@ function tabResources(c) {
       <div class="cfg-res-field mt-2">
         <label>Devices${tip('One device per line. Format: /dev/host or /dev/host:/dev/container. Shorthand /dev/foo is expanded to /dev/foo:/dev/foo automatically.')}</label>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
-          <select class="cfg-inp" style="flex:1;max-width:220px;" onchange="(function(sel){
-            var opt=sel.options[sel.selectedIndex];
+          <select class="cfg-inp" style="flex:1;max-width:220px;" onchange="
+            var opt=this.options[this.selectedIndex];
             var v=opt.value;
             if(!v)return;
-            var inp=sel.parentNode.querySelector('.dev-path-inp');
-            inp.value=v;
-            inp.title=opt.getAttribute('data-desc')||'';
-            sel.value='';inp.focus();inp.select();
-          })(this)">
+            var inp=document.getElementById('builder-dev-input');
+            if(inp){inp.value=v;inp.focus();inp.select();}
+            this.value='';">
             <option value="">— add common device —</option>
             <optgroup label="Serial / USB">
               <option value="/dev/ttyUSB0" data-desc="First USB-to-serial adapter.">/dev/ttyUSB0</option>
@@ -2992,23 +2990,11 @@ function tabResources(c) {
               <option value="/dev/rfkill" data-desc="RF kill switch.">/dev/rfkill</option>
             </optgroup>
           </select>
-          <input type="text" class="cfg-inp dev-path-inp" style="flex:1;" placeholder="/dev/ttyUSB0"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();
-              var ta=this.closest('.cfg-res-field').querySelector('textarea');
-              var v=this.value.trim();if(!v)return;
-              var cur=(ta.value||'').trimEnd();
-              ta.value=cur?(cur+'\n'+v):v;
-              cfgSet('devices',ta.value);this.value='';}">
-          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="(function(btn){
-            var inp=btn.previousElementSibling;
-            var ta=btn.closest('.cfg-res-field').querySelector('textarea');
-            var v=inp.value.trim();if(!v)return;
-            var cur=(ta.value||'').trimEnd();
-            ta.value=cur?(cur+'\n'+v):v;
-            cfgSet('devices',ta.value);inp.value='';
-          })(this)"><i class="bi bi-plus-lg"></i></button>
+          <input type="text" id="builder-dev-input" class="cfg-inp" style="flex:1;" placeholder="/dev/ttyUSB0"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addBuilderDevice();}">
+          <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addBuilderDevice()"><i class="bi bi-plus-lg"></i></button>
         </div>
-        <textarea class="cfg-inp cfg-inp-full" rows="3" placeholder="/dev/ttyUSB0&#10;/dev/video0:/dev/video0"
+        <textarea id="builder-dev-textarea" class="cfg-inp cfg-inp-full" rows="3" placeholder="/dev/ttyUSB0&#10;/dev/video0:/dev/video0"
           oninput="cfgSet('devices',this.value)">${esc(c.devices||'')}</textarea>
       </div>
     </div>
@@ -3039,6 +3025,19 @@ function tabResources(c) {
 // Generic setter for simple fields
 function cfgSet(field, value) {
   const c = getC(selectedId); if (c) { c[field] = value; refreshBadges(selectedId); }
+}
+
+function addBuilderDevice() {
+  const inp = document.getElementById('builder-dev-input');
+  if (!inp) return;
+  const v = inp.value.trim();
+  if (!v) return;
+  const ta = document.getElementById('builder-dev-textarea');
+  if (!ta) return;
+  const cur = (ta.value || '').trimEnd();
+  ta.value = cur ? (cur + '\n' + v) : v;
+  cfgSet('devices', ta.value);
+  inp.value = '';
 }
 
 // ── Probe Section ────────────────────────────────────────────────
