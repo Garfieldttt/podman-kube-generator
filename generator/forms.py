@@ -356,7 +356,7 @@ class ContainerForm(forms.Form):
     )
     # GPU / Hardware
     gpu_access = forms.ChoiceField(
-        label='GPU / Hardware Access',
+        label='Hardware Access',
         choices=GPU_ACCESS_CHOICES,
         required=False,
         widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),

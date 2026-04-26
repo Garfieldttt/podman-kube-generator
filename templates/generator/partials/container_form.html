@@ -102,8 +102,8 @@
           {{ form.cpu_request }}
         </div>
 
-        <!-- GPU / Hardware / Devices -->
-        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">HARDWARE / DEVICES</span></div>
+        <!-- Hardware / Devices -->
+        <div class="col-12 mt-2"><span class="text-secondary small fw-semibold">HARDWARE</span></div>
         <div class="col-md-4">
           <label>{{ form.gpu_access.label }} <i class="bi bi-info-circle text-secondary" data-bs-toggle="tooltip" title="NVIDIA/AMD ROCm: adds CDI resource limit (requires CDI configured on host). Intel/AMD VAAPI: passes /dev/dri into the container via annotation. Custom: specify any host:container device path."></i></label>
           {{ form.gpu_access }}
