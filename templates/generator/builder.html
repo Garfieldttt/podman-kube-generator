@@ -3113,7 +3113,7 @@ function _applyStackData(d) {
   (d.containers||[]).forEach((raw,i) => {
     const id = uid();
     state.containers.push(mkC({
-      id, x:60+i*215, y:100,
+      id, x:60+(i%2)*270, y:80+Math.floor(i/2)*200,
       name:raw.name||shortName(raw.image), image:raw.image||'',
       pull_policy:raw.pull_policy||'',
       ports:parsePorts(raw.ports||''), volumes:parseVols(raw.volumes||''), env:parseEnv(raw.env||''),
