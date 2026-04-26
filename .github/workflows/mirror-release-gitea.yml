@@ -1,0 +1,41 @@
+name: Mirror Release to Gitea
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release on Gitea
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          NAME: ${{ github.event.release.name }}
+          BODY: ${{ github.event.release.body }}
+          PRERELEASE: ${{ github.event.release.prerelease }}
+        run: |
+          python3 - <<'EOF'
+          import os, json, urllib.request
+
+          payload = json.dumps({
+              "tag_name": os.environ["TAG"],
+              "name": os.environ["NAME"],
+              "body": os.environ["BODY"],
+              "draft": False,
+              "prerelease": os.environ["PRERELEASE"] == "true"
+          }).encode()
+
+          req = urllib.request.Request(
+              "https://git.rzen.at/api/v1/repos/thomas/podman-kube-generator/releases",
+              data=payload,
+              headers={
+                  "Authorization": f"token {os.environ['GITEA_TOKEN']}",
+                  "Content-Type": "application/json"
+              },
+              method="POST"
+          )
+          with urllib.request.urlopen(req) as resp:
+              print(resp.status, json.loads(resp.read()).get("html_url"))
+          EOF
